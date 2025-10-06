@@ -1,0 +1,15 @@
+# VigiNote OSINT Alerts Bot
+
+Posts high-severity OSINT alerts (conflict, political instability, disasters, outbreaks) to a Telegram channel with:
+- Headline, 2-sentence dek, bullets, source link
+- Cross-source de-dup (max 2 outlets per story / 24h)
+- Region coverage + per-region minimums
+- Daily & per-run caps, min gap, quiet hours
+- AI bullet summaries if `OPENAI_API_KEY` is set; extractive fallback otherwise
+
+## Quick start (local)
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env  # fill in TELEGRAM_BOT_TOKEN & TELEGRAM_CHAT_ID etc.
+python main.py
