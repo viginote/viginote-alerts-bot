@@ -1,18 +1,4 @@
-# env & secrets
-.env
-*.env
-
-# databases / caches
-*.db
-*.sqlite
 __pycache__/
 *.pyc
-
-# virtual envs
-.venv/
-env/
-venv/
-
-# OS
-.DS_Store
-Thumbs.db
+.env
+*.db
