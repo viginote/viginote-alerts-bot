@@ -339,7 +339,7 @@ def run_once():
 
     print(f"Run done. Sent {sent_run} this run; {total_sent}/{MAX_ALERTS_PER_DAY} today @ {datetime.now(timezone.utc).isoformat()}")
     
-        if __name__ == "__main__":
+    if __name__ == "__main__":
     # If POLL_INTERVAL > 0 (seconds), run forever with a sleep between cycles.
     # If POLL_INTERVAL = 0 or unset, run once and exit (use cron instead).
     interval = int(os.getenv("POLL_INTERVAL", "0"))
