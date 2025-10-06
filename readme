@@ -1,15 +1,22 @@
 # VigiNote OSINT Alerts Bot
 
-Posts high-severity OSINT alerts (conflict, political instability, disasters, outbreaks) to a Telegram channel with:
-- Headline, 2-sentence dek, bullets, source link
-- Cross-source de-dup (max 2 outlets per story / 24h)
-- Region coverage + per-region minimums
-- Daily & per-run caps, min gap, quiet hours
-- AI bullet summaries if `OPENAI_API_KEY` is set; extractive fallback otherwise
+Polls curated RSS feeds, extracts article text, scores severity, dedupes near-duplicate headlines, and posts structured alerts to Telegram.
 
-## Quick start (local)
-```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env  # fill in TELEGRAM_BOT_TOKEN & TELEGRAM_CHAT_ID etc.
-python main.py
+## Deploy (Render)
+
+1. Push this repo to GitHub.
+2. Render → New → **Background Worker**.
+3. Build: `pip install -r requirements.txt`
+4. Start: `python main.py`
+5. Add a disk mounted at `/data` (1 GB).
+6. Add environment variables from `.env.example` (with real values for `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`).
+7. **Optional:** set `DEBUG=1` while testing.
+
+**Tuning**
+- `SEVERITY_THRESHOLD` (3–8): lower = more chatty.
+- `SIM_THRESHOLD` (70–95): lower = less strict on duplicates.
+- `MIN_PER_REGION` ensures diversity each cycle.
+- `MAX_PER_CLUSTER` limits repeated coverage of the same story.
+
+**Cron**
+Set `POLL_INTERVAL=0` and use Render Cron to run `python main.py` every N minutes.
