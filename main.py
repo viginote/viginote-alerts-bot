@@ -1,8 +1,8 @@
-# src/main.py  (you can keep it at repo root too; if you do, update Render start command accordingly)
-
-import os, re, time, sqlite3, json, traceback
+import os, re, time, sqlite3, traceback, random, html
+from collections import defaultdict
 from datetime import datetime, timezone, timedelta
 from urllib.parse import urlparse
+
 import requests
 import feedparser
 from bs4 import BeautifulSoup
@@ -10,42 +10,259 @@ import trafilatura
 import tldextract
 from rapidfuzz import fuzz
 
-# ------------- ENV / CONFIG -------------
-
-UA = os.getenv("USER_AGENT", "VigiNoteAlertsBot/1.0 (+https://viginote.com)")
+# =======================
+# ENV / CONFIG
+# =======================
+UA = os.getenv("USER_AGENT", "VigiNoteAlertsBot/1.1 (+https://viginote.com)")
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID   = os.getenv("TELEGRAM_CHAT_ID", "")
 assert TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID, "Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID"
 
-REGIONS      = [s.strip().upper() for s in os.getenv("REGIONS", "GLOBAL,MIDDLE_EAST,EUROPE,ASIA,WEST_EAST_AFRICA,SOUTHERN_AFRICA,SOUTH_AMERICA").split(",") if s.strip()]
-CUSTOM_FEEDS = [u.strip() for u in os.getenv("CUSTOM_FEEDS", "").split(",") if u.strip()]
+REGIONS      = [s.strip().upper() for s in os.getenv("REGIONS","GLOBAL,MIDDLE_EAST,EUROPE,ASIA,WEST_EAST_AFRICA,SOUTHERN_AFRICA,SOUTH_AMERICA").split(",") if s.strip()]
+CUSTOM_FEEDS = [u.strip() for u in os.getenv("CUSTOM_FEEDS","").split(",") if u.strip()]
 
-POLL_LIMIT         = int(os.getenv("POLL_LIMIT", "25"))
-MAX_ALERTS_PER_RUN = int(os.getenv("MAX_ALERTS_PER_RUN", "6"))
-MAX_ALERTS_PER_DAY = int(os.getenv("MAX_ALERTS_PER_DAY", "18"))
-MIN_GAP_SECONDS    = int(os.getenv("MIN_GAP_SECONDS", "90"))
-QUIET_SPEC         = os.getenv("QUIET_HOURS_UTC", "")  # e.g. "22-06" -> mute between 22:00..06:59 UTC
-MIN_PER_REGION     = int(os.getenv("MIN_PER_REGION", "1"))
-MAX_PER_CLUSTER    = int(os.getenv("MAX_PER_CLUSTER", "2"))
-SIM_THRESHOLD      = int(os.getenv("SIM_THRESHOLD", "86"))      # title similarity (RapidFuzz ratio)
-SEVERITY_THRESHOLD = int(os.getenv("SEVERITY_THRESHOLD", "5"))  # how serious a story must be (3-8)
-DB_PATH            = os.getenv("DB_PATH", "/data/osint.db")
-DEBUG              = os.getenv("DEBUG", "0") == "1"
+POLL_LIMIT         = int(os.getenv("POLL_LIMIT","25"))
+MAX_ALERTS_PER_RUN = int(os.getenv("MAX_ALERTS_PER_RUN","6"))
+MAX_ALERTS_PER_DAY = int(os.getenv("MAX_ALERTS_PER_DAY","18"))
+MIN_GAP_SECONDS    = int(os.getenv("MIN_GAP_SECONDS","90"))
+QUIET_SPEC         = os.getenv("QUIET_HOURS_UTC","")        # e.g. "22-06"
+MIN_PER_REGION     = int(os.getenv("MIN_PER_REGION","1"))
+MAX_PER_CLUSTER    = int(os.getenv("MAX_PER_CLUSTER","2"))
+SIM_THRESHOLD      = int(os.getenv("SIM_THRESHOLD","86"))   # dedupe similarity
+SEVERITY_THRESHOLD = int(os.getenv("SEVERITY_THRESHOLD","6"))
+CRITICAL_THRESHOLD = int(os.getenv("CRITICAL_THRESHOLD","8"))   # fast-track threshold
+NONCRIT_COOLDOWN   = int(os.getenv("NONCRITICAL_COOLDOWN_SECONDS","1500"))  # ~25 minutes
+MAX_PER_SOURCE_RUN = int(os.getenv("MAX_PER_SOURCE_RUN","2"))
+FEED_SHUFFLE       = os.getenv("FEED_SHUFFLE","1") == "1"
 
-# ------------- TELEGRAM -------------
+DB_PATH            = os.getenv("DB_PATH","/data/osint_alerts.db")
+DEBUG              = os.getenv("DEBUG","0") == "1"
 
+OPENAI_API_KEY     = os.getenv("OPENAI_API_KEY","")   # not used yet; reserved for summaries
+OPENAI_MODEL       = os.getenv("OPENAI_MODEL","gpt-4o-mini")
+
+# =======================
+# FEEDS (diversified)
+# =======================
+FEEDS = {
+    "GLOBAL": [
+        "https://feeds.reuters.com/reuters/worldNews",
+        "https://www.bbc.co.uk/news/world/rss.xml",
+        "https://apnews.com/hub/world-news?output=rss",
+        "https://reliefweb.int/updates/rss.xml",
+        "https://rss.dw.com/rdf/rss-en-world",
+    ],
+    "MIDDLE_EAST": [
+        "https://www.timesofisrael.com/feed/",
+        "https://www.jpost.com/Rss/RssFeedsHeadlines.aspx",
+        "https://www.israelnationalnews.com/Rss/",
+        "https://www.reuters.com/world/middle-east/rss",
+        "https://english.alarabiya.net/.mrss",
+        # "https://www.aljazeera.com/xml/rss/middleeast.xml",  # de-emphasized; add back if needed
+    ],
+    "EUROPE": [
+        "https://www.reuters.com/world/europe/rss",
+        "https://www.bbc.co.uk/news/world/europe/rss.xml",
+        "https://www.dw.com/feeds/rss",
+        "https://euobserver.com/feed",
+        "https://apnews.com/hub/europe?output=rss",
+    ],
+    "ASIA": [
+        "https://www.reuters.com/world/asia-pacific/rss",
+        "https://www.scmp.com/rss/91/feed",
+        "https://www.japantimes.co.jp/feed/",
+        "https://www.straitstimes.com/news/asia/rss.xml",
+        "https://timesofindia.indiatimes.com/rssfeeds/-2128936835.cms",
+    ],
+    "WEST_EAST_AFRICA": [
+        "https://www.bbc.co.uk/news/world/africa/rss.xml",
+        "https://www.theeastafrican.co.ke/feeds/rss",
+        "https://www.nation.africa/kenya/rssfeed",
+        "https://www.reuters.com/world/africa/rss",
+        "https://reliefweb.int/updates/rss.xml?search=class_type%3A12%20OR%20class_type%3A13%20AND%20PC-107",
+        "https://punchng.com/feed/",
+        "https://www.vanguardngr.com/feed/",
+        "https://dailytrust.com/feed/",
+        "https://addisstandard.com/feed/",
+        "https://www.garoweonline.com/en/rss",
+    ],
+    "SOUTHERN_AFRICA": [
+        "https://www.news24.com/rss?sectionId=1032",
+        "https://ewn.co.za/RSS",
+        "https://www.dailymaverick.co.za/section/news/feed/",
+        "https://www.timeslive.co.za/rss/",
+        "https://www.reuters.com/world/africa/rss",
+    ],
+    "SOUTH_AMERICA": [
+        "https://www.reuters.com/world/americas/rss",
+        "https://www.bbc.co.uk/news/world/latin_america/rss.xml",
+        "https://www.infobae.com/america/rss/",
+        "https://en.mercopress.com/rss",
+        "https://reliefweb.int/updates/rss.xml?search=class_type%3A12%20OR%20class_type%3A13%20AND%20PC-13",
+    ],
+}
+
+# =======================
+# DB & QUOTAS
+# =======================
+def db():
+    # ensure parent dir exists if using /data
+    try:
+        parent = os.path.dirname(DB_PATH)
+        if parent and not os.path.exists(parent):
+            os.makedirs(parent, exist_ok=True)
+    except Exception:
+        pass
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("CREATE TABLE IF NOT EXISTS sent_log (url TEXT PRIMARY KEY, ts INTEGER, title TEXT, is_critical INTEGER)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_sent_ts ON sent_log(ts)")
+    cur.execute("CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT)")
+    conn.commit()
+    return conn
+
+def kv_get(conn, key, default=None):
+    cur = conn.cursor()
+    cur.execute("SELECT v FROM kv WHERE k=?", (key,))
+    r = cur.fetchone()
+    return r[0] if r else default
+
+def kv_set(conn, key, val):
+    cur = conn.cursor()
+    cur.execute("INSERT OR REPLACE INTO kv (k,v) VALUES (?,?)", (key, str(val)))
+    conn.commit()
+
+def today_bounds():
+    now = datetime.now(timezone.utc)
+    start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+    end   = start + timedelta(days=1)
+    return int(start.timestamp()), int(end.timestamp())
+
+def daily_count(conn):
+    s, e = today_bounds()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) FROM sent_log WHERE ts>=? AND ts<?", (s,e))
+    return int(cur.fetchone()[0] or 0)
+
+def insert_sent(conn, url, title, is_critical):
+    cur = conn.cursor()
+    cur.execute("INSERT OR IGNORE INTO sent_log(url, ts, title, is_critical) VALUES (?,?,?,?)",
+                (url, int(time.time()), title, 1 if is_critical else 0))
+    conn.commit()
+
+def recent_titles(conn, days=3):
+    cutoff = int((datetime.now(timezone.utc) - timedelta(days=days)).timestamp())
+    cur = conn.cursor()
+    cur.execute("SELECT title FROM sent_log WHERE ts>=? ORDER BY ts DESC LIMIT 500", (cutoff,))
+    return [r[0] for r in cur.fetchall()]
+
+# =======================
+# UTILITIES
+# =======================
+def html_escape(s: str) -> str:
+    return html.escape(s or "", quote=True)
+
+def in_quiet_hours(spec: str) -> bool:
+    if not spec or "-" not in spec: return False
+    try:
+        s,e = [int(x) for x in spec.split("-")]
+        h = datetime.now(timezone.utc).hour
+        return (s <= h < e) if s<=e else (h>=s or h<e)
+    except Exception:
+        return False
+
+def domain_of(url: str) -> str:
+    try:
+        t = tldextract.extract(url)
+        return ".".join(p for p in [t.domain, t.suffix] if p)
+    except Exception:
+        return urlparse(url).netloc
+
+def fetch_article_text(link: str) -> str:
+    try:
+        dl = trafilatura.fetch_url(link, no_ssl=True, timeout=20)
+        if dl:
+            txt = trafilatura.extract(dl, include_comments=False, include_tables=False)
+            if txt and len(txt) > 200:
+                return txt
+    except Exception:
+        pass
+    try:
+        r = requests.get(link, headers={"User-Agent": UA}, timeout=20)
+        soup = BeautifulSoup(r.text, "html.parser")
+        for s in soup(["script","style","noscript"]): s.extract()
+        return " ".join(soup.get_text(separator=" ").split())[:4000]
+    except Exception:
+        return ""
+
+def first_sentence(text: str, max_chars=100) -> str:
+    if not text: return ""
+    # crude sentence split; good enough for précis
+    parts = re.split(r"(?<=[\.\!\?])\s+", text.strip())
+    lead = parts[0] if parts else text
+    lead = re.sub(r"^\s*(REUTERS|AP|AFP)\s*[-–—:]\s*", "", lead, flags=re.I)  # strip wire dateline
+    lead = re.sub(r"\s+", " ", lead).strip()
+    return (lead[:max_chars] + "…") if len(lead) > max_chars else lead
+
+def severity_icon(score: int) -> str:
+    if score >= 9: return "🛑"
+    if score >= 7: return "🔴"
+    if score >= 5: return "🟠"
+    return "🟡"
+
+# =======================
+# SCORING (with Africa boosts)
+# =======================
+BASE_WEIGHTS = [
+    (r"\b(air ?strike|strike|shelling|artillery|missile|rocket|drone|uav|explosion|blast|bomb)\b", 3),
+    (r"\b(assassination|ambush|clash|firefight|shooting|mass shooting|attack|raid)\b", 3),
+    (r"\b(ceasefire|truce|hostage|kidnap|abduction)\b", 2),
+    (r"\b(military|troops|brigade|battalion|militia|rebels|insurgents|terrorists?)\b", 1),
+    (r"\b(coup|martial law|state of emergency|sanctions?|unrest|protests?|riots?)\b", 3),
+    (r"\b(blockade|border closure|evacuation|curfew)\b", 2),
+    (r"\b(earthquake|aftershock|tsunami|cyclone|hurricane|typhoon|tornado|floods?|wildfire|landslide|eruption|volcano)\b", 3),
+    (r"\b(famine|cholera|measles|outbreak|epidemic|pandemic|disease)\b", 2),
+    (r"\b(killed|dead|deaths|fatalities|casualties|wounded|injured)\b", 2),
+    (r"\b(massive|major|deadly|severe|devastating|worst)\b", 1),
+]
+BLACKLIST = re.compile(r"\b(football|soccer|cricket|tennis|celebrity|music|movie|gaming|esports|box office|fashion|gossip|opinion|review)\b", re.I)
+
+# region-weighted bonuses
+AFRICA_BONUS_PATTERNS = [
+    (r"\b(coup|junta|putsch|martial law|state of emergency)\b", 2),
+    (r"\b(unrest|riots?|looting|clashes?|curfew)\b", 2),
+    (r"\b(cholera|measles|ebola|famine|drought|water shortage|outbreak)\b", 2),
+    (r"\b(cyclone|floods?|landslide|wildfire|earthquake)\b", 2),
+    (r"\b(cartel|gang|bandit|kidnap|abduction|extortion)\b", 2),
+    (r"\b(border closure|evacuation|IDPs?|refugees?)\b", 1),
+]
+
+def severity_score(title: str, text: str, region: str) -> int:
+    T = f"{title}\n{text}".lower()
+    if BLACKLIST.search(T): return 0
+    score = 0
+    for pat, w in BASE_WEIGHTS:
+        if re.search(pat, T, flags=re.I):
+            score += w
+    if re.search(r"\b(\d{2,}|dozens|scores|hundreds|thousands)\b", T):  # magnitude cue
+        score += 1
+    # Africa region boosts
+    if region in ("WEST_EAST_AFRICA", "SOUTHERN_AFRICA"):
+        for pat, bonus in AFRICA_BONUS_PATTERNS:
+            if re.search(pat, T, flags=re.I):
+                score += bonus
+    return score
+
+# =======================
+# TELEGRAM
+# =======================
 def send_tg(text: str) -> bool:
     try:
         r = requests.post(
             f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
-            data={
-                "chat_id": TELEGRAM_CHAT_ID,
-                "text": text,
-                "disable_web_page_preview": True,
-                "parse_mode": "HTML",
-            },
-            timeout=20,
+            data={"chat_id": TELEGRAM_CHAT_ID, "text": text, "parse_mode":"HTML", "disable_web_page_preview": True},
+            timeout=20
         )
         ok = r.json().get("ok", False)
         if not ok:
@@ -57,105 +274,12 @@ def send_tg(text: str) -> bool:
 
 def debug_tg(msg: str):
     if DEBUG:
-        try:
-            send_tg(f"🛠 {msg}")
-        except Exception as e:
-            print("[DEBUG_TG EXC]", e)
+        try: send_tg(f"🛠 {msg}")
+        except Exception as e: print("[DEBUG_TG EXC]", e)
 
-# ------------- DB / DEDUPE -------------
-
-def db():
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True) if "/" in DB_PATH else None
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-    cur.execute("CREATE TABLE IF NOT EXISTS sent_log (url TEXT PRIMARY KEY, ts INTEGER, title TEXT)")
-    cur.execute("CREATE INDEX IF NOT EXISTS idx_sent_ts ON sent_log(ts)")
-    conn.commit()
-    return conn
-
-def today_utc_bounds():
-    now = datetime.now(timezone.utc)
-    start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
-    end = start + timedelta(days=1)
-    return int(start.timestamp()), int(end.timestamp())
-
-def daily_count(conn) -> int:
-    s, e = today_utc_bounds()
-    cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) FROM sent_log WHERE ts >= ? AND ts < ?", (s, e))
-    return int(cur.fetchone()[0])
-
-def insert_sent(conn, url, title):
-    cur = conn.cursor()
-    cur.execute("INSERT OR IGNORE INTO sent_log(url, ts, title) VALUES (?,?,?)", (url, int(time.time()), title))
-    conn.commit()
-
-def recent_titles(conn, days=3):
-    cutoff = int((datetime.now(timezone.utc) - timedelta(days=days)).timestamp())
-    cur = conn.cursor()
-    cur.execute("SELECT title FROM sent_log WHERE ts >= ? ORDER BY ts DESC LIMIT 500", (cutoff,))
-    return [r[0] for r in cur.fetchall()]
-
-# ------------- QUIET HOURS -------------
-
-def in_quiet_hours(spec: str) -> bool:
-    """ spec like '22-06' (UTC). """
-    if not spec or "-" not in spec:
-        return False
-    try:
-        start_h, end_h = spec.split("-")
-        start_h, end_h = int(start_h), int(end_h)
-        now_h = datetime.now(timezone.utc).hour
-        if start_h <= end_h:
-            return start_h <= now_h < end_h
-        else:
-            return now_h >= start_h or now_h < end_h
-    except:
-        return False
-
-# ------------- FEED SOURCES -------------
-
-FEEDS = {
-    "GLOBAL": [
-        "https://feeds.reuters.com/reuters/worldNews",
-        "https://www.aljazeera.com/xml/rss/all.xml",
-        "https://rss.dw.com/rdf/rss-en-world",
-        "https://www.bbc.co.uk/news/world/rss.xml",
-        "https://apnews.com/hub/apf-topnews?utm_source=apnews.com&utm_medium=referral&utm_campaign=rss"
-    ],
-    "MIDDLE_EAST": [
-        "https://english.alarabiya.net/.mrss",
-        "https://www.jpost.com/Rss/RssFeedsHeadlines.aspx",
-        "https://www.al-monitor.com/rss.xml",
-        "https://www.arabnews.com/rss.xml"
-    ],
-    "EUROPE": [
-        "https://www.euronews.com/rss?level=theme&name=news",
-        "https://www.bbc.co.uk/news/world/europe/rss.xml",
-        "https://www.reuters.com/world/europe/rss"
-    ],
-    "ASIA": [
-        "https://www.reuters.com/world/asia-pacific/rss",
-        "https://www.straitstimes.com/news/world/rss.xml",
-        "https://www.thehindu.com/news/international/feeder/default.rss"
-    ],
-    "WEST_EAST_AFRICA": [
-        "https://www.theeastafrican.co.ke/feeds/rss/2754392-2754392-ydbrdf/index.xml",
-        "https://www.reuters.com/world/africa/rss",
-        "https://www.aljazeera.com/xml/rss/all.xml?region=africa"
-    ],
-    "SOUTHERN_AFRICA": [
-        "https://www.news24.com/news24/southafrica/rss",
-        "https://ewn.co.za/RSS",
-        "https://www.defenceweb.co.za/feed/"
-    ],
-    "SOUTH_AMERICA": [
-        "https://www.reuters.com/world/americas/rss",
-        "https://www.bbc.co.uk/news/world/latin_america/rss.xml",
-        "https://www.aljazeera.com/xml/rss/all.xml?region=latin-america"
-    ],
-}
-
+# =======================
+# CORE
+# =======================
 def build_feeds():
     feeds = []
     for region in REGIONS:
@@ -164,62 +288,10 @@ def build_feeds():
             feeds.append((region, urls))
     if CUSTOM_FEEDS:
         feeds.append(("CUSTOM", CUSTOM_FEEDS))
+    if FEED_SHUFFLE:
+        random.seed(int(time.time()) // 60)
+        random.shuffle(feeds)
     return feeds
-
-# ------------- EXTRACTION / SCORING -------------
-
-KEYWEIGHTS = {
-    # conflict / kinetic
-    r"\b(air ?strike|strike|shelling|artillery|missile|rocket|drone|uav|uav|explosion|blast|bomb|suicide attack)\b": 3,
-    r"\b(assassination|ambush|clash|firefight|shooting|mass shooting|attack|raid)\b": 3,
-    r"\b(ceasefire|truce|hostage|kidnap|abduction)\b": 2,
-    r"\b(military|troops|brigade|battalion|militia|rebels|insurgents|terrorists?)\b": 1,
-    # instability / political risk
-    r"\b(coup|martial law|state of emergency|sanctions?|unrest|protests?|riots?)\b": 3,
-    r"\b(blockade|border closure|evacuation|curfew)\b": 2,
-    # disasters / HADR
-    r"\b(earthquake|aftershock|tsunami|cyclone|hurricane|typhoon|tornado|floods?|wildfire|landslide|eruption|volcano)\b": 3,
-    r"\b(famine|cholera|outbreak|epidemic|pandemic|disease)\b": 2,
-    # severity cues
-    r"\b(killed|dead|deaths|fatalities|casualties|wounded|injured)\b": 2,
-    r"\b(massive|major|deadly|severe|devastating|worst)\b": 1,
-}
-
-def extract_text(link: str, user_agent: str) -> str:
-    try:
-        dl = trafilatura.fetch_url(link, no_ssl=True, timeout=20)
-        if dl:
-            txt = trafilatura.extract(dl, include_comments=False, include_tables=False)
-            if txt and len(txt) > 200:
-                return txt
-    except Exception:
-        pass
-    try:
-        r = requests.get(link, headers={"User-Agent": user_agent}, timeout=20)
-        soup = BeautifulSoup(r.text, "html.parser")
-        for s in soup(["script", "style", "noscript"]):
-            s.extract()
-        return " ".join(soup.get_text(separator=" ").split())[:4000]
-    except Exception:
-        return ""
-
-def domain_of(link: str) -> str:
-    try:
-        t = tldextract.extract(link)
-        return ".".join(p for p in [t.domain, t.suffix] if p)
-    except Exception:
-        return urlparse(link).netloc
-
-def severity_score(title: str, text: str) -> int:
-    s = 0
-    blob = f"{title}\n{text}".lower()
-    for pat, weight in KEYWEIGHTS.items():
-        if re.search(pat, blob):
-            s += weight
-    # simple numeric cues
-    if re.search(r"\b(\d{2,}|dozens|scores|hundreds|thousands)\b", blob):
-        s += 1
-    return s
 
 def looks_duplicate(title: str, recent: list, threshold: int) -> bool:
     for t in recent:
@@ -227,48 +299,43 @@ def looks_duplicate(title: str, recent: list, threshold: int) -> bool:
             return True
     return False
 
-# ------------- MAIN POLLER -------------
-
 def run_once():
     if in_quiet_hours(QUIET_SPEC):
-        print("⏸ quiet hours")
-        debug_tg("Quiet hours—skipping this cycle.")
-        return
+        print("⏸ quiet hours"); debug_tg("Quiet hours—skipping."); return
 
     feeds = build_feeds()
     conn = db()
     total_today = daily_count(conn)
     sent_run = 0
-    per_region_sent = {r: 0 for r, _ in feeds}
+    per_region_sent = defaultdict(int)
+    per_source_sent = defaultdict(int)
 
-    feeds_polled = 0
-    entries_seen = 0
-    entries_scored = 0
-    entries_passed = 0
+    # noncritical cooldown gate
+    last_nc = kv_get(conn, "last_noncritical_ts", "0")
+    last_noncrit_ts = int(last_nc) if str(last_nc).isdigit() else 0
 
-    print(f"Polling {len(feeds)} feeds | caps: run={MAX_ALERTS_PER_RUN}/day={MAX_ALERTS_PER_DAY} | threshold={SEVERITY_THRESHOLD}")
-    debug_tg(f"Polling {len(feeds)} feeds @ threshold {SEVERITY_THRESHOLD}")
+    print(f"Polling {len(feeds)} feeds | caps: run={MAX_ALERTS_PER_RUN}/day={MAX_ALERTS_PER_DAY} | thr={SEVERITY_THRESHOLD} crit={CRITICAL_THRESHOLD} nc_cooldown={NONCRIT_COOLDOWN}s")
+    debug_tg(f"Polling {len(feeds)} feeds (thr {SEVERITY_THRESHOLD}/crit {CRITICAL_THRESHOLD})")
 
     recent = recent_titles(conn, days=3)
 
     for region, urls in feeds:
-        if sent_run >= MAX_ALERTS_PER_RUN:
+        if sent_run >= MAX_ALERTS_PER_RUN or total_today >= MAX_ALERTS_PER_DAY:
             break
+
         for feed_url in urls:
-            if sent_run >= MAX_ALERTS_PER_RUN:
+            if sent_run >= MAX_ALERTS_PER_RUN or total_today >= MAX_ALERTS_PER_DAY:
                 break
             try:
                 parsed = feedparser.parse(feed_url, request_headers={"User-Agent": UA})
-                feeds_polled += 1
             except Exception as e:
                 print("[FEED ERR]", feed_url, "->", e)
                 continue
 
             entries = parsed.entries[:POLL_LIMIT]
-            entries_seen += len(entries)
 
             for e in entries:
-                if sent_run >= MAX_ALERTS_PER_RUN:
+                if sent_run >= MAX_ALERTS_PER_RUN or total_today >= MAX_ALERTS_PER_DAY:
                     break
 
                 title = (e.get("title") or "").strip()
@@ -276,65 +343,72 @@ def run_once():
                 if not title or not link:
                     continue
 
-                # region minimums: try to keep at least MIN_PER_REGION items per region
-                if MIN_PER_REGION > 0 and per_region_sent.get(region, 0) < MIN_PER_REGION and total_today >= MAX_ALERTS_PER_DAY:
-                    # if we've reached daily cap, skip region min enforcement
-                    pass
-
-                # extract text & score
-                text = extract_text(link, UA) or (e.get("summary") or "")
-                entries_scored += 1
-                score = severity_score(title, text)
-                if score < SEVERITY_THRESHOLD:
-                    continue
-                entries_passed += 1
-
-                # dedupe / cluster control
                 if looks_duplicate(title, recent, SIM_THRESHOLD):
-                    # count near-duplicate cluster limit
+                    # limit repeats of same cluster
                     dupes = sum(1 for t in recent if fuzz.token_set_ratio(title, t) >= SIM_THRESHOLD)
                     if dupes >= MAX_PER_CLUSTER:
-                        # skip extra repeats of same story
                         continue
 
-                # daily cap
-                if total_today >= MAX_ALERTS_PER_DAY:
-                    break
+                # get body and score
+                text = fetch_article_text(link) or (e.get("summary") or "")
+                score = severity_score(title, text, region)
+                if score < SEVERITY_THRESHOLD:
+                    continue
 
-                # per-region sanity
-                if MIN_PER_REGION > 0 and sum(per_region_sent.values()) < MIN_PER_REGION * len(per_region_sent):
-                    # keep sending balanced
-                    if per_region_sent.get(region, 0) >= MIN_PER_REGION:
-                        # already satisfied region min—allow but no special logic
-                        pass
-
-                # Compose TG message
                 dom = domain_of(link)
+                if per_source_sent[dom] >= MAX_PER_SOURCE_RUN:
+                    continue
+
+                # noncritical cooldown: throttle normal posts; critical bypasses
+                is_critical = score >= CRITICAL_THRESHOLD
+                now_ts = int(time.time())
+                if not is_critical and (now_ts - last_noncrit_ts) < NONCRIT_COOLDOWN:
+                    # skip for cooldown; keep scanning in case we find a critical item
+                    continue
+
+                # region balancing (soft)
+                if MIN_PER_REGION > 0:
+                    need = {r for r,_ in feeds if per_region_sent[r] < MIN_PER_REGION}
+                    if need and region not in need and sent_run < len(need):
+                        continue
+
+                # craft message
+                ico = severity_icon(score)
+                region_tag = region.replace("_"," ").title()
+                precis = first_sentence(text, max_chars=100)
                 msg = (
-                    f"<b>{title}</b>\n"
-                    f"<i>Region:</i> {region.replace('_', ' ').title()}  •  <i>Source:</i> {dom}\n\n"
-                    f"{text[:450].rstrip()}…\n\n"
-                    f"🔗 <a href=\"{link}\">Full report</a>"
+                    f"{ico} <b>[{html_escape(region_tag)}] {html_escape(title)}</b>\n"
+                    f"<code>{html_escape(precis)}</code>\n"
+                    f"• Source: {html_escape(dom)}\n\n"
+                    f"🔗 <a href=\"{html_escape(link)}\">Full report</a>"
                 )
 
+                # send
                 if send_tg(msg):
-                    insert_sent(conn, link, title)
+                    insert_sent(conn, link, title, is_critical)
+                    recent.insert(0, title)
+                    per_source_sent[dom] += 1
+                    per_region_sent[region] += 1
                     sent_run += 1
                     total_today += 1
-                    per_region_sent[region] = per_region_sent.get(region, 0) + 1
-                    recent.insert(0, title)  # update dedupe memory
-                    print(f"+ sent: {region} | {title[:80]}")
-                    if MIN_GAP_SECONDS:
+                    print(f"+ sent [{region}] {title[:80]} (score={score}, src={dom})")
+
+                    if not is_critical:
+                        last_noncrit_ts = now_ts
+                        kv_set(conn, "last_noncritical_ts", last_noncrit_ts)
+
+                    if MIN_GAP_SECONDS and not is_critical:
                         time.sleep(MIN_GAP_SECONDS)
                 else:
-                    print("- send failed:", title[:80])
+                    print("- send failed:", title[:90])
 
     print(f"Run done. Sent {sent_run} this run; {total_today}/{MAX_ALERTS_PER_DAY} today @ {datetime.now(timezone.utc).isoformat()}")
-    debug_tg(f"Heartbeat: polled {feeds_polled} feeds, saw {entries_seen} items, scored {entries_scored}, "
-             f"passed {entries_passed}, sent {sent_run}.")
+    if DEBUG:
+        debug_tg(f"Heartbeat: sent {sent_run}, today {total_today}/{MAX_ALERTS_PER_DAY}.")
 
-# ------------- ENTRYPOINT -------------
-
+# =======================
+# ENTRYPOINT LOOP
+# =======================
 if __name__ == "__main__":
     try:
         if DEBUG:
@@ -342,7 +416,9 @@ if __name__ == "__main__":
     except Exception as e:
         print("[STARTUP PING ERROR]", e)
 
-    interval = int(os.getenv("POLL_INTERVAL", "0"))
+    interval = int(os.getenv("POLL_INTERVAL","120"))  # default 2 min so critical can go out quickly
+    # Tip: with NONCRIT_COOLDOWN set ~1500s, normal items self-throttle to ~25min while critical bypass cooldown.
+
     if interval > 0:
         while True:
             try:
