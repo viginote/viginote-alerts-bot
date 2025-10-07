@@ -1,4 +1,4 @@
-import os, re, time, sqlite3, traceback, random, html
+import os, re, time, sqlite3, traceback, random, html, json
 from collections import defaultdict
 from datetime import datetime, timezone, timedelta
 from urllib.parse import urlparse
@@ -32,15 +32,20 @@ MAX_PER_CLUSTER    = int(os.getenv("MAX_PER_CLUSTER","2"))
 SIM_THRESHOLD      = int(os.getenv("SIM_THRESHOLD","86"))   # dedupe similarity
 SEVERITY_THRESHOLD = int(os.getenv("SEVERITY_THRESHOLD","6"))
 CRITICAL_THRESHOLD = int(os.getenv("CRITICAL_THRESHOLD","8"))   # fast-track threshold
-NONCRIT_COOLDOWN   = int(os.getenv("NONCRITICAL_COOLDOWN_SECONDS","1500"))  # ~25 minutes
+NONCRIT_COOLDOWN   = int(os.getenv("NONCRITICAL_COOLDOWN_SECONDS","1500"))  # ~25 min
 MAX_PER_SOURCE_RUN = int(os.getenv("MAX_PER_SOURCE_RUN","2"))
 FEED_SHUFFLE       = os.getenv("FEED_SHUFFLE","1") == "1"
 
 DB_PATH            = os.getenv("DB_PATH","/data/osint_alerts.db")
 DEBUG              = os.getenv("DEBUG","0") == "1"
 
-OPENAI_API_KEY     = os.getenv("OPENAI_API_KEY","")   # not used yet; reserved for summaries
-OPENAI_MODEL       = os.getenv("OPENAI_MODEL","gpt-4o-mini")
+# AI (optional)
+AI_ENABLED       = os.getenv("AI_ENABLED","1") == "1"
+OPENAI_API_KEY   = os.getenv("OPENAI_API_KEY","")
+OPENAI_MODEL     = os.getenv("OPENAI_MODEL","gpt-4o-mini")
+AI_TIMEOUT       = int(os.getenv("AI_TIMEOUT","18"))
+AI_MAX_TOKENS    = int(os.getenv("AI_MAX_TOKENS","220"))
+PRECIS_MAX_CHARS = int(os.getenv("PRÉCIS_MAX_CHARS","100"))
 
 # =======================
 # FEEDS (diversified)
@@ -59,7 +64,7 @@ FEEDS = {
         "https://www.israelnationalnews.com/Rss/",
         "https://www.reuters.com/world/middle-east/rss",
         "https://english.alarabiya.net/.mrss",
-        # "https://www.aljazeera.com/xml/rss/middleeast.xml",  # de-emphasized; add back if needed
+        # "https://www.aljazeera.com/xml/rss/middleeast.xml",
     ],
     "EUROPE": [
         "https://www.reuters.com/world/europe/rss",
@@ -107,7 +112,6 @@ FEEDS = {
 # DB & QUOTAS
 # =======================
 def db():
-    # ensure parent dir exists if using /data
     try:
         parent = os.path.dirname(DB_PATH)
         if parent and not os.path.exists(parent):
@@ -198,10 +202,9 @@ def fetch_article_text(link: str) -> str:
 
 def first_sentence(text: str, max_chars=100) -> str:
     if not text: return ""
-    # crude sentence split; good enough for précis
     parts = re.split(r"(?<=[\.\!\?])\s+", text.strip())
     lead = parts[0] if parts else text
-    lead = re.sub(r"^\s*(REUTERS|AP|AFP)\s*[-–—:]\s*", "", lead, flags=re.I)  # strip wire dateline
+    lead = re.sub(r"^\s*(REUTERS|AP|AFP)\s*[-–—:]\s*", "", lead, flags=re.I)
     lead = re.sub(r"\s+", " ", lead).strip()
     return (lead[:max_chars] + "…") if len(lead) > max_chars else lead
 
@@ -228,7 +231,6 @@ BASE_WEIGHTS = [
 ]
 BLACKLIST = re.compile(r"\b(football|soccer|cricket|tennis|celebrity|music|movie|gaming|esports|box office|fashion|gossip|opinion|review)\b", re.I)
 
-# region-weighted bonuses
 AFRICA_BONUS_PATTERNS = [
     (r"\b(coup|junta|putsch|martial law|state of emergency)\b", 2),
     (r"\b(unrest|riots?|looting|clashes?|curfew)\b", 2),
@@ -245,14 +247,70 @@ def severity_score(title: str, text: str, region: str) -> int:
     for pat, w in BASE_WEIGHTS:
         if re.search(pat, T, flags=re.I):
             score += w
-    if re.search(r"\b(\d{2,}|dozens|scores|hundreds|thousands)\b", T):  # magnitude cue
+    if re.search(r"\b(\d{2,}|dozens|scores|hundreds|thousands)\b", T):
         score += 1
-    # Africa region boosts
     if region in ("WEST_EAST_AFRICA", "SOUTHERN_AFRICA"):
         for pat, bonus in AFRICA_BONUS_PATTERNS:
             if re.search(pat, T, flags=re.I):
                 score += bonus
     return score
+
+# =======================
+# AI SUMMARY (optional)
+# =======================
+def ai_précis_and_bullets(title: str, text: str, region: str):
+    if not (AI_ENABLED and OPENAI_API_KEY and OPENAI_MODEL):
+        return None
+    prompt = f"""You are an OSINT summarizer for security/risk briefs.
+Rules:
+- Produce a single ultra-concise précis (<= {PRECIS_MAX_CHARS} characters) stating WHAT happened, WHERE/WHO, WHY it matters.
+- Then produce exactly 3 bullets, each one sentence, neutral tone:
+  1) What happened (scale if known)
+  2) Location/time/actors (most relevant)
+  3) So-what/implication or immediate next
+- Do NOT repeat the title. No source names/URLs. No emojis.
+- Region: {region.replace('_',' ').title()}.
+
+Title: {title}
+Body:
+{text[:2400]}
+"""
+    try:
+        headers = {"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"}
+        payload = {
+            "model": OPENAI_MODEL,
+            "messages": [
+                {"role": "system", "content": "You produce tight, decision-grade OSINT briefs."},
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": 0.2,
+            "max_tokens": AI_MAX_TOKENS,
+        }
+        resp = requests.post("https://api.openai.com/v1/chat/completions",
+                             headers=headers, data=json.dumps(payload), timeout=AI_TIMEOUT)
+        j = resp.json()
+        if not j.get("choices"): return None
+        content = j["choices"][0]["message"]["content"].strip()
+        lines = [ln.strip() for ln in content.splitlines() if ln.strip()]
+        if not lines: return None
+
+        precis, bullets = None, []
+        for ln in lines:
+            if ln.startswith(("-", "•", "*")):
+                bullets.append(ln.lstrip("-•* ").strip())
+            elif precis is None:
+                precis = ln
+
+        if precis:
+            precis = precis[:PRECIS_MAX_CHARS] + ("…" if len(precis) > PRECIS_MAX_CHARS else "")
+        if len(bullets) < 3:
+            bullets += [""] * (3 - len(bullets))
+        bullets = bullets[:3]
+        if not precis or not bullets[0]: return None
+        return precis, bullets
+    except Exception as e:
+        print("[AI SUMMARY ERROR]", e)
+        return None
 
 # =======================
 # TELEGRAM
@@ -265,8 +323,7 @@ def send_tg(text: str) -> bool:
             timeout=20
         )
         ok = r.json().get("ok", False)
-        if not ok:
-            print("[TG ERROR]", r.json())
+        if not ok: print("[TG ERROR]", r.json())
         return ok
     except Exception as e:
         print("[TG EXC]", e)
@@ -284,8 +341,7 @@ def build_feeds():
     feeds = []
     for region in REGIONS:
         urls = FEEDS.get(region, [])
-        if urls:
-            feeds.append((region, urls))
+        if urls: feeds.append((region, urls))
     if CUSTOM_FEEDS:
         feeds.append(("CUSTOM", CUSTOM_FEEDS))
     if FEED_SHUFFLE:
@@ -310,7 +366,6 @@ def run_once():
     per_region_sent = defaultdict(int)
     per_source_sent = defaultdict(int)
 
-    # noncritical cooldown gate
     last_nc = kv_get(conn, "last_noncritical_ts", "0")
     last_noncrit_ts = int(last_nc) if str(last_nc).isdigit() else 0
 
@@ -322,7 +377,6 @@ def run_once():
     for region, urls in feeds:
         if sent_run >= MAX_ALERTS_PER_RUN or total_today >= MAX_ALERTS_PER_DAY:
             break
-
         for feed_url in urls:
             if sent_run >= MAX_ALERTS_PER_RUN or total_today >= MAX_ALERTS_PER_DAY:
                 break
@@ -344,12 +398,10 @@ def run_once():
                     continue
 
                 if looks_duplicate(title, recent, SIM_THRESHOLD):
-                    # limit repeats of same cluster
                     dupes = sum(1 for t in recent if fuzz.token_set_ratio(title, t) >= SIM_THRESHOLD)
                     if dupes >= MAX_PER_CLUSTER:
                         continue
 
-                # get body and score
                 text = fetch_article_text(link) or (e.get("summary") or "")
                 score = severity_score(title, text, region)
                 if score < SEVERITY_THRESHOLD:
@@ -359,31 +411,43 @@ def run_once():
                 if per_source_sent[dom] >= MAX_PER_SOURCE_RUN:
                     continue
 
-                # noncritical cooldown: throttle normal posts; critical bypasses
                 is_critical = score >= CRITICAL_THRESHOLD
                 now_ts = int(time.time())
                 if not is_critical and (now_ts - last_noncrit_ts) < NONCRIT_COOLDOWN:
-                    # skip for cooldown; keep scanning in case we find a critical item
                     continue
 
-                # region balancing (soft)
                 if MIN_PER_REGION > 0:
                     need = {r for r,_ in feeds if per_region_sent[r] < MIN_PER_REGION}
                     if need and region not in need and sent_run < len(need):
                         continue
 
-                # craft message
                 ico = severity_icon(score)
                 region_tag = region.replace("_"," ").title()
-                precis = first_sentence(text, max_chars=100)
-                msg = (
-                    f"{ico} <b>[{html_escape(region_tag)}] {html_escape(title)}</b>\n"
-                    f"<code>{html_escape(precis)}</code>\n"
-                    f"• Source: {html_escape(dom)}\n\n"
-                    f"🔗 <a href=\"{html_escape(link)}\">Full report</a>"
-                )
 
-                # send
+                ai_out = ai_précis_and_bullets(title, text, region)
+                if ai_out:
+                    precis_ai, bullets = ai_out
+                    bullets = [b for b in bullets if b]
+                else:
+                    precis_ai = first_sentence(text, max_chars=PRECIS_MAX_CHARS)
+                    bullets = []
+                    if text:
+                        parts = re.split(r"(?<=[\.\!\?])\s+", text)
+                        for p in parts[:3]:
+                            p = re.sub(r"\s+", " ", p).strip()
+                            if p and len(bullets) < 3:
+                                bullets.append(p)
+
+                msg_lines = [
+                    f"{ico} <b>[{html_escape(region_tag)}] {html_escape(title)}</b>",
+                    f"<code>{html_escape(precis_ai)}</code>",
+                ]
+                for b in bullets[:3]:
+                    if b: msg_lines.append(f"• {html_escape(b)}")
+                msg_lines.append(f"\n🔗 <a href=\"{html_escape(link)}\">Full report</a>")
+                msg_lines.append(f"<i>Source:</i> {html_escape(dom)}")
+                msg = "\n".join(msg_lines)
+
                 if send_tg(msg):
                     insert_sent(conn, link, title, is_critical)
                     recent.insert(0, title)
@@ -416,9 +480,7 @@ if __name__ == "__main__":
     except Exception as e:
         print("[STARTUP PING ERROR]", e)
 
-    interval = int(os.getenv("POLL_INTERVAL","120"))  # default 2 min so critical can go out quickly
-    # Tip: with NONCRIT_COOLDOWN set ~1500s, normal items self-throttle to ~25min while critical bypass cooldown.
-
+    interval = int(os.getenv("POLL_INTERVAL","120"))  # 2 min for near-immediate criticals
     if interval > 0:
         while True:
             try:
