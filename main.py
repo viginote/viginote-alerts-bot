@@ -1,4 +1,4 @@
-import os, re, time, sqlite3, traceback, random, html, json
+import os, re, time, sqlite3, traceback, random, html, json, hashlib
 from collections import defaultdict
 from datetime import datetime, timezone, timedelta
 from urllib.parse import urlparse
@@ -13,7 +13,7 @@ from rapidfuzz import fuzz
 # =======================
 # ENV / CONFIG
 # =======================
-UA = os.getenv("USER_AGENT", "VigiNoteAlertsBot/1.1 (+https://viginote.com)")
+UA = os.getenv("USER_AGENT", "VigiNoteAlertsBot/1.2 (+https://viginote.com)")
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID   = os.getenv("TELEGRAM_CHAT_ID", "")
@@ -31,7 +31,7 @@ MIN_PER_REGION     = int(os.getenv("MIN_PER_REGION","1"))
 MAX_PER_CLUSTER    = int(os.getenv("MAX_PER_CLUSTER","2"))
 SIM_THRESHOLD      = int(os.getenv("SIM_THRESHOLD","86"))   # dedupe similarity
 SEVERITY_THRESHOLD = int(os.getenv("SEVERITY_THRESHOLD","6"))
-CRITICAL_THRESHOLD = int(os.getenv("CRITICAL_THRESHOLD","8"))   # fast-track threshold
+CRITICAL_THRESHOLD = int(os.getenv("CRITICAL_THRESHOLD","8"))  # fast-track
 NONCRIT_COOLDOWN   = int(os.getenv("NONCRITICAL_COOLDOWN_SECONDS","1500"))  # ~25 min
 MAX_PER_SOURCE_RUN = int(os.getenv("MAX_PER_SOURCE_RUN","2"))
 FEED_SHUFFLE       = os.getenv("FEED_SHUFFLE","1") == "1"
@@ -39,13 +39,16 @@ FEED_SHUFFLE       = os.getenv("FEED_SHUFFLE","1") == "1"
 DB_PATH            = os.getenv("DB_PATH","/data/osint_alerts.db")
 DEBUG              = os.getenv("DEBUG","0") == "1"
 
-# AI (optional)
+# AI (optional) – but always concise
 AI_ENABLED       = os.getenv("AI_ENABLED","1") == "1"
 OPENAI_API_KEY   = os.getenv("OPENAI_API_KEY","")
 OPENAI_MODEL     = os.getenv("OPENAI_MODEL","gpt-4o-mini")
-AI_TIMEOUT       = int(os.getenv("AI_TIMEOUT","18"))
-AI_MAX_TOKENS    = int(os.getenv("AI_MAX_TOKENS","220"))
-PRECIS_MAX_CHARS = int(os.getenv("PRÉCIS_MAX_CHARS","100"))
+AI_TIMEOUT       = int(os.getenv("AI_TIMEOUT","12"))
+AI_MAX_TOKENS    = int(os.getenv("AI_MAX_TOKENS","60"))    # small & cheap
+PRECIS_MAX_CHARS = int(os.getenv("PRÉCIS_MAX_CHARS","120"))
+
+# Stronger cross-run dedupe via normalized title hash
+DEDUPE_DAYS = int(os.getenv("DEDUPE_DAYS","3"))
 
 # =======================
 # FEEDS (diversified)
@@ -120,8 +123,9 @@ def db():
         pass
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
-    cur.execute("CREATE TABLE IF NOT EXISTS sent_log (url TEXT PRIMARY KEY, ts INTEGER, title TEXT, is_critical INTEGER)")
+    cur.execute("CREATE TABLE IF NOT EXISTS sent_log (url TEXT PRIMARY KEY, ts INTEGER, title TEXT, title_hash TEXT, is_critical INTEGER)")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_sent_ts ON sent_log(ts)")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_title_hash ON sent_log(title_hash)")
     cur.execute("CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT)")
     conn.commit()
     return conn
@@ -149,10 +153,10 @@ def daily_count(conn):
     cur.execute("SELECT COUNT(*) FROM sent_log WHERE ts>=? AND ts<?", (s,e))
     return int(cur.fetchone()[0] or 0)
 
-def insert_sent(conn, url, title, is_critical):
+def insert_sent(conn, url, title, title_hash, is_critical):
     cur = conn.cursor()
-    cur.execute("INSERT OR IGNORE INTO sent_log(url, ts, title, is_critical) VALUES (?,?,?,?)",
-                (url, int(time.time()), title, 1 if is_critical else 0))
+    cur.execute("INSERT OR IGNORE INTO sent_log(url, ts, title, title_hash, is_critical) VALUES (?,?,?,?,?)",
+                (url, int(time.time()), title, title_hash, 1 if is_critical else 0))
     conn.commit()
 
 def recent_titles(conn, days=3):
@@ -160,6 +164,12 @@ def recent_titles(conn, days=3):
     cur = conn.cursor()
     cur.execute("SELECT title FROM sent_log WHERE ts>=? ORDER BY ts DESC LIMIT 500", (cutoff,))
     return [r[0] for r in cur.fetchall()]
+
+def seen_title_hash(conn, title_hash, days=3):
+    cutoff = int((datetime.now(timezone.utc) - timedelta(days=days)).timestamp())
+    cur = conn.cursor()
+    cur.execute("SELECT 1 FROM sent_log WHERE title_hash=? AND ts>=? LIMIT 1", (title_hash, cutoff))
+    return cur.fetchone() is not None
 
 # =======================
 # UTILITIES
@@ -200,7 +210,7 @@ def fetch_article_text(link: str) -> str:
     except Exception:
         return ""
 
-def first_sentence(text: str, max_chars=100) -> str:
+def first_sentence(text: str, max_chars=120) -> str:
     if not text: return ""
     parts = re.split(r"(?<=[\.\!\?])\s+", text.strip())
     lead = parts[0] if parts else text
@@ -213,6 +223,21 @@ def severity_icon(score: int) -> str:
     if score >= 7: return "🔴"
     if score >= 5: return "🟠"
     return "🟡"
+
+# --- Normalize title to avoid source tails like " | SCMP.com"
+def normalize_title(raw: str) -> str:
+    if not raw: return ""
+    t = raw.strip()
+    # Drop everything after a pipe (common source delimiter)
+    if " | " in t:
+        t = t.split(" | ")[0]
+    # squeeze spaces & lowercase
+    t = re.sub(r"\s+", " ", t).strip().lower()
+    return t
+
+def title_hash(raw: str) -> str:
+    norm = normalize_title(raw)
+    return hashlib.sha1(norm.encode("utf-8")).hexdigest()
 
 # =======================
 # SCORING (with Africa boosts)
@@ -256,61 +281,54 @@ def severity_score(title: str, text: str, region: str) -> int:
     return score
 
 # =======================
-# AI SUMMARY (optional)
+# AI SUMMARY (always concise)
 # =======================
-def ai_précis_and_bullets(title: str, text: str, region: str):
-    if not (AI_ENABLED and OPENAI_API_KEY and OPENAI_MODEL):
-        return None
-    prompt = f"""You are an OSINT summarizer for security/risk briefs.
-Rules:
-- Produce a single ultra-concise précis (<= {PRECIS_MAX_CHARS} characters) stating WHAT happened, WHERE/WHO, WHY it matters.
-- Then produce exactly 3 bullets, each one sentence, neutral tone:
-  1) What happened (scale if known)
-  2) Location/time/actors (most relevant)
-  3) So-what/implication or immediate next
-- Do NOT repeat the title. No source names/URLs. No emojis.
-- Region: {region.replace('_',' ').title()}.
+def concise_summary(title: str, text: str) -> str:
+    """
+    Returns a single concise line <= PRECIS_MAX_CHARS.
+    Uses OpenAI if key provided; else heuristic fallback.
+    """
+    if not text:
+        t = title.strip()
+        return (t[:PRECIS_MAX_CHARS] + "…") if len(t) > PRECIS_MAX_CHARS else t
 
-Title: {title}
-Body:
-{text[:2400]}
-"""
+    # Fallback (no API / failure): first sentence clipped
+    fallback = first_sentence(text, max_chars=PRECIS_MAX_CHARS)
+
+    if not (AI_ENABLED and OPENAI_API_KEY):
+        return fallback
+
+    prompt = (
+        f"Summarize the event in ONE line (<= {PRECIS_MAX_CHARS} characters). "
+        f"Plain factual wording. No extra details, no emojis.\n\n"
+        f"Title: {title}\n\nText: {text[:2400]}"
+    )
+
     try:
-        headers = {"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"}
-        payload = {
-            "model": OPENAI_MODEL,
-            "messages": [
-                {"role": "system", "content": "You produce tight, decision-grade OSINT briefs."},
-                {"role": "user", "content": prompt},
-            ],
-            "temperature": 0.2,
-            "max_tokens": AI_MAX_TOKENS,
-        }
-        resp = requests.post("https://api.openai.com/v1/chat/completions",
-                             headers=headers, data=json.dumps(payload), timeout=AI_TIMEOUT)
+        resp = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {OPENAI_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": OPENAI_MODEL,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": AI_MAX_TOKENS,
+                "temperature": 0.2,
+            },
+            timeout=AI_TIMEOUT,
+        )
         j = resp.json()
-        if not j.get("choices"): return None
-        content = j["choices"][0]["message"]["content"].strip()
-        lines = [ln.strip() for ln in content.splitlines() if ln.strip()]
-        if not lines: return None
-
-        precis, bullets = None, []
-        for ln in lines:
-            if ln.startswith(("-", "•", "*")):
-                bullets.append(ln.lstrip("-•* ").strip())
-            elif precis is None:
-                precis = ln
-
-        if precis:
-            precis = precis[:PRECIS_MAX_CHARS] + ("…" if len(precis) > PRECIS_MAX_CHARS else "")
-        if len(bullets) < 3:
-            bullets += [""] * (3 - len(bullets))
-        bullets = bullets[:3]
-        if not precis or not bullets[0]: return None
-        return precis, bullets
+        if not j.get("choices"):
+            return fallback
+        out = j["choices"][0]["message"]["content"].strip()
+        # hard cap (belt & suspenders)
+        out = re.sub(r"\s+", " ", out)
+        return (out[:PRECIS_MAX_CHARS] + "…") if len(out) > PRECIS_MAX_CHARS else out
     except Exception as e:
         print("[AI SUMMARY ERROR]", e)
-        return None
+        return fallback
 
 # =======================
 # TELEGRAM
@@ -365,14 +383,13 @@ def run_once():
     sent_run = 0
     per_region_sent = defaultdict(int)
     per_source_sent = defaultdict(int)
+    seen_hash_this_run = set()
 
     last_nc = kv_get(conn, "last_noncritical_ts", "0")
     last_noncrit_ts = int(last_nc) if str(last_nc).isdigit() else 0
 
     print(f"Polling {len(feeds)} feeds | caps: run={MAX_ALERTS_PER_RUN}/day={MAX_ALERTS_PER_DAY} | thr={SEVERITY_THRESHOLD} crit={CRITICAL_THRESHOLD} nc_cooldown={NONCRIT_COOLDOWN}s")
-    debug_tg(f"Polling {len(feeds)} feeds (thr {SEVERITY_THRESHOLD}/crit {CRITICAL_THRESHOLD})")
-
-    recent = recent_titles(conn, days=3)
+    recent = recent_titles(conn, days=DEDUPE_DAYS)
 
     for region, urls in feeds:
         if sent_run >= MAX_ALERTS_PER_RUN or total_today >= MAX_ALERTS_PER_DAY:
@@ -392,18 +409,27 @@ def run_once():
                 if sent_run >= MAX_ALERTS_PER_RUN or total_today >= MAX_ALERTS_PER_DAY:
                     break
 
-                title = (e.get("title") or "").strip()
-                link  = (e.get("link")  or "").strip()
-                if not title or not link:
+                raw_title = (e.get("title") or "").strip()
+                link      = (e.get("link")  or "").strip()
+                if not raw_title or not link:
                     continue
 
-                if looks_duplicate(title, recent, SIM_THRESHOLD):
-                    dupes = sum(1 for t in recent if fuzz.token_set_ratio(title, t) >= SIM_THRESHOLD)
+                # 1) exact link dedupe via DB primary key (insert later)
+                # 2) normalized title hash dedupe across DEDUPE_DAYS
+                h = title_hash(raw_title)
+                if h in seen_hash_this_run:
+                    continue
+                if seen_title_hash(conn, h, days=DEDUPE_DAYS):
+                    continue
+
+                # Similarity-based cluster dedupe
+                if looks_duplicate(raw_title, recent, SIM_THRESHOLD):
+                    dupes = sum(1 for t in recent if fuzz.token_set_ratio(raw_title, t) >= SIM_THRESHOLD)
                     if dupes >= MAX_PER_CLUSTER:
                         continue
 
                 text = fetch_article_text(link) or (e.get("summary") or "")
-                score = severity_score(title, text, region)
+                score = severity_score(raw_title, text, region)
                 if score < SEVERITY_THRESHOLD:
                     continue
 
@@ -424,38 +450,24 @@ def run_once():
                 ico = severity_icon(score)
                 region_tag = region.replace("_"," ").title()
 
-                ai_out = ai_précis_and_bullets(title, text, region)
-                if ai_out:
-                    precis_ai, bullets = ai_out
-                    bullets = [b for b in bullets if b]
-                else:
-                    precis_ai = first_sentence(text, max_chars=PRECIS_MAX_CHARS)
-                    bullets = []
-                    if text:
-                        parts = re.split(r"(?<=[\.\!\?])\s+", text)
-                        for p in parts[:3]:
-                            p = re.sub(r"\s+", " ", p).strip()
-                            if p and len(bullets) < 3:
-                                bullets.append(p)
+                precis = concise_summary(raw_title, text)
 
-                msg_lines = [
-                    f"{ico} <b>[{html_escape(region_tag)}] {html_escape(title)}</b>",
-                    f"<code>{html_escape(precis_ai)}</code>",
-                ]
-                for b in bullets[:3]:
-                    if b: msg_lines.append(f"• {html_escape(b)}")
-                msg_lines.append(f"\n🔗 <a href=\"{html_escape(link)}\">Full report</a>")
-                msg_lines.append(f"<i>Source:</i> {html_escape(dom)}")
-                msg = "\n".join(msg_lines)
+                msg = (
+                    f"{ico} <b>[{html_escape(region_tag)}] {html_escape(raw_title)}</b>\n"
+                    f"<code>{html_escape(precis)}</code>\n"
+                    f"• Source: {html_escape(dom)}\n\n"
+                    f"🔗 <a href=\"{html_escape(link)}\">Full report</a>"
+                )
 
                 if send_tg(msg):
-                    insert_sent(conn, link, title, is_critical)
-                    recent.insert(0, title)
+                    insert_sent(conn, link, raw_title, h, is_critical)
+                    recent.insert(0, raw_title)
+                    seen_hash_this_run.add(h)
                     per_source_sent[dom] += 1
                     per_region_sent[region] += 1
                     sent_run += 1
                     total_today += 1
-                    print(f"+ sent [{region}] {title[:80]} (score={score}, src={dom})")
+                    print(f"+ sent [{region}] {raw_title[:80]} (score={score}, src={dom})")
 
                     if not is_critical:
                         last_noncrit_ts = now_ts
@@ -464,7 +476,7 @@ def run_once():
                     if MIN_GAP_SECONDS and not is_critical:
                         time.sleep(MIN_GAP_SECONDS)
                 else:
-                    print("- send failed:", title[:90])
+                    print("- send failed:", raw_title[:90])
 
     print(f"Run done. Sent {sent_run} this run; {total_today}/{MAX_ALERTS_PER_DAY} today @ {datetime.now(timezone.utc).isoformat()}")
     if DEBUG:
@@ -474,13 +486,7 @@ def run_once():
 # ENTRYPOINT LOOP
 # =======================
 if __name__ == "__main__":
-    try:
-        if DEBUG:
-            send_tg("🟢 VigiNoteAlerts connected. Starting poller…")
-    except Exception as e:
-        print("[STARTUP PING ERROR]", e)
-
-    interval = int(os.getenv("POLL_INTERVAL","120"))  # 2 min for near-immediate criticals
+    interval = int(os.getenv("POLL_INTERVAL","120"))  # 2 min for quick critical
     if interval > 0:
         while True:
             try:
