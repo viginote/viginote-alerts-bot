@@ -24,7 +24,6 @@ from pydantic import BaseModel
 DB_PATH          = os.getenv("DB_PATH", "/data/osint_alerts.db")
 ANTHROPIC_KEY    = os.getenv("ANTHROPIC_API_KEY", "")
 ANTHROPIC_MODEL  = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
-OPENAI_KEY       = os.getenv("OPENAI_API_KEY", "")
 
 app = FastAPI(
     title="VigiNote Briefing API",
@@ -343,10 +342,7 @@ class ImageRequest(BaseModel):
 
 @app.post("/ai/image")
 async def ai_image(req: ImageRequest):
-    """
-    Generates a conflict-appropriate background image via DALL-E 3.
-    Returns the image URL for use in the LinkedIn thumbnail.
-    """
+    """Selects a conflict-appropriate Unsplash image based on briefing content. Returns image URL for LinkedIn thumbnail."""
     if not OPENAI_KEY:
         raise HTTPException(status_code=503, detail="OPENAI_API_KEY not configured")
 
@@ -386,37 +382,49 @@ async def ai_image(req: ImageRequest):
     else:
         scene = "dramatic view of Earth from low orbit with storm systems visible over continents, deep space background, cinematic photography, dark navy and blue tones"
 
-    full_prompt = (
-        f"Professional editorial photography for a global intelligence briefing publication. "
-        f"{scene}. "
-        f"No text, no watermarks, no logos, no people in distress. "
-        f"High production quality, cinematic lighting, suitable as a background image for a professional document cover. "
-        f"Predominantly dark navy, deep blue, and grey tones to allow white text overlay."
-    )
+    # Scene identified — used for Unsplash keyword matching below
 
-    try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(
-                "https://api.openai.com/v1/images/generations",
-                headers={
-                    "Authorization": f"Bearer {OPENAI_KEY}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": "dall-e-3",
-                    "prompt": full_prompt,
-                    "n": 1,
-                    "size": "1792x1024",
-                    "quality": "standard",
-                    "style": "vivid",
-                },
-            )
-        resp.raise_for_status()
-        data = resp.json()
-        image_url = data["data"][0]["url"]
-        return {"status": "ok", "image_url": image_url, "scene_type": scene[:60]}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Image generation error: {str(e)}")
+    # Unsplash keyword map — matched to conflict/crisis type
+    unsplash_keywords = {
+        "medical":     "healthcare,field,workers,documentary",
+        "disease":     "medical,emergency,field,camp",
+        "flood":       "flood,aerial,emergency,dramatic",
+        "disaster":    "natural,disaster,aerial,rescue",
+        "protest":     "crowd,city,square,dusk,dramatic",
+        "coup":        "city,politics,dusk,dramatic,crowd",
+        "famine":      "humanitarian,aid,arid,landscape,people",
+        "refugee":     "humanitarian,camp,people,landscape",
+        "maritime":    "ocean,storm,ships,dramatic,sea",
+        "nuclear":     "global,network,data,dark,blue",
+        "sanctions":   "government,politics,global,dark",
+        "africa":      "africa,landscape,sunset,dramatic,savanna",
+        "sudan":       "africa,desert,landscape,dramatic,sky",
+        "somalia":     "africa,coast,dramatic,sky,landscape",
+        "middle east": "desert,city,dusk,dramatic,architecture",
+        "gaza":        "mediterranean,city,dramatic,sky,dusk",
+        "syria":       "desert,ruins,dramatic,sky,architecture",
+        "yemen":       "desert,landscape,dramatic,sky,arid",
+        "ukraine":     "winter,eastern,europe,landscape,dramatic",
+        "europe":      "europe,landscape,winter,dramatic,sky",
+        "russia":      "winter,landscape,dramatic,snow,forest",
+        "asia":        "asia,city,night,rain,dramatic,lights",
+        "china":       "china,city,night,dramatic,skyline",
+        "myanmar":     "southeast,asia,landscape,dramatic,sky",
+        "pakistan":    "south,asia,landscape,dramatic,mountains",
+        "afghanistan": "mountains,dramatic,landscape,arid,sky",
+        "south america": "latin,america,landscape,dramatic,sky",
+        "venezuela":   "south,america,city,dramatic,dusk",
+        "colombia":    "south,america,jungle,dramatic,landscape",
+    }
+
+    keyword = "world,globe,dramatic,sky,dark,blue"
+    for k, v in unsplash_keywords.items():
+        if k in combined or k in region_str.lower():
+            keyword = v
+            break
+
+    image_url = f"https://source.unsplash.com/1792x1024/?{keyword}"
+    return {"status": "ok", "image_url": image_url, "scene_type": scene[:60], "source": "unsplash"}
 
 # =======================
 # DASHBOARD
