@@ -23,7 +23,7 @@ from pydantic import BaseModel
 
 DB_PATH          = os.getenv("DB_PATH", "/data/osint_alerts.db")
 ANTHROPIC_KEY    = os.getenv("ANTHROPIC_API_KEY", "")
-ANTHROPIC_MODEL  = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")
+ANTHROPIC_MODEL  = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
 
 app = FastAPI(
     title="VigiNote Briefing API",
