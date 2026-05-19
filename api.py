@@ -24,6 +24,7 @@ from pydantic import BaseModel
 DB_PATH          = os.getenv("DB_PATH", "/data/osint_alerts.db")
 ANTHROPIC_KEY    = os.getenv("ANTHROPIC_API_KEY", "")
 ANTHROPIC_MODEL  = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
+OPENAI_KEY       = os.getenv("OPENAI_API_KEY", "")
 
 app = FastAPI(
     title="VigiNote Briefing API",
@@ -342,89 +343,105 @@ class ImageRequest(BaseModel):
 
 @app.post("/ai/image")
 async def ai_image(req: ImageRequest):
-    """Selects a conflict-appropriate Unsplash image based on briefing content. Returns image URL for LinkedIn thumbnail."""
-    if not OPENAI_KEY:
-        raise HTTPException(status_code=503, detail="OPENAI_API_KEY not configured")
+    """Generates a conflict-appropriate image via DALL-E 3. Falls back to Unsplash if unavailable."""
 
-    # Build a scene-appropriate prompt based on content
-    region_str  = ", ".join(req.regions[:3]) if req.regions else "global"
-    org_str     = ", ".join(req.organizations[:2]) if req.organizations else ""
-    loc_str     = ", ".join(req.locations[:2]) if req.locations else ""
+    region_str = ", ".join(req.regions[:3]) if req.regions else "global"
+    combined   = (req.headline + " " + " ".join(req.organizations) + " " + " ".join(req.locations)).lower()
 
-    # Detect conflict type from headline and orgs for scene selection
-    headline_lower = req.headline.lower()
-    orgs_lower     = " ".join(req.organizations).lower()
-    locs_lower     = " ".join(req.locations).lower()
-    combined       = headline_lower + " " + orgs_lower + " " + locs_lower
-
+    # Scene prompt — policy-safe editorial photography descriptions
     if any(w in combined for w in ["ebola","cholera","disease","outbreak","epidemic","pandemic","health","medical"]):
-        scene = "healthcare workers wearing full protective white suits and face masks conducting field tests in a remote outdoor medical camp, rows of testing equipment, golden hour light, documentary photography"
-    elif any(w in combined for w in ["airstrike","bombing","missile","drone","explosion","shelling","artillery"]):
-        scene = "dramatic aerial photograph of a city skyline at dusk with dark storm clouds, emergency services vehicles visible on streets below, cinematic wide angle, deep blue and orange tones"
+        scene = "healthcare workers in white protective suits and face masks at an outdoor field medical station, testing equipment on tables, golden hour sunlight, editorial photography, no text"
     elif any(w in combined for w in ["flood","cyclone","hurricane","earthquake","tsunami","disaster","wildfire"]):
-        scene = "aerial view of a flooded landscape at dawn, emergency rescue boats navigating through submerged streets, dramatic clouds, photojournalism style, blue and grey tones"
-    elif any(w in combined for w in ["coup","protest","riot","unrest","demonstration"]):
-        scene = "large crowd gathered in a city square at dusk, dramatic lighting from street lamps, wide angle cityscape, deep shadows and warm highlights, documentary photography"
-    elif any(w in combined for w in ["famine","drought","hunger","refugee","displacement","camp","idp"]):
-        scene = "wide angle photograph of a humanitarian aid distribution point in an arid landscape, long queues of people, golden hour sunlight, photojournalism documentary style"
-    elif any(w in combined for w in ["navy","maritime","ship","vessel","sea","coast","port","strait"]):
-        scene = "dramatic aerial view of large cargo ships and vessels at sea during stormy weather, dark ocean, cinematic wide angle photography, deep blue tones"
+        scene = "aerial view of flooded landscape at dawn, dramatic storm clouds, blue and grey tones, editorial photography, no text"
+    elif any(w in combined for w in ["coup","protest","unrest","demonstration","riot"]):
+        scene = "large crowd in a city square at dusk, dramatic street lighting, wide angle, deep shadows, editorial photography, no text"
+    elif any(w in combined for w in ["famine","drought","hunger","refugee","displacement","camp"]):
+        scene = "wide angle view of an arid landscape with people gathered at a distribution point, golden hour, editorial photography, no text"
+    elif any(w in combined for w in ["navy","maritime","ship","vessel","sea","coast","port"]):
+        scene = "aerial view of cargo vessels at sea during stormy weather, dark ocean, cinematic wide angle, deep blue tones, no text"
     elif any(w in combined for w in ["nuclear","chemical","biological","wmd","sanctions"]):
-        scene = "abstract digital world map with glowing network connections and data points, dark atmospheric tones, intelligence operations center aesthetic, deep blue and amber"
-    elif "africa" in region_str.lower() or any(w in combined for w in ["sudan","somalia","congo","mali","niger","nigeria","ethiopia"]):
-        scene = "dramatic African savanna landscape at sunset, dust clouds on the horizon, silhouettes of vehicles on a dirt road, cinematic golden hour photography"
+        scene = "abstract digital world map with glowing data network connections, dark atmospheric tones, deep blue and amber, no text"
+    elif any(w in combined for w in ["airstrike","bombing","missile","drone","explosion","shelling"]):
+        scene = "dramatic aerial view of an urban skyline at dusk with storm clouds, emergency vehicles on streets, cinematic wide angle, deep blue and orange tones, no text"
+    elif "africa" in region_str.lower() or any(w in combined for w in ["sudan","somalia","congo","mali","nigeria","ethiopia"]):
+        scene = "dramatic African savanna landscape at sunset, dust and haze on the horizon, cinematic golden hour photography, no text"
     elif "middle east" in region_str.lower() or any(w in combined for w in ["gaza","israel","syria","yemen","iraq","iran","lebanon"]):
-        scene = "dramatic cityscape of an ancient Middle Eastern city at dusk, warm amber and deep blue sky, minarets silhouetted against clouds, wide angle cinematic photography"
+        scene = "ancient Middle Eastern city skyline at dusk, warm amber sky, minarets silhouetted against dramatic clouds, cinematic photography, no text"
     elif "europe" in region_str.lower() or any(w in combined for w in ["ukraine","russia","nato","balkan","caucasus"]):
-        scene = "winter landscape of Eastern Europe, bare trees and grey sky over a vast plain, dramatic overcast lighting, cinematic documentary photography, muted cold tones"
+        scene = "winter landscape of Eastern Europe, grey overcast sky over a vast plain, bare trees, cinematic documentary photography, muted cold tones, no text"
     elif "asia" in region_str.lower() or any(w in combined for w in ["china","taiwan","korea","myanmar","afghanistan","pakistan"]):
-        scene = "dramatic nighttime cityscape of a major Asian city, neon reflections on wet streets, moody atmospheric lighting, cinematic wide shot, deep blue and gold tones"
+        scene = "Asian city skyline at night, neon reflections on wet streets, moody atmospheric lighting, cinematic wide shot, no text"
+    elif "south america" in region_str.lower() or any(w in combined for w in ["venezuela","colombia","brazil","mexico","haiti"]):
+        scene = "South American city skyline at dusk, dramatic sky, warm tones, cinematic documentary photography, no text"
     else:
-        scene = "dramatic view of Earth from low orbit with storm systems visible over continents, deep space background, cinematic photography, dark navy and blue tones"
+        scene = "view of Earth from orbit showing continents and storm systems, dark space background, deep navy and blue tones, no text"
 
-    # Scene identified — used for Unsplash keyword matching below
+    full_prompt = (
+        f"Editorial photography for a professional intelligence publication. "
+        f"{scene}. "
+        f"High production quality, cinematic composition, predominantly dark navy and deep blue tones "
+        f"suitable as a document cover background. No people in distress, no graphic content, no logos, no watermarks."
+    )
 
-    # Unsplash keyword map — matched to conflict/crisis type
-    unsplash_keywords = {
-        "medical":     "healthcare,field,workers,documentary",
-        "disease":     "medical,emergency,field,camp",
-        "flood":       "flood,aerial,emergency,dramatic",
-        "disaster":    "natural,disaster,aerial,rescue",
-        "protest":     "crowd,city,square,dusk,dramatic",
-        "coup":        "city,politics,dusk,dramatic,crowd",
-        "famine":      "humanitarian,aid,arid,landscape,people",
-        "refugee":     "humanitarian,camp,people,landscape",
-        "maritime":    "ocean,storm,ships,dramatic,sea",
-        "nuclear":     "global,network,data,dark,blue",
-        "sanctions":   "government,politics,global,dark",
-        "africa":      "africa,landscape,sunset,dramatic,savanna",
-        "sudan":       "africa,desert,landscape,dramatic,sky",
-        "somalia":     "africa,coast,dramatic,sky,landscape",
-        "middle east": "desert,city,dusk,dramatic,architecture",
-        "gaza":        "mediterranean,city,dramatic,sky,dusk",
-        "syria":       "desert,ruins,dramatic,sky,architecture",
-        "yemen":       "desert,landscape,dramatic,sky,arid",
-        "ukraine":     "winter,eastern,europe,landscape,dramatic",
-        "europe":      "europe,landscape,winter,dramatic,sky",
-        "russia":      "winter,landscape,dramatic,snow,forest",
-        "asia":        "asia,city,night,rain,dramatic,lights",
-        "china":       "china,city,night,dramatic,skyline",
-        "myanmar":     "southeast,asia,landscape,dramatic,sky",
-        "pakistan":    "south,asia,landscape,dramatic,mountains",
-        "afghanistan": "mountains,dramatic,landscape,arid,sky",
-        "south america": "latin,america,landscape,dramatic,sky",
-        "venezuela":   "south,america,city,dramatic,dusk",
-        "colombia":    "south,america,jungle,dramatic,landscape",
+    # Try DALL-E 3 first
+    if OPENAI_KEY:
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.post(
+                    "https://api.openai.com/v1/images/generations",
+                    headers={
+                        "Authorization": f"Bearer {OPENAI_KEY}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": "gpt-image-1",
+                        "prompt": full_prompt,
+                        "n": 1,
+                        "size": "1792x1024",
+                        "quality": "medium",
+                    },
+                )
+            if resp.status_code == 200:
+                data = resp.json()
+                item = data["data"][0]
+                # gpt-image-1 returns b64_json, dall-e-3 returns url
+                if item.get("url"):
+                    image_url = item["url"]
+                elif item.get("b64_json"):
+                    image_url = "data:image/png;base64," + item["b64_json"]
+                else:
+                    raise ValueError("No image data in response")
+                return {"status": "ok", "image_url": image_url, "scene_type": scene[:80], "source": "gpt-image-1"}
+            else:
+                # Log the actual error for debugging
+                error_detail = resp.text[:200]
+                print(f"[DALL-E ERROR] {resp.status_code}: {error_detail}")
+        except Exception as e:
+            print(f"[DALL-E EXCEPTION] {str(e)}")
+
+    # Unsplash fallback — keyed by topic
+    unsplash_map = {
+        "medical": "healthcare,field,documentary",
+        "disease": "medical,emergency,field",
+        "flood":   "flood,aerial,dramatic",
+        "protest": "crowd,city,dusk",
+        "famine":  "humanitarian,landscape,people",
+        "maritime":"ocean,storm,sea",
+        "nuclear": "global,network,dark",
+        "africa":  "africa,landscape,sunset",
+        "middle east": "desert,city,dusk",
+        "europe":  "europe,winter,landscape",
+        "asia":    "asia,city,night",
+        "south america": "latin,america,landscape",
     }
-
-    keyword = "world,globe,dramatic,sky,dark,blue"
-    for k, v in unsplash_keywords.items():
+    kw = "world,globe,dramatic,sky"
+    for k, v in unsplash_map.items():
         if k in combined or k in region_str.lower():
-            keyword = v
+            kw = v
             break
 
-    image_url = f"https://source.unsplash.com/1792x1024/?{keyword}"
-    return {"status": "ok", "image_url": image_url, "scene_type": scene[:60], "source": "unsplash"}
+    image_url = f"https://source.unsplash.com/1792x1024/?{kw},dark"
+    return {"status": "ok", "image_url": image_url, "scene_type": scene[:80], "source": "unsplash"}
 
 # =======================
 # DASHBOARD
