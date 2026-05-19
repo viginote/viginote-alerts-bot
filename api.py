@@ -84,44 +84,75 @@ def ingest(alert: dict):
 # =======================
 @app.get("/alerts")
 def list_alerts(
-    region:    Optional[str]  = Query(None),
-    tier:      Optional[int]  = Query(None, ge=0, le=2),
-    critical:  Optional[bool] = Query(None),
-    min_score: int            = Query(0, ge=0),
-    hours:     int            = Query(24, ge=1, le=8760),
-    limit:     int            = Query(100, ge=1, le=500),
-    entity:    Optional[str]  = Query(None),
-    keyword:   Optional[str]  = Query(None),
+    region:    Optional[str] = Query(None),
+    tier:      Optional[str] = Query(None),
+    critical:  Optional[str] = Query(None),
+    min_score: Optional[str] = Query(None),
+    hours:     Optional[str] = Query(None),
+    limit:     Optional[str] = Query(None),
+    entity:    Optional[str] = Query(None),
+    keyword:   Optional[str] = Query(None),
 ):
-    cutoff = int((datetime.now(timezone.utc) - timedelta(hours=hours)).timestamp())
+    # Parse with safe defaults
+    try: hours_i = max(1, min(8760, int(hours))) if hours else 24
+    except: hours_i = 24
+    try: score_i = max(0, int(min_score)) if min_score else 0
+    except: score_i = 0
+    try: limit_i = max(1, min(500, int(limit))) if limit else 100
+    except: limit_i = 100
+    try: tier_i = int(tier) if tier and tier not in ("ALL","") else None
+    except: tier_i = None
+    crit_i = None
+    if critical and critical.lower() == "true":  crit_i = 1
+    if critical and critical.lower() == "false": crit_i = 0
+    region_s = region.upper() if region and region not in ("ALL","") else None
+
+    cutoff = int((datetime.now(timezone.utc) - timedelta(hours=hours_i)).timestamp())
     conn = get_db()
     cur  = conn.cursor()
 
-    sql = "SELECT * FROM sent_log WHERE ts >= ? AND score >= ?"
-    params: list = [cutoff, min_score]
+    # Discover actual columns to avoid crashing on schema mismatch
+    try:
+        col_rows = cur.execute("PRAGMA table_info(sent_log)").fetchall()
+        cols = [c[1] for c in col_rows]
+    except Exception as e:
+        conn.close()
+        return {"count": 0, "alerts": [], "error": f"DB schema error: {str(e)}"}
 
-    if region:
+    safe_cols = ", ".join(cols) if cols else "*"
+    sql = f"SELECT {safe_cols} FROM sent_log WHERE ts >= ? AND score >= ?"
+    params: list = [cutoff, score_i]
+
+    if region_s and "region" in cols:
         sql += " AND region = ?"
-        params.append(region.upper())
-    if tier is not None:
+        params.append(region_s)
+    if tier_i is not None and "source_tier" in cols:
         sql += " AND source_tier = ?"
-        params.append(tier)
-    if critical is not None:
+        params.append(tier_i)
+    if crit_i is not None:
         sql += " AND is_critical = ?"
-        params.append(1 if critical else 0)
-    if entity:
+        params.append(crit_i)
+    if entity and "entities" in cols:
         sql += " AND entities LIKE ?"
         params.append(f"%{entity}%")
     if keyword:
-        sql += " AND (title LIKE ? OR precis LIKE ?)"
-        params.extend([f"%{keyword}%", f"%{keyword}%"])
+        if "precis" in cols:
+            sql += " AND (title LIKE ? OR precis LIKE ?)"
+            params.extend([f"%{keyword}%", f"%{keyword}%"])
+        else:
+            sql += " AND title LIKE ?"
+            params.append(f"%{keyword}%")
 
     sql += " ORDER BY score DESC, ts DESC LIMIT ?"
-    params.append(limit)
+    params.append(limit_i)
 
-    rows = [row_to_dict(r) for r in cur.execute(sql, params).fetchall()]
-    conn.close()
-    return {"count": len(rows), "alerts": rows}
+    try:
+        rows = [row_to_dict(r) for r in cur.execute(sql, params).fetchall()]
+        conn.close()
+        return {"count": len(rows), "alerts": rows}
+    except Exception as e:
+        conn.close()
+        return {"count": 0, "alerts": [], "error": str(e)}
 
 # =======================
 # SINGLE ALERT
