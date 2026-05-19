@@ -1,31 +1,34 @@
 """
-VigiNote Briefing API — FastAPI webhook receiver + query interface.
-
-Start:  uvicorn api:app --host 0.0.0.0 --port 8000 --reload
-Or set: WEBHOOK_URL=http://localhost:8000/ingest in your bot env.
+VigiNote Briefing API — FastAPI webhook receiver + query interface + AI briefing studio.
 
 Endpoints:
-  POST /ingest          — receive alerts from the bot (called automatically)
-  GET  /alerts          — query stored alerts with filters
-  GET  /alerts/{id}     — single alert with full article text + entities
-  GET  /briefing        — markdown briefing digest for a time window
-  GET  /entities        — top entities across a time window
-  GET  /health          — uptime check
+  POST /ingest              — receive alerts from the bot
+  GET  /alerts              — query stored alerts with filters
+  GET  /alerts/{id}         — single alert
+  GET  /briefing            — markdown briefing digest
+  GET  /entities            — top entities
+  POST /ai/generate         — AI-powered briefing generation (Claude)
+  GET  /dashboard           — serve the briefing studio UI
+  GET  /health              — uptime check
 """
 
-import os, json, sqlite3
+import os, json, sqlite3, httpx
 from datetime import datetime, timezone, timedelta
-from typing import Optional
+from typing import Optional, List
 from fastapi import FastAPI, Query, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
-DB_PATH = os.getenv("DB_PATH", "/data/osint_alerts.db")
+DB_PATH          = os.getenv("DB_PATH", "/data/osint_alerts.db")
+ANTHROPIC_KEY    = os.getenv("ANTHROPIC_API_KEY", "")
+ANTHROPIC_MODEL  = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")
 
 app = FastAPI(
     title="VigiNote Briefing API",
     description="Query and ingest OSINT alerts for professional briefing generation.",
-    version="1.0.0",
+    version="2.0.0",
 )
 
 app.add_middleware(
@@ -53,14 +56,10 @@ def row_to_dict(row) -> dict:
     return d
 
 # =======================
-# INGEST (called by bot)
+# INGEST
 # =======================
 @app.post("/ingest", status_code=201)
 def ingest(alert: dict):
-    """
-    Receive a structured alert from the bot and write it to the DB.
-    The bot calls this automatically if WEBHOOK_URL is set.
-    """
     conn = get_db()
     cur  = conn.cursor()
     try:
@@ -85,18 +84,15 @@ def ingest(alert: dict):
 # =======================
 @app.get("/alerts")
 def list_alerts(
-    region:      Optional[str] = Query(None, description="Filter by region, e.g. MIDDLE_EAST"),
-    tier:        Optional[int] = Query(None, description="Source tier: 0=wire, 1=regional, 2=local"),
-    critical:    Optional[bool]= Query(None, description="True = critical only"),
-    min_score:   int           = Query(0,    description="Minimum severity score"),
-    hours:       int           = Query(24,   description="Look-back window in hours"),
-    limit:       int           = Query(50,   description="Max results"),
-    entity:      Optional[str] = Query(None, description="Filter by entity name (partial match)"),
+    region:    Optional[str]  = Query(None),
+    tier:      Optional[int]  = Query(None),
+    critical:  Optional[bool] = Query(None),
+    min_score: int            = Query(0),
+    hours:     int            = Query(24),
+    limit:     int            = Query(100),
+    entity:    Optional[str]  = Query(None),
+    keyword:   Optional[str]  = Query(None),
 ):
-    """
-    List alerts with optional filters. Default: last 24 h, all regions.
-    Use for feeding briefing templates.
-    """
     cutoff = int((datetime.now(timezone.utc) - timedelta(hours=hours)).timestamp())
     conn = get_db()
     cur  = conn.cursor()
@@ -116,6 +112,9 @@ def list_alerts(
     if entity:
         sql += " AND entities LIKE ?"
         params.append(f"%{entity}%")
+    if keyword:
+        sql += " AND (title LIKE ? OR precis LIKE ?)"
+        params.extend([f"%{keyword}%", f"%{keyword}%"])
 
     sql += " ORDER BY score DESC, ts DESC LIMIT ?"
     params.append(limit)
@@ -129,7 +128,6 @@ def list_alerts(
 # =======================
 @app.get("/alerts/{alert_id}")
 def get_alert(alert_id: int):
-    """Full alert record including article text and parsed entities."""
     conn = get_db()
     cur  = conn.cursor()
     row  = cur.execute("SELECT * FROM sent_log WHERE id=?", (alert_id,)).fetchone()
@@ -139,69 +137,40 @@ def get_alert(alert_id: int):
     return row_to_dict(row)
 
 # =======================
-# BRIEFING DIGEST
+# BRIEFING DIGEST (markdown)
 # =======================
 @app.get("/briefing", response_class=PlainTextResponse)
 def briefing_digest(
-    hours:     int           = Query(24,  description="Time window in hours"),
+    hours:     int           = Query(24),
     region:    Optional[str] = Query(None),
     min_score: int           = Query(5),
 ):
-    """
-    Returns a plain-text markdown briefing digest.
-    Paste directly into a report template or pipe to a document generator.
-    """
     cutoff = int((datetime.now(timezone.utc) - timedelta(hours=hours)).timestamp())
     conn = get_db()
     cur  = conn.cursor()
-
     sql = "SELECT * FROM sent_log WHERE ts>=? AND score>=?"
     params: list = [cutoff, min_score]
     if region:
         sql += " AND region=?"
         params.append(region.upper())
     sql += " ORDER BY score DESC, ts DESC"
-
     rows = [row_to_dict(r) for r in cur.execute(sql, params).fetchall()]
     conn.close()
-
     if not rows:
-        return f"# VigiNote Briefing\n_No alerts matching criteria in the last {hours}h._\n"
-
+        return f"# VigiNote Briefing\n_No alerts in the last {hours}h._\n"
     now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    window  = f"Last {hours}h" if hours < 48 else f"Last {hours//24}d"
-    lines   = [
-        f"# VigiNote Intelligence Briefing",
-        f"_Generated: {now_str} | Window: {window} | Alerts: {len(rows)}_",
-        "",
-    ]
-
-    # Group by region
+    lines = [f"# VigiNote Intelligence Briefing", f"_{now_str} | {len(rows)} alerts_", ""]
     by_region: dict = {}
     for r in rows:
         by_region.setdefault(r["region"], []).append(r)
-
     for reg, alerts in by_region.items():
         lines.append(f"## {reg.replace('_',' ').title()}")
         for a in alerts:
-            crit_flag = " 🛑 **CRITICAL**" if a["is_critical"] else ""
-            lines.append(f"### {a['title']}{crit_flag}")
-            lines.append(f"- **Score:** {a['score']}  |  **Source:** {a['source_dom']} (tier {a['source_tier']})  |  **Time:** {a['ts_iso'][:16]}")
-            lines.append(f"- **Summary:** {a['precis']}")
-
-            ents = a.get("entities") or {}
-            if ents.get("locations"):
-                lines.append(f"- **Locations:** {', '.join(ents['locations'][:6])}")
-            if ents.get("organizations"):
-                lines.append(f"- **Actors/Orgs:** {', '.join(ents['organizations'][:5])}")
-            if ents.get("persons"):
-                lines.append(f"- **Persons:** {', '.join(ents['persons'][:4])}")
-
-            lines.append(f"- **Selection:** _{a.get('selection_reason','')}_")
-            lines.append(f"- **Link:** {a['url']}")
+            lines.append(f"### {a['title']}")
+            lines.append(f"- **Source:** {a['source_dom']} | **Score:** {a['score']} | **Time:** {a['ts_iso'][:16]}")
+            lines.append(f"- {a['precis']}")
+            lines.append(f"- {a['url']}")
             lines.append("")
-        lines.append("")
-
     return "\n".join(lines)
 
 # =======================
@@ -211,23 +180,17 @@ def briefing_digest(
 def top_entities(
     hours:  int           = Query(48),
     region: Optional[str] = Query(None),
-    etype:  str           = Query("locations", description="locations | organizations | persons"),
+    etype:  str           = Query("locations"),
     limit:  int           = Query(20),
 ):
-    """
-    Returns the most-mentioned entities across recent alerts.
-    Useful for spotting hotspots and key actors for a briefing.
-    """
     cutoff = int((datetime.now(timezone.utc) - timedelta(hours=hours)).timestamp())
     conn = get_db()
     cur  = conn.cursor()
-
     sql = "SELECT entities FROM sent_log WHERE ts>=? AND entities IS NOT NULL AND entities!='{}'"
     params: list = [cutoff]
     if region:
         sql += " AND region=?"
         params.append(region.upper())
-
     counts: dict = {}
     for (raw,) in cur.execute(sql, params).fetchall():
         try:
@@ -237,14 +200,115 @@ def top_entities(
         except Exception:
             continue
     conn.close()
-
     ranked = sorted(counts.items(), key=lambda x: x[1], reverse=True)[:limit]
-    return {
-        "entity_type": etype,
-        "hours": hours,
-        "region": region,
-        "results": [{"name": n, "count": c} for n, c in ranked],
-    }
+    return {"entity_type": etype, "hours": hours, "region": region,
+            "results": [{"name": n, "count": c} for n, c in ranked]}
+
+# =======================
+# AI BRIEFING GENERATION
+# =======================
+class BriefingRequest(BaseModel):
+    alerts: List[dict]
+    briefing_type: str = "morning"   # morning | rapid | daily | custom
+    custom_title: Optional[str] = None
+
+@app.post("/ai/generate")
+async def ai_generate(req: BriefingRequest):
+    """
+    Takes a list of selected alert dicts, calls Claude to write:
+    - executive_summary (2-3 paragraphs)
+    - per-alert enhanced summaries (2-3 sentences each)
+    - linkedin_caption (punchy 150-word post)
+    - thumbnail_headline (max 12 words, hook for the image card)
+    """
+    if not ANTHROPIC_KEY:
+        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
+    if not req.alerts:
+        raise HTTPException(status_code=400, detail="No alerts provided")
+
+    now_str = datetime.now(timezone.utc).strftime("%d %B %Y, %H:%M UTC")
+    regions = list({a.get("region","").replace("_"," ").title() for a in req.alerts})
+    critical_count = sum(1 for a in req.alerts if a.get("is_critical"))
+
+    alerts_text = ""
+    for i, a in enumerate(req.alerts, 1):
+        ents = a.get("entities") or {}
+        locs = ", ".join((ents.get("locations") or [])[:3])
+        orgs = ", ".join((ents.get("organizations") or [])[:3])
+        alerts_text += f"""
+ALERT {i}:
+Title: {a.get('title','')}
+Region: {a.get('region','').replace('_',' ')}
+Source: {a.get('source_dom','')} (tier {a.get('source_tier',0)})
+Score: {a.get('score',0)} | Critical: {'Yes' if a.get('is_critical') else 'No'}
+Current summary: {a.get('precis','')}
+Locations: {locs}
+Organizations: {orgs}
+Article text: {(a.get('article_text') or '')[:600]}
+---"""
+
+    prompt = f"""You are a senior intelligence analyst writing the VigiNote {req.briefing_type.title()} Intelligence Briefing for {now_str}.
+
+Selected alerts ({len(req.alerts)} items, {critical_count} critical, regions: {', '.join(regions)}):
+{alerts_text}
+
+Write the following in strict JSON format with these exact keys:
+
+{{
+  "executive_summary": "2-3 paragraph professional intelligence executive summary covering the overall threat picture, key developments, and regional dynamics. Authoritative, factual, no speculation. ~200 words.",
+  "alert_summaries": [
+    {{
+      "id": 1,
+      "enhanced_summary": "2-3 sentence enhanced summary for this alert. More context than the original. Professional intelligence tone."
+    }}
+  ],
+  "linkedin_caption": "A compelling 120-150 word LinkedIn post introducing this briefing. Professional but engaging. Start with a hook line. Include 3-4 relevant hashtags at the end. Written as VigiNote, not as an individual.",
+  "thumbnail_headline": "Maximum 10 words. A punchy news-style headline for the thumbnail image card. The single most important story or theme from this briefing.",
+  "briefing_title": "A sharp professional title for this briefing, e.g. 'VigiNote Morning Brief — Gaza Escalation & Sudan Crisis'"
+}}
+
+Return ONLY the JSON object. No preamble, no markdown fences."""
+
+    try:
+        async with httpx.AsyncClient(timeout=45.0) as client:
+            resp = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": ANTHROPIC_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": ANTHROPIC_MODEL,
+                    "max_tokens": 2000,
+                    "messages": [{"role": "user", "content": prompt}],
+                },
+            )
+        resp.raise_for_status()
+        raw = resp.json()["content"][0]["text"].strip()
+        # Strip markdown fences if Claude wrapped them anyway
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        result = json.loads(raw.strip())
+        return {"status": "ok", "generated": result}
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=500, detail=f"AI response parse error: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI generation error: {str(e)}")
+
+# =======================
+# DASHBOARD
+# =======================
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard():
+    """Serve the briefing studio UI."""
+    import pathlib
+    html_path = pathlib.Path(__file__).parent / "dashboard.html"
+    if html_path.exists():
+        return HTMLResponse(content=html_path.read_text())
+    raise HTTPException(status_code=404, detail="dashboard.html not found in project root")
 
 # =======================
 # HEALTH
@@ -255,6 +319,6 @@ def health():
         conn = get_db()
         count = conn.execute("SELECT COUNT(*) FROM sent_log").fetchone()[0]
         conn.close()
-        return {"status": "ok", "total_alerts_stored": count}
+        return {"status": "ok", "total_alerts_stored": count, "ai_enabled": bool(ANTHROPIC_KEY)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
