@@ -863,11 +863,14 @@ async function generateThumbnailImage() {
     if (!resp.ok) throw new Error(data.detail || 'Image generation failed');
 
     const img = document.getElementById('thumb-bg-img');
-    img.crossOrigin = 'anonymous';
+    // Only set crossOrigin for external URLs, not base64 data URIs
+    if (!data.image_url.startsWith('data:')) {
+      img.crossOrigin = 'anonymous';
+    }
     img.onload = () => {
       img.style.display = 'block';
       document.getElementById('thumb-fallback-bg').style.display = 'none';
-      const src = 'Editorial image ready';
+      const src = data.source === 'gpt-image-1' ? 'AI image ready (gpt-image-1)' : 'Editorial image loaded';
       status.textContent = src + ' — click Download PNG to save.';
     };
     img.onerror = () => {
