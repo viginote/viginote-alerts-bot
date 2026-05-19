@@ -461,10 +461,10 @@ async function fetchAlerts() {
   const score  = document.getElementById('score-filter').value;
   const tier   = document.getElementById('tier-filter').value;
 
-  let url = `${API_BASE}/alerts?hours=${hours}&min_score=${score}&limit=100`;
-  if (region) url += `&region=${region}`;
-  if (kw)     url += `&keyword=${encodeURIComponent(kw)}`;
-  if (tier!=='') url += `&tier=${tier}`;
+  let url = `${API_BASE}/alerts?hours=${encodeURIComponent(hours)}&min_score=${encodeURIComponent(score)}&limit=100`;
+  if (region && region !== '') url += `&region=${encodeURIComponent(region)}`;
+  if (kw && kw !== '')         url += `&keyword=${encodeURIComponent(kw)}`;
+  if (tier && tier !== '')     url += `&tier=${encodeURIComponent(tier)}`;
 
   document.getElementById('alert-list').innerHTML = '<div style="padding:30px;text-align:center;color:var(--text-3)"><div class="spinner spinner-dark" style="margin:0 auto 8px"></div>Loading…</div>';
 
