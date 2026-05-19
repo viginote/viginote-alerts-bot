@@ -725,28 +725,35 @@ def run_once():
         # --- Telegram message ---
         ico        = severity_icon(c["score"])
         region_tag = c["region"].replace("_"," ").title()
-        if c["tier"] == 2:
-            src_label = f"{html_escape(c['dom'])} 🔍"
-        elif c["tier"] == 1:
-            src_label = f"{html_escape(c['dom'])} 📡"
-        else:
-            src_label = html_escape(c["dom"])
 
-        # Entity summary line for Telegram
-        entity_parts = []
-        if entities.get("locations"):
-            entity_parts.append("📍 " + ", ".join(entities["locations"][:4]))
-        if entities.get("organizations"):
-            entity_parts.append("🏛 " + ", ".join(entities["organizations"][:3]))
-        if entities.get("persons"):
-            entity_parts.append("👤 " + ", ".join(entities["persons"][:3]))
-        entity_line = "\n" + "  ".join(entity_parts) if entity_parts else ""
+        # Source label — tier indicator only, no emoji clutter on wire sources
+        tier_badge = " 🔍" if c["tier"] == 2 else (" 📡" if c["tier"] == 1 else "")
+        src_label  = f"{html_escape(c['dom'])}{tier_badge}"
+
+        # Critical badge
+        crit_badge = "  🛑 <b>CRITICAL</b>" if is_critical else ""
+
+        # Entities — max 2 locations, 2 orgs, 1 person; all on one compact line
+        loc_str  = ", ".join(entities.get("locations", [])[:2])
+        org_str  = ", ".join(entities.get("organizations", [])[:2])
+        per_str  = ", ".join(entities.get("persons", [])[:1])
+        ent_parts = []
+        if loc_str: ent_parts.append(f"📍 {loc_str}")
+        if org_str: ent_parts.append(f"🏛 {org_str}")
+        if per_str: ent_parts.append(f"👤 {per_str}")
+        entity_line = "\n" + "  |  ".join(ent_parts) if ent_parts else ""
+
+        # Tier label for source line (readable, not raw metadata)
+        tier_labels = {2: "Local/Specialist", 1: "Regional", 0: "Wire"}
+        tier_str = tier_labels.get(c["tier"], "")
 
         msg = (
-            f"{ico} <b>[{html_escape(region_tag)}] {html_escape(c['raw_title'])}</b>\n"
-            f"<code>{html_escape(precis)}</code>{entity_line}\n"
-            f"• Source: {src_label}  |  Score: {c['score']}\n"
-            f"• <i>{html_escape(sel_reason)}</i>\n\n"
+            f"{ico} <b>[{html_escape(region_tag)}]{crit_badge}</b>\n"
+            f"<b>{html_escape(c['raw_title'])}</b>\n"
+            f"\n"
+            f"{html_escape(precis)}{entity_line}\n"
+            f"\n"
+            f"<b>Source:</b> {src_label}  ·  <b>Tier:</b> {tier_str}  ·  <b>Score:</b> {c['score']}\n"
             f"🔗 <a href=\"{html_escape(c['link'])}\">Full report</a>"
         )
 
