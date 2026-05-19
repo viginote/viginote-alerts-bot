@@ -362,38 +362,36 @@ async def ai_image(req: ImageRequest):
     combined       = headline_lower + " " + orgs_lower + " " + locs_lower
 
     if any(w in combined for w in ["ebola","cholera","disease","outbreak","epidemic","pandemic","health","medical"]):
-        scene = "medical workers in white hazmat suits and masks conducting disease testing in a field camp in Africa, portable laboratory equipment, documentary photography style"
+        scene = "healthcare workers wearing full protective white suits and face masks conducting field tests in a remote outdoor medical camp, rows of testing equipment, golden hour light, documentary photography"
     elif any(w in combined for w in ["airstrike","bombing","missile","drone","explosion","shelling","artillery"]):
-        scene = "aerial surveillance photograph of urban conflict zone, smoke rising from buildings, satellite imagery aesthetic, muted tones"
+        scene = "dramatic aerial photograph of a city skyline at dusk with dark storm clouds, emergency services vehicles visible on streets below, cinematic wide angle, deep blue and orange tones"
     elif any(w in combined for w in ["flood","cyclone","hurricane","earthquake","tsunami","disaster","wildfire"]):
-        scene = "aerial view of natural disaster aftermath, emergency response teams on the ground, dramatic sky, photojournalism style"
-    elif any(w in combined for w in ["coup","protest","riot","unrest","demonstration","militia","rebel"]):
-        scene = "crowd of protesters in an urban square at dusk, dramatic lighting, documentary photography, wide angle"
+        scene = "aerial view of a flooded landscape at dawn, emergency rescue boats navigating through submerged streets, dramatic clouds, photojournalism style, blue and grey tones"
+    elif any(w in combined for w in ["coup","protest","riot","unrest","demonstration"]):
+        scene = "large crowd gathered in a city square at dusk, dramatic lighting from street lamps, wide angle cityscape, deep shadows and warm highlights, documentary photography"
     elif any(w in combined for w in ["famine","drought","hunger","refugee","displacement","camp","idp"]):
-        scene = "wide angle photograph of a humanitarian aid distribution in an arid landscape, people queuing, golden hour lighting"
+        scene = "wide angle photograph of a humanitarian aid distribution point in an arid landscape, long queues of people, golden hour sunlight, photojournalism documentary style"
     elif any(w in combined for w in ["navy","maritime","ship","vessel","sea","coast","port","strait"]):
-        scene = "dramatic aerial view of naval vessels at sea, stormy weather, cinematic photography"
-    elif any(w in combined for w in ["cartel","gang","narco","crime","smuggling","trafficking"]):
-        scene = "night time border surveillance photograph, dramatic lighting, security checkpoint, documentary style"
-    elif any(w in combined for w in ["nuclear","chemical","biological","weapon","wmd"]):
-        scene = "abstract representation of a global security threat map, dark atmospheric tones, intelligence briefing aesthetic"
+        scene = "dramatic aerial view of large cargo ships and vessels at sea during stormy weather, dark ocean, cinematic wide angle photography, deep blue tones"
+    elif any(w in combined for w in ["nuclear","chemical","biological","wmd","sanctions"]):
+        scene = "abstract digital world map with glowing network connections and data points, dark atmospheric tones, intelligence operations center aesthetic, deep blue and amber"
     elif "africa" in region_str.lower() or any(w in combined for w in ["sudan","somalia","congo","mali","niger","nigeria","ethiopia"]):
-        scene = "dramatic landscape photograph of sub-Saharan Africa, armed military convoy on a dusty road, golden hour, documentary style"
+        scene = "dramatic African savanna landscape at sunset, dust clouds on the horizon, silhouettes of vehicles on a dirt road, cinematic golden hour photography"
     elif "middle east" in region_str.lower() or any(w in combined for w in ["gaza","israel","syria","yemen","iraq","iran","lebanon"]):
-        scene = "dramatic urban landscape of a Middle Eastern city at dusk, tension visible in the streets, photojournalism style"
+        scene = "dramatic cityscape of an ancient Middle Eastern city at dusk, warm amber and deep blue sky, minarets silhouetted against clouds, wide angle cinematic photography"
     elif "europe" in region_str.lower() or any(w in combined for w in ["ukraine","russia","nato","balkan","caucasus"]):
-        scene = "winter landscape with military vehicles on a snow covered Eastern European road, overcast sky, documentary photography"
+        scene = "winter landscape of Eastern Europe, bare trees and grey sky over a vast plain, dramatic overcast lighting, cinematic documentary photography, muted cold tones"
     elif "asia" in region_str.lower() or any(w in combined for w in ["china","taiwan","korea","myanmar","afghanistan","pakistan"]):
-        scene = "dramatic cityscape of an Asian capital at night with military presence, tense atmosphere, cinematic wide shot"
+        scene = "dramatic nighttime cityscape of a major Asian city, neon reflections on wet streets, moody atmospheric lighting, cinematic wide shot, deep blue and gold tones"
     else:
-        scene = "dramatic world map with crisis hotspots highlighted, intelligence briefing room aesthetic, dark professional tones"
+        scene = "dramatic view of Earth from low orbit with storm systems visible over continents, deep space background, cinematic photography, dark navy and blue tones"
 
     full_prompt = (
-        f"Professional photojournalism style image for an intelligence briefing. "
-        f"Scene: {scene}. "
-        f"Style: high contrast, dramatic lighting, no text, no watermarks, no logos, "
-        f"cinematic composition, suitable for a professional security briefing document. "
-        f"Dark navy and grey tones that work as a background for white text overlay."
+        f"Professional editorial photography for a global intelligence briefing publication. "
+        f"{scene}. "
+        f"No text, no watermarks, no logos, no people in distress. "
+        f"High production quality, cinematic lighting, suitable as a background image for a professional document cover. "
+        f"Predominantly dark navy, deep blue, and grey tones to allow white text overlay."
     )
 
     try:
