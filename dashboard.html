@@ -193,12 +193,29 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--tex
 .linkedin-preview{background:#f3f2ef;border-radius:8px;padding:16px;font-size:13px;line-height:1.6;color:#333;white-space:pre-wrap;max-height:200px;overflow-y:auto}
 
 @media print{
-  .topnav,.editor-left,.editor-header,.export-header,.export-body,.generate-bar,.main-panel-header{display:none!important}
-  #screen-editor{height:auto!important;overflow:visible!important}
-  .editor-body{overflow:visible!important}
-  .editor-right{padding:0!important;background:#fff!important;overflow:visible!important}
-  .preview-wrap{border:none!important;box-shadow:none!important;border-radius:0!important}
-  body{background:#fff}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .topnav,.editor-left,.editor-header,.export-header,.export-body,.generate-bar,.main-panel-header,.no-print{display:none!important}
+  #screen-editor{display:block!important;height:auto!important;overflow:visible!important}
+  .editor-body{display:block!important;overflow:visible!important}
+  .editor-left{display:none!important}
+  .editor-right{display:block!important;padding:0!important;background:#fff!important;overflow:visible!important;width:100%!important}
+  .preview-wrap{border:none!important;box-shadow:none!important;border-radius:0!important;width:100%!important}
+  body{background:#fff!important;margin:0!important;padding:0!important}
+  .preview-header{padding:32px 40px 24px!important;-webkit-print-color-adjust:exact!important}
+  .preview-body{padding:24px 40px 40px!important}
+  .exec-box{page-break-inside:avoid!important;break-inside:avoid!important}
+  .stats-strip{page-break-inside:avoid!important;break-inside:avoid!important}
+  .region-block{page-break-inside:avoid!important;break-inside:avoid!important}
+  .alert-preview-card{page-break-inside:avoid!important;break-inside:avoid!important;margin-bottom:14px!important}
+  .sources-foot{page-break-inside:avoid!important;break-inside:avoid!important}
+  .preview-footer{page-break-inside:avoid!important;break-inside:avoid!important}
+  .ap-title{orphans:3!important;widows:3!important}
+  .ap-summary{orphans:3!important;widows:3!important}
+  .exec-box p{orphans:4!important;widows:4!important}
+  .sec-label{page-break-after:avoid!important;break-after:avoid!important}
+  .reg-head{page-break-after:avoid!important;break-after:avoid!important}
+  h1,h2,h3{page-break-after:avoid!important;break-after:avoid!important;orphans:3!important;widows:3!important}
+  @page{margin:0.6in 0.75in!important;size:A4!important}
 }
 </style>
 </head>
@@ -733,7 +750,7 @@ function renderPreview(g) {
           <span><strong>Source:</strong> ${a.source_dom||''} ${tierLabel(a.source_tier)}</span>
           <span><strong>Score:</strong> ${a.score}</span>
           <span>${fmtTime(a.ts_iso)}</span>
-          ${a.url?`<a href="${a.url}" target="_blank" style="color:var(--navy-mid)">Full report →</a>`:''}
+          ${a.url && a.url !== '#' ? `<a href="${a.url}" target="_blank" rel="noopener noreferrer" class="no-print" style="color:var(--navy-mid);font-weight:600;text-decoration:none">Full report →</a>` : ''}
         </div>
       </div>`;
     });
@@ -818,8 +835,8 @@ async function generateThumbnailImage() {
   const btn = document.getElementById('gen-img-btn');
   const status = document.getElementById('img-gen-status');
   btn.disabled = true;
-  btn.textContent = '⏳ Generating image…';
-  status.textContent = 'DALL-E 3 is creating your conflict image…';
+  btn.textContent = '⏳ Finding image…';
+  status.textContent = 'Selecting editorial image for your briefing topic…';
 
   const regions  = [...new Set(selectedAlerts.map(a => regionLabel(a.region)))];
   const orgs     = [];
@@ -850,7 +867,7 @@ async function generateThumbnailImage() {
     img.onload = () => {
       img.style.display = 'block';
       document.getElementById('thumb-fallback-bg').style.display = 'none';
-      const src = data.source === 'dalle' ? 'AI-generated image ready' : 'Editorial image loaded';
+      const src = 'Editorial image ready';
       status.textContent = src + ' — click Download PNG to save.';
     };
     img.onerror = () => {
@@ -867,34 +884,178 @@ async function generateThumbnailImage() {
 }
 
 function downloadThumbnail() {
-  const thumb = document.getElementById('thumb-preview');
-  // Load html2canvas if not already loaded
-  if (typeof html2canvas === 'undefined') {
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-    script.onload = () => doDownload(thumb);
-    document.head.appendChild(script);
-  } else {
-    doDownload(thumb);
-  }
-}
+  // Canvas-based render — handles Unsplash CORS images correctly
+  const W = 1200, H = 627;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
 
-function doDownload(thumb) {
-  html2canvas(thumb, {
-    scale: 2,
-    useCORS: true,
-    allowTaint: true,
-    backgroundColor: '#0f1f5c',
-    width: thumb.offsetWidth,
-    height: thumb.offsetHeight,
-  }).then(canvas => {
+  // Background
+  ctx.fillStyle = '#0f1f5c';
+  ctx.fillRect(0, 0, W, H);
+
+  // Get current state
+  const headline  = document.getElementById('thumb-headline')?.textContent || '';
+  const dateText  = document.getElementById('thumb-date')?.textContent || '';
+  const tagEls    = document.getElementById('thumb-tags')?.querySelectorAll('.tb-tag') || [];
+  const tags      = Array.from(tagEls).map(t => t.textContent.trim()).slice(0,4);
+  const bgImg     = document.getElementById('thumb-bg-img');
+  const hasImage  = bgImg && bgImg.src && bgImg.style.display !== 'none' && bgImg.complete && bgImg.naturalWidth > 0;
+
+  function renderCard() {
+    // Background gradient
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, 'rgba(42,64,153,0.9)');
+    grad.addColorStop(1, 'rgba(10,20,60,1)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Top accent bar
+    const barGrad = ctx.createLinearGradient(0, 0, W, 0);
+    barGrad.addColorStop(0, '#3a6fd8');
+    barGrad.addColorStop(1, '#1a2f6e');
+    ctx.fillStyle = barGrad;
+    ctx.fillRect(0, 0, W, 5);
+
+    // Logo panel top-right
+    const lpX = W - 180, lpY = 18, lpW = 162, lpH = 44;
+    ctx.fillStyle = 'rgba(8,16,40,0.7)';
+    roundRect(ctx, lpX, lpY, lpW, lpH, 6);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(100,160,220,0.2)';
+    ctx.lineWidth = 1;
+    roundRect(ctx, lpX, lpY, lpW, lpH, 6);
+    ctx.stroke();
+
+    // Shield icon (simplified)
+    drawShield(ctx, lpX + 16, lpY + 7, 28);
+
+    // VIGINOTE text
+    ctx.fillStyle = 'rgba(200,215,240,0.95)';
+    ctx.font = '700 13px Arial';
+    ctx.letterSpacing = '3px';
+    ctx.fillText('VIGINOTE', lpX + 52, lpY + 26);
+
+    // Bottom gradient overlay
+    const botGrad = ctx.createLinearGradient(0, H * 0.45, 0, H);
+    botGrad.addColorStop(0, 'transparent');
+    botGrad.addColorStop(1, 'rgba(8,16,50,0.95)');
+    ctx.fillStyle = botGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Region tags
+    let tagX = 48;
+    ctx.font = '700 11px Arial';
+    tags.forEach(tag => {
+      const tw = ctx.measureText(tag).width + 20;
+      ctx.strokeStyle = 'rgba(160,180,232,0.35)';
+      ctx.lineWidth = 1;
+      ctx.fillStyle = 'rgba(160,180,232,0.15)';
+      roundRect(ctx, tagX, H - 146, tw, 20, 3);
+      ctx.fill();
+      roundRect(ctx, tagX, H - 146, tw, 20, 3);
+      ctx.stroke();
+      ctx.fillStyle = '#a0b4e8';
+      ctx.fillText(tag.toUpperCase(), tagX + 10, H - 132);
+      tagX += tw + 8;
+    });
+
+    // Intelligence Briefing label
+    ctx.fillStyle = '#a0b4e8';
+    ctx.font = '700 11px Arial';
+    ctx.fillText('INTELLIGENCE BRIEFING', 48, H - 104);
+
+    // Main headline
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 36px Georgia, serif';
+    const words = headline.split(' ');
+    let line = '', lines = [], maxW = W - 96;
+    words.forEach(w => {
+      const test = line + (line ? ' ' : '') + w;
+      if (ctx.measureText(test).width > maxW && line) {
+        lines.push(line); line = w;
+      } else { line = test; }
+    });
+    if (line) lines.push(line);
+    lines.slice(0,2).forEach((l, i) => {
+      ctx.fillText(l, 48, H - 68 + (i * 44));
+    });
+
+    // Date line
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.font = '400 13px Arial';
+    ctx.fillText(dateText, 48, H - 28);
+
     const link = document.createElement('a');
     link.download = 'viginote-thumbnail.png';
-    link.href = canvas.toDataURL('image/png');
+    link.href = canvas.toDataURL('image/png', 0.95);
     link.click();
-  }).catch(e => {
-    alert('Download failed: ' + e.message);
-  });
+  }
+
+  function drawShield(ctx, x, y, size) {
+    const s = size / 32;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(s, s);
+    ctx.strokeStyle = '#3a5070';
+    ctx.lineWidth = 2 / s;
+    ctx.fillStyle = '#0d1e3a';
+    ctx.beginPath();
+    ctx.moveTo(16, 1); ctx.lineTo(30, 6); ctx.lineTo(30, 18);
+    ctx.bezierCurveTo(30, 26, 16, 32, 16, 32);
+    ctx.bezierCurveTo(16, 32, 2, 26, 2, 18);
+    ctx.lineTo(2, 6); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#4a90c8';
+    ctx.lineWidth = 1.5 / s;
+    ctx.beginPath();
+    ctx.moveTo(4, 16); ctx.bezierCurveTo(7, 10, 25, 10, 28, 16);
+    ctx.bezierCurveTo(25, 22, 7, 22, 4, 16);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(16, 16, 4, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = '#4a90c8';
+    ctx.beginPath();
+    ctx.arc(16, 16, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  if (hasImage) {
+    // Draw the Unsplash image as background then overlay
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      // Scale to fill
+      const scale = Math.max(W / img.width, H / img.height);
+      const dw = img.width * scale, dh = img.height * scale;
+      const dx = (W - dw) / 2, dy = (H - dh) / 2;
+      ctx.drawImage(img, dx, dy, dw, dh);
+      // Dark overlay for readability
+      ctx.fillStyle = 'rgba(8,16,50,0.55)';
+      ctx.fillRect(0, 0, W, H);
+      renderCard();
+    };
+    img.onerror = () => renderCard(); // fallback if CORS blocks
+    img.src = bgImg.src;
+  } else {
+    renderCard();
+  }
 }
 
 function showOverlay(msg, sub) {
