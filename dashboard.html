@@ -206,9 +206,9 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--tex
 
 <nav class="topnav">
   <div class="brand">VIGINOTE<span>Briefing Studio</span></div>
-  <button class="tab-btn active" onclick="showScreen('select',this)" id="tab-select">① Select</button>
-  <button class="tab-btn" onclick="showScreen('editor',this)" id="tab-editor">② Edit <span class="badge" id="sel-badge" style="display:none">0</span></button>
-  <button class="tab-btn" onclick="showScreen('export',this)" id="tab-export">③ Export</button>
+  <button type="button" class="tab-btn active" onclick="showScreen('select',this)" id="tab-select">① Select</button>
+  <button type="button" class="tab-btn" onclick="showScreen('editor',this)" id="tab-editor">② Edit <span class="badge" id="sel-badge" style="display:none">0</span></button>
+  <button type="button" class="tab-btn" onclick="showScreen('export',this)" id="tab-export">③ Export</button>
 </nav>
 
 <!-- LOADING OVERLAY -->
@@ -227,12 +227,12 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--tex
   <div class="sidebar">
     <div class="sidebar-section">
       <label>Search keyword</label>
-      <input type="text" id="kw-input" placeholder="e.g. Gaza, ceasefire, coup…" onkeydown="if(event.key==='Enter')fetchAlerts()">
+      <input type="search" id="kw-input" placeholder="e.g. Gaza, ceasefire, coup…" autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
     <div class="sidebar-section">
       <label>Region</label>
       <select id="region-filter">
-        <option value="">All regions</option>
+        <option value="ALL">All regions</option>
         <option value="GLOBAL">Global</option>
         <option value="MIDDLE_EAST">Middle East</option>
         <option value="EUROPE">Europe</option>
@@ -258,7 +258,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--tex
           <option value="9">Score 9+ (critical)</option>
         </select>
         <select id="tier-filter">
-          <option value="">Any source</option>
+          <option value="ALL">Any source</option>
           <option value="2">Local/Specialist</option>
           <option value="1">Regional</option>
           <option value="0">Wire only</option>
@@ -266,7 +266,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--tex
       </div>
     </div>
     <div class="sidebar-section">
-      <button class="btn btn-navy btn-full" onclick="fetchAlerts()">
+      <button type="button" class="btn btn-navy btn-full" onclick="fetchAlerts()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         Search alerts
       </button>
@@ -295,7 +295,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--tex
   <div class="main-panel">
     <div class="main-panel-header">
       <h2>Selected alerts</h2>
-      <button class="btn btn-outline btn-sm" onclick="clearSelection()">Clear all</button>
+      <button type="button" class="btn btn-outline btn-sm" onclick="clearSelection()">Clear all</button>
     </div>
     <div class="selected-tray" id="selected-tray">
       <div class="empty-tray">
@@ -312,7 +312,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--tex
         <option value="daily">Daily Brief</option>
         <option value="custom">Custom Report</option>
       </select>
-      <button class="btn btn-navy" id="gen-btn" onclick="generateBriefing()" disabled>
+      <button type="button" class="btn btn-navy" id="gen-btn" onclick="generateBriefing()" disabled>
         Generate with AI →
       </button>
     </div>
@@ -325,10 +325,10 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--tex
 ══════════════════════════════════════ -->
 <div class="screen" id="screen-editor">
   <div class="editor-header">
-    <button class="btn btn-outline btn-sm" onclick="showScreen('select',document.getElementById('tab-select'))">← Back</button>
+    <button type="button" class="btn btn-outline btn-sm" onclick="showScreen('select',document.getElementById('tab-select'))">← Back</button>
     <h2 id="editor-title">Briefing Editor</h2>
-    <button class="btn btn-outline btn-sm" onclick="regenerate()">↺ Regenerate</button>
-    <button class="btn btn-navy btn-sm" onclick="showScreen('export',document.getElementById('tab-export'))">Export & Download →</button>
+    <button type="button" class="btn btn-outline btn-sm" onclick="regenerate()">↺ Regenerate</button>
+    <button type="button" class="btn btn-navy btn-sm" onclick="showScreen('export',document.getElementById('tab-export'))">Export & Download →</button>
   </div>
   <div class="editor-body">
 
@@ -354,7 +354,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--tex
         <input type="text" id="edit-thumb-headline" placeholder="Max 10 words — punchy hook">
         <div class="field-hint">Used on the LinkedIn image card</div>
       </div>
-      <button class="btn btn-navy btn-full" onclick="applyEdits()" style="margin-top:4px">Apply edits to preview →</button>
+      <button type="button" class="btn btn-navy btn-full" onclick="applyEdits()" style="margin-top:4px">Apply edits to preview →</button>
     </div>
 
     <!-- RIGHT: live preview -->
@@ -370,7 +370,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--tex
 ══════════════════════════════════════ -->
 <div class="screen" id="screen-export">
   <div class="export-header">
-    <button class="btn btn-outline btn-sm" onclick="showScreen('editor',document.getElementById('tab-editor'))">← Back to editor</button>
+    <button type="button" class="btn btn-outline btn-sm" onclick="showScreen('editor',document.getElementById('tab-editor'))">← Back to editor</button>
     <h2 style="margin-right:auto">Export &amp; Publish</h2>
   </div>
   <div class="export-body">
@@ -381,7 +381,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--tex
       <h3>PDF Briefing Document</h3>
       <p>Full-page professional briefing — ready to upload to LinkedIn as a document post or send to clients.</p>
       <div class="export-actions">
-        <button class="btn btn-navy" onclick="downloadPDF()">⬇ Download PDF</button>
+        <button type="button" class="btn btn-navy" onclick="downloadPDF()">⬇ Download PDF</button>
       </div>
     </div>
 
@@ -400,7 +400,7 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--tex
         <div class="tb-date" id="thumb-date"></div>
       </div>
       <div class="export-actions">
-        <button class="btn btn-navy" onclick="downloadThumbnail()">⬇ Download PNG</button>
+        <button type="button" class="btn btn-navy" onclick="downloadThumbnail()">⬇ Download PNG</button>
       </div>
     </div>
 
@@ -411,8 +411,8 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--tex
       <p>AI-written post caption — proofread, copy, and paste when uploading the document or image.</p>
       <div class="linkedin-preview" id="linkedin-preview">Your AI-generated caption will appear here after generating the briefing.</div>
       <div class="export-actions">
-        <button class="btn btn-outline" onclick="copyCaption()">📋 Copy caption</button>
-        <button class="btn btn-outline btn-sm" onclick="showScreen('editor',document.getElementById('tab-editor'))">Edit caption</button>
+        <button type="button" class="btn btn-outline" onclick="copyCaption()">📋 Copy caption</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="showScreen('editor',document.getElementById('tab-editor'))">Edit caption</button>
       </div>
     </div>
 
@@ -462,9 +462,9 @@ async function fetchAlerts() {
   const tier   = document.getElementById('tier-filter').value;
 
   let url = `${API_BASE}/alerts?hours=${encodeURIComponent(hours)}&min_score=${encodeURIComponent(score)}&limit=100`;
-  if (region && region !== '') url += `&region=${encodeURIComponent(region)}`;
+  if (region && region !== 'ALL') url += `&region=${encodeURIComponent(region)}`;
   if (kw && kw !== '')         url += `&keyword=${encodeURIComponent(kw)}`;
-  if (tier && tier !== '')     url += `&tier=${encodeURIComponent(tier)}`;
+  if (tier && tier !== 'ALL')  url += `&tier=${encodeURIComponent(tier)}`;
 
   document.getElementById('alert-list').innerHTML = '<div style="padding:30px;text-align:center;color:var(--text-3)"><div class="spinner spinner-dark" style="margin:0 auto 8px"></div>Loading…</div>';
 
@@ -548,7 +548,7 @@ function updateSelectionUI() {
           <span>Score ${a.score}</span>
         </div>
       </div>
-      <button class="remove" onclick="toggleAlert(${a.id})">✕</button>
+      <button type="button" class="remove" onclick="toggleAlert(${a.id})">✕</button>
     </div>`).join('');
 }
 
