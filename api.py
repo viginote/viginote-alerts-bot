@@ -348,39 +348,38 @@ async def ai_image(req: ImageRequest):
     region_str = ", ".join(req.regions[:3]) if req.regions else "global"
     combined   = (req.headline + " " + " ".join(req.organizations) + " " + " ".join(req.locations)).lower()
 
-    # Scene prompt — policy-safe editorial photography descriptions
+    # Ultra-minimal prompts — no conflict language at all
     if any(w in combined for w in ["ebola","cholera","disease","outbreak","epidemic","pandemic","health","medical"]):
-        scene = "healthcare workers in white protective suits and face masks at an outdoor field medical station, testing equipment on tables, golden hour sunlight, editorial photography, no text"
+        scene = "scientists in white lab coats working outdoors, golden hour light, blue sky, landscape photography"
     elif any(w in combined for w in ["flood","cyclone","hurricane","earthquake","tsunami","disaster","wildfire"]):
-        scene = "aerial view of flooded landscape at dawn, dramatic storm clouds, blue and grey tones, editorial photography, no text"
+        scene = "dramatic storm clouds over a wide river landscape at dawn, blue and grey tones, landscape photography"
     elif any(w in combined for w in ["coup","protest","unrest","demonstration","riot"]):
-        scene = "large crowd in a city square at dusk, dramatic street lighting, wide angle, deep shadows, editorial photography, no text"
+        scene = "empty city square at dusk with dramatic street lighting, wide angle urban photography, deep blue tones"
     elif any(w in combined for w in ["famine","drought","hunger","refugee","displacement","camp"]):
-        scene = "wide angle view of an arid landscape with people gathered at a distribution point, golden hour, editorial photography, no text"
+        scene = "vast arid landscape at golden hour, dramatic sky, dust in the air, landscape photography"
     elif any(w in combined for w in ["navy","maritime","ship","vessel","sea","coast","port"]):
-        scene = "aerial view of cargo vessels at sea during stormy weather, dark ocean, cinematic wide angle, deep blue tones, no text"
+        scene = "dramatic ocean seascape during stormy weather, dark waves, cinematic wide angle, deep blue tones"
     elif any(w in combined for w in ["nuclear","chemical","biological","wmd","sanctions"]):
-        scene = "abstract digital world map with glowing data network connections, dark atmospheric tones, deep blue and amber, no text"
+        scene = "glowing world map with network data connections, dark blue background, abstract digital art"
     elif any(w in combined for w in ["airstrike","bombing","missile","drone","explosion","shelling"]):
-        scene = "dramatic aerial view of an urban skyline at dusk with storm clouds, emergency vehicles on streets, cinematic wide angle, deep blue and orange tones, no text"
+        scene = "dramatic urban skyline at dusk, storm clouds, city lights, wide angle architecture photography"
     elif "africa" in region_str.lower() or any(w in combined for w in ["sudan","somalia","congo","mali","nigeria","ethiopia"]):
-        scene = "dramatic African savanna landscape at sunset, dust and haze on the horizon, cinematic golden hour photography, no text"
+        scene = "African savanna landscape at sunset, golden hour light, acacia trees silhouetted, landscape photography"
     elif "middle east" in region_str.lower() or any(w in combined for w in ["gaza","israel","syria","yemen","iraq","iran","lebanon"]):
-        scene = "ancient Middle Eastern city skyline at dusk, warm amber sky, minarets silhouetted against dramatic clouds, cinematic photography, no text"
+        scene = "ancient desert city skyline at dusk, warm amber sky, architecture silhouetted, landscape photography"
     elif "europe" in region_str.lower() or any(w in combined for w in ["ukraine","russia","nato","balkan","caucasus"]):
-        scene = "winter landscape of Eastern Europe, grey overcast sky over a vast plain, bare trees, cinematic documentary photography, muted cold tones, no text"
+        scene = "winter European landscape, snow covered plain, bare trees, overcast grey sky, landscape photography"
     elif "asia" in region_str.lower() or any(w in combined for w in ["china","taiwan","korea","myanmar","afghanistan","pakistan"]):
-        scene = "Asian city skyline at night, neon reflections on wet streets, moody atmospheric lighting, cinematic wide shot, no text"
+        scene = "Asian city skyline at night, reflections on wet streets, neon lights, urban photography"
     elif "south america" in region_str.lower() or any(w in combined for w in ["venezuela","colombia","brazil","mexico","haiti"]):
-        scene = "South American city skyline at dusk, dramatic sky, warm tones, cinematic documentary photography, no text"
+        scene = "South American cityscape at dusk, dramatic sky, warm tones, landscape photography"
     else:
-        scene = "view of Earth from orbit showing continents and storm systems, dark space background, deep navy and blue tones, no text"
+        scene = "planet Earth from space, continents and clouds visible, dark background, deep blue tones"
 
     full_prompt = (
-        f"Editorial photography for a professional intelligence publication. "
-        f"{scene}. "
-        f"High production quality, cinematic composition, predominantly dark navy and deep blue tones "
-        f"suitable as a document cover background. No people in distress, no graphic content, no logos, no watermarks."
+        f"Professional landscape or cityscape photograph. {scene}. "
+        f"Dark navy and deep blue colour palette. Cinematic composition. "
+        f"No people, no text, no logos, no watermarks. High quality photography."
     )
 
     # Try DALL-E 3 first
@@ -394,11 +393,12 @@ async def ai_image(req: ImageRequest):
                         "Content-Type": "application/json",
                     },
                     json={
-                        "model": "gpt-image-1",
+                        "model": "dall-e-3",
                         "prompt": full_prompt,
                         "n": 1,
                         "size": "1792x1024",
-                        "quality": "medium",
+                        "quality": "standard",
+                        "style": "natural",
                     },
                 )
             if resp.status_code == 200:
