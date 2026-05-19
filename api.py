@@ -18,6 +18,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.responses import PlainTextResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 DB_PATH = os.getenv("DB_PATH", "/data/osint_alerts.db")
 
@@ -25,6 +26,13 @@ app = FastAPI(
     title="VigiNote Briefing API",
     description="Query and ingest OSINT alerts for professional briefing generation.",
     version="1.0.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
 )
 
 # =======================
