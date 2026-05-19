@@ -85,11 +85,11 @@ def ingest(alert: dict):
 @app.get("/alerts")
 def list_alerts(
     region:    Optional[str]  = Query(None),
-    tier:      Optional[int]  = Query(None),
+    tier:      Optional[int]  = Query(None, ge=0, le=2),
     critical:  Optional[bool] = Query(None),
-    min_score: int            = Query(0),
-    hours:     int            = Query(24),
-    limit:     int            = Query(100),
+    min_score: int            = Query(0, ge=0),
+    hours:     int            = Query(24, ge=1, le=8760),
+    limit:     int            = Query(100, ge=1, le=500),
     entity:    Optional[str]  = Query(None),
     keyword:   Optional[str]  = Query(None),
 ):
