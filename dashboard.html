@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VigiNote Briefing Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;600;700&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0f1f5c;
+  --navy-mid:#1a2f6e;
+  --navy-light:#2a4099;
+  --navy-pale:#e8edf9;
+  --navy-faint:#f0f3fb;
+  --red:#c0392b;
+  --amber:#e67e22;
+  --green:#27ae60;
+  --text:#0d1b3e;
+  --text-2:#4a5568;
+  --text-3:#8b9ab5;
+  --border:#dde2ee;
+  --bg:#f4f6f9;
+  --white:#ffffff;
+  --card-shadow:0 1px 3px rgba(15,31,92,0.08);
+}
+body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+
+/* ── TOP NAV ── */
+.topnav{background:var(--navy);height:52px;display:flex;align-items:center;padding:0 24px;gap:20px;position:sticky;top:0;z-index:100}
+.topnav .brand{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#fff;letter-spacing:1px;margin-right:auto}
+.topnav .brand span{color:#a0b4e8;font-size:11px;font-weight:400;letter-spacing:2px;display:block;text-transform:uppercase;margin-top:-2px}
+.tab-btn{background:none;border:none;color:rgba(255,255,255,0.55);font-size:13px;font-weight:600;padding:6px 14px;border-radius:6px;cursor:pointer;transition:all 0.15s;font-family:'Source Sans 3',sans-serif;letter-spacing:0.3px}
+.tab-btn:hover{color:#fff;background:rgba(255,255,255,0.1)}
+.tab-btn.active{color:#fff;background:rgba(255,255,255,0.15)}
+.tab-btn .badge{background:var(--red);color:#fff;font-size:10px;padding:1px 5px;border-radius:10px;margin-left:5px}
+
+/* ── LAYOUT ── */
+.screen{display:none;height:calc(100vh - 52px)}
+.screen.active{display:flex}
+
+/* ── SCREEN 1: SELECTOR ── */
+#screen-select{flex-direction:row}
+.sidebar{width:280px;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar-section{padding:16px;border-bottom:1px solid var(--border)}
+.sidebar-section label{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);display:block;margin-bottom:8px}
+.sidebar-section select,
+.sidebar-section input[type=text]{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text);background:var(--white);font-family:'Source Sans 3',sans-serif}
+.sidebar-section select:focus,
+.sidebar-section input:focus{outline:2px solid var(--navy-mid);outline-offset:-1px}
+.sidebar-section .row{display:flex;gap:8px;margin-top:8px}
+.sidebar-section .row select{flex:1}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'Source Sans 3',sans-serif;transition:all 0.15s;text-decoration:none}
+.btn:hover{opacity:0.88}
+.btn-navy{background:var(--navy-mid);color:#fff}
+.btn-outline{background:var(--white);color:var(--navy-mid);border:1px solid var(--border)}
+.btn-outline:hover{border-color:var(--navy-mid);background:var(--navy-faint)}
+.btn-red{background:var(--red);color:#fff}
+.btn-green{background:var(--green);color:#fff}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-full{width:100%;justify-content:center}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+
+.alert-list-wrap{flex:1;overflow-y:auto;padding:0}
+.alert-list-header{padding:12px 16px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.alert-list-header .count{font-size:12px;color:var(--text-3)}
+.alert-list-header .select-all{font-size:12px;color:var(--navy-mid);cursor:pointer;font-weight:600}
+.alert-item{padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s;display:flex;gap:10px;align-items:flex-start}
+.alert-item:hover{background:var(--navy-faint)}
+.alert-item.selected{background:var(--navy-faint);border-left:3px solid var(--navy-mid)}
+.alert-item .cb{margin-top:2px;flex-shrink:0;width:15px;height:15px;accent-color:var(--navy-mid)}
+.alert-item .info{flex:1;min-width:0}
+.alert-item .title{font-size:13px;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:3px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.alert-item .meta{font-size:11px;color:var(--text-3);display:flex;gap:8px;flex-wrap:wrap}
+.sev-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.dot-crit{background:var(--red)}
+.dot-high{background:var(--amber)}
+.dot-med{background:#2980b9}
+
+.main-panel{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.main-panel-header{padding:16px 20px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0}
+.main-panel-header h2{font-size:15px;font-weight:700;color:var(--text);margin-right:auto}
+.selected-tray{flex:1;overflow-y:auto;padding:16px 20px}
+.empty-tray{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-3);text-align:center;gap:8px}
+.empty-tray .icon{font-size:40px;opacity:0.3}
+.selected-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start}
+.selected-card .remove{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:16px;padding:0;flex-shrink:0;line-height:1}
+.selected-card .remove:hover{color:var(--red)}
+.selected-card .sc-title{font-size:13px;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:4px}
+.selected-card .sc-meta{font-size:11px;color:var(--text-3)}
+.region-chip{display:inline-block;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:3px;background:var(--navy-pale);color:var(--navy-mid)}
+
+.generate-bar{padding:14px 20px;background:var(--white);border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0}
+.generate-bar .sel-count{font-size:13px;color:var(--text-2);margin-right:auto}
+.generate-bar select{padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text);background:var(--white);font-family:'Source Sans 3',sans-serif}
+
+/* spinner */
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block}
+.spinner-dark{border-color:rgba(15,31,92,0.15);border-top-color:var(--navy-mid)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* loading overlay */
+.overlay{position:fixed;inset:0;background:rgba(10,20,60,0.6);z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.overlay.show{display:flex}
+.overlay .msg{color:#fff;font-size:15px;font-weight:600}
+.overlay .sub{color:rgba(255,255,255,0.6);font-size:13px}
+.overlay .big-spinner{width:44px;height:44px;border:3px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite}
+
+/* ── SCREEN 2: EDITOR ── */
+#screen-editor{flex-direction:column;overflow:hidden}
+.editor-header{padding:14px 24px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0}
+.editor-header h2{font-size:15px;font-weight:700;margin-right:auto}
+.editor-body{flex:1;display:flex;overflow:hidden}
+.editor-left{width:340px;background:var(--white);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;padding:20px}
+.editor-right{flex:1;overflow-y:auto;padding:24px;background:var(--bg)}
+
+.field-group{margin-bottom:20px}
+.field-group label{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);display:block;margin-bottom:6px}
+.field-group textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text);font-family:'Source Sans 3',sans-serif;line-height:1.6;resize:vertical;min-height:100px}
+.field-group textarea:focus{outline:2px solid var(--navy-mid);outline-offset:-1px}
+.field-group input[type=text]{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--text);font-family:'Source Sans 3',sans-serif}
+.field-group input:focus{outline:2px solid var(--navy-mid);outline-offset:-1px}
+.field-hint{font-size:11px;color:var(--text-3);margin-top:4px}
+
+.linkedin-box{background:var(--navy-faint);border:1px solid #c5d0ef;border-radius:8px;padding:14px}
+.linkedin-box textarea{background:var(--white)}
+
+/* briefing preview */
+.preview-wrap{background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:var(--card-shadow)}
+.preview-header{background:var(--navy);padding:32px 36px 24px;border-bottom:3px solid #a0b4e8}
+.preview-header .pre-over{font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#a0b4e8;margin-bottom:8px}
+.preview-header h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:#fff;line-height:1.2;margin-bottom:14px}
+.preview-header .pre-meta{display:flex;gap:20px;font-size:12px;color:rgba(255,255,255,0.55);flex-wrap:wrap}
+.preview-body{padding:28px 36px}
+.exec-box{background:var(--navy-faint);border-left:4px solid var(--navy-mid);border-radius:0 6px 6px 0;padding:16px 20px;margin-bottom:28px}
+.exec-box .exec-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--navy-mid);margin-bottom:8px}
+.exec-box p{font-size:14px;line-height:1.75;color:var(--text-2);white-space:pre-wrap}
+.stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px}
+.stat-box{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center}
+.stat-box .n{font-size:22px;font-weight:700;color:var(--navy-mid);line-height:1}
+.stat-box .l{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);margin-top:4px}
+.sec-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-3);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.region-block{margin-bottom:24px}
+.reg-head{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--navy-mid);background:var(--navy-pale);padding:3px 9px;border-radius:3px;margin-bottom:10px}
+.alert-preview-card{border:1px solid var(--border);border-radius:8px;padding:16px 18px;margin-bottom:10px;background:var(--white)}
+.alert-preview-card.crit{border-left:3px solid var(--red)}
+.alert-preview-card.high{border-left:3px solid var(--amber)}
+.alert-preview-card.med{border-left:3px solid #2980b9}
+.ap-head{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px}
+.ap-title{font-size:14px;font-weight:700;color:var(--text);line-height:1.35;flex:1}
+.crit-badge{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--red);background:#fde8e6;padding:2px 6px;border-radius:3px;flex-shrink:0;margin-top:2px}
+.ap-summary{font-size:13px;color:var(--text-2);line-height:1.65;margin-bottom:10px}
+.ap-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.chip{font-size:11px;padding:2px 8px;border-radius:3px;border:1px solid var(--border)}
+.chip-loc{background:#eef2fc;border-color:#b3c6f0;color:var(--navy-mid)}
+.chip-org{background:#f2eefb;border-color:#c5b8e8;color:#4527a0}
+.chip-per{background:#e8f5f4;border-color:#b2dfdb;color:#00695c}
+.ap-foot{font-size:11px;color:var(--text-3);display:flex;gap:14px;flex-wrap:wrap}
+.ap-foot strong{color:var(--text-2)}
+.tier-local{color:#2e7d32;background:#e8f5e9;border-color:#a5d6a7}
+.tier-regional{color:#1565c0;background:#e3f2fd;border-color:#90caf9}
+.tier-wire{color:#616161;background:#f5f5f5;border-color:#e0e0e0}
+.sources-foot{margin-top:28px;padding-top:18px;border-top:1px solid var(--border)}
+.source-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.source-chip{font-size:11px;padding:3px 9px;border-radius:3px;border:1px solid var(--border);color:var(--text-2);background:var(--bg)}
+.preview-footer{margin-top:28px;padding-top:16px;border-top:3px solid var(--navy-mid);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.preview-footer .brand-ft{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--navy-mid);letter-spacing:1px}
+.preview-footer .disc{font-size:10px;color:var(--text-3);max-width:380px;text-align:right;line-height:1.5}
+
+/* ── SCREEN 3: EXPORT ── */
+#screen-export{flex-direction:column;overflow:hidden}
+.export-header{padding:14px 24px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0}
+.export-body{flex:1;overflow-y:auto;padding:28px;display:grid;grid-template-columns:1fr 1fr;gap:24px;align-content:start}
+.export-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:14px}
+.export-card h3{font-size:14px;font-weight:700;color:var(--text)}
+.export-card p{font-size:13px;color:var(--text-2);line-height:1.6}
+.export-card .icon-big{font-size:36px;line-height:1}
+.export-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+
+/* thumbnail canvas */
+.thumb-preview{width:100%;aspect-ratio:1200/627;background:var(--navy);border-radius:8px;overflow:hidden;position:relative;display:flex;flex-direction:column;justify-content:flex-end;padding:24px 28px}
+.thumb-preview .tb-over{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#a0b4e8;margin-bottom:6px}
+.thumb-preview .tb-headline{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#fff;line-height:1.25;margin-bottom:10px}
+.thumb-preview .tb-date{font-size:10px;color:rgba(255,255,255,0.5)}
+.thumb-preview .tb-brand{position:absolute;top:20px;right:22px;font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:rgba(255,255,255,0.8);letter-spacing:1px}
+.thumb-preview .tb-bar{position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#3a6fd8,#1a2f6e)}
+.thumb-preview .tb-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.thumb-preview .tb-tag{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:2px;background:rgba(160,180,232,0.2);color:#a0b4e8;border:1px solid rgba(160,180,232,0.3)}
+.thumb-preview .tb-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 80% 20%, rgba(42,64,153,0.8) 0%, rgba(15,31,92,1) 60%);z-index:0}
+.thumb-preview>*{position:relative;z-index:1}
+
+.linkedin-preview{background:#f3f2ef;border-radius:8px;padding:16px;font-size:13px;line-height:1.6;color:#333;white-space:pre-wrap;max-height:200px;overflow-y:auto}
+
+@media print{
+  .topnav,.editor-left,.editor-header,.export-header,.export-body,.generate-bar,.main-panel-header{display:none!important}
+  #screen-editor{height:auto!important;overflow:visible!important}
+  .editor-body{overflow:visible!important}
+  .editor-right{padding:0!important;background:#fff!important;overflow:visible!important}
+  .preview-wrap{border:none!important;box-shadow:none!important;border-radius:0!important}
+  body{background:#fff}
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="brand">VIGINOTE<span>Briefing Studio</span></div>
+  <button class="tab-btn active" onclick="showScreen('select',this)" id="tab-select">① Select</button>
+  <button class="tab-btn" onclick="showScreen('editor',this)" id="tab-editor">② Edit <span class="badge" id="sel-badge" style="display:none">0</span></button>
+  <button class="tab-btn" onclick="showScreen('export',this)" id="tab-export">③ Export</button>
+</nav>
+
+<!-- LOADING OVERLAY -->
+<div class="overlay" id="overlay">
+  <div class="big-spinner"></div>
+  <div class="msg" id="overlay-msg">Generating briefing…</div>
+  <div class="sub" id="overlay-sub">Claude is writing your executive summary and alert analyses</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 1 — SELECT
+══════════════════════════════════════ -->
+<div class="screen active" id="screen-select">
+
+  <!-- LEFT: filters -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <label>Search keyword</label>
+      <input type="text" id="kw-input" placeholder="e.g. Gaza, ceasefire, coup…" onkeydown="if(event.key==='Enter')fetchAlerts()">
+    </div>
+    <div class="sidebar-section">
+      <label>Region</label>
+      <select id="region-filter">
+        <option value="">All regions</option>
+        <option value="GLOBAL">Global</option>
+        <option value="MIDDLE_EAST">Middle East</option>
+        <option value="EUROPE">Europe</option>
+        <option value="ASIA">Asia</option>
+        <option value="WEST_EAST_AFRICA">West / East Africa</option>
+        <option value="SOUTHERN_AFRICA">Southern Africa</option>
+        <option value="SOUTH_AMERICA">South America</option>
+      </select>
+    </div>
+    <div class="sidebar-section">
+      <label>Time window</label>
+      <select id="hours-filter">
+        <option value="6">Last 6 hours</option>
+        <option value="12" selected>Last 12 hours</option>
+        <option value="24">Last 24 hours</option>
+        <option value="48">Last 48 hours</option>
+      </select>
+      <div class="row">
+        <select id="score-filter">
+          <option value="4">Score 4+</option>
+          <option value="5" selected>Score 5+</option>
+          <option value="7">Score 7+ (high)</option>
+          <option value="9">Score 9+ (critical)</option>
+        </select>
+        <select id="tier-filter">
+          <option value="">Any source</option>
+          <option value="2">Local/Specialist</option>
+          <option value="1">Regional</option>
+          <option value="0">Wire only</option>
+        </select>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <button class="btn btn-navy btn-full" onclick="fetchAlerts()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Search alerts
+      </button>
+    </div>
+    <div class="sidebar-section" style="padding-bottom:8px">
+      <label>Selected for briefing</label>
+    </div>
+    <div id="selected-count-bar" style="padding:8px 16px;font-size:12px;color:var(--text-3);border-bottom:1px solid var(--border)">0 alerts selected</div>
+  </div>
+
+  <!-- CENTRE: alert list -->
+  <div style="width:340px;border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--white)">
+    <div class="alert-list-header">
+      <span class="count" id="list-count">No alerts loaded</span>
+      <span class="select-all" onclick="selectAll()">Select all</span>
+    </div>
+    <div class="alert-list-wrap" id="alert-list">
+      <div style="padding:40px 20px;text-align:center;color:var(--text-3)">
+        <div style="font-size:32px;opacity:0.3;margin-bottom:8px">📡</div>
+        Use filters to load alerts
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: selection tray -->
+  <div class="main-panel">
+    <div class="main-panel-header">
+      <h2>Selected alerts</h2>
+      <button class="btn btn-outline btn-sm" onclick="clearSelection()">Clear all</button>
+    </div>
+    <div class="selected-tray" id="selected-tray">
+      <div class="empty-tray">
+        <div class="icon">📋</div>
+        <div style="font-weight:600;font-size:14px">No alerts selected</div>
+        <div style="font-size:13px">Tick alerts from the list to build your briefing</div>
+      </div>
+    </div>
+    <div class="generate-bar">
+      <span class="sel-count" id="gen-count">0 alerts selected</span>
+      <select id="briefing-type">
+        <option value="morning">Morning Brief</option>
+        <option value="rapid">Rapid Brief</option>
+        <option value="daily">Daily Brief</option>
+        <option value="custom">Custom Report</option>
+      </select>
+      <button class="btn btn-navy" id="gen-btn" onclick="generateBriefing()" disabled>
+        Generate with AI →
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 2 — EDITOR
+══════════════════════════════════════ -->
+<div class="screen" id="screen-editor">
+  <div class="editor-header">
+    <button class="btn btn-outline btn-sm" onclick="showScreen('select',document.getElementById('tab-select'))">← Back</button>
+    <h2 id="editor-title">Briefing Editor</h2>
+    <button class="btn btn-outline btn-sm" onclick="regenerate()">↺ Regenerate</button>
+    <button class="btn btn-navy btn-sm" onclick="showScreen('export',document.getElementById('tab-export'))">Export & Download →</button>
+  </div>
+  <div class="editor-body">
+
+    <!-- LEFT: editable fields -->
+    <div class="editor-left">
+      <div class="field-group">
+        <label>Briefing title</label>
+        <input type="text" id="edit-title" placeholder="VigiNote Morning Brief…">
+      </div>
+      <div class="field-group">
+        <label>Executive summary</label>
+        <textarea id="edit-exec" rows="7" placeholder="AI-generated executive summary will appear here…"></textarea>
+        <div class="field-hint">Edit freely — this is your professional analysis voice</div>
+      </div>
+      <div id="edit-summaries"></div>
+      <div class="field-group linkedin-box">
+        <label>LinkedIn caption</label>
+        <textarea id="edit-linkedin" rows="6" placeholder="AI-generated LinkedIn post caption…"></textarea>
+        <div class="field-hint">Ready to paste — edit tone as needed</div>
+      </div>
+      <div class="field-group">
+        <label>Thumbnail headline</label>
+        <input type="text" id="edit-thumb-headline" placeholder="Max 10 words — punchy hook">
+        <div class="field-hint">Used on the LinkedIn image card</div>
+      </div>
+      <button class="btn btn-navy btn-full" onclick="applyEdits()" style="margin-top:4px">Apply edits to preview →</button>
+    </div>
+
+    <!-- RIGHT: live preview -->
+    <div class="editor-right">
+      <div class="preview-wrap" id="briefing-preview"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 3 — EXPORT
+══════════════════════════════════════ -->
+<div class="screen" id="screen-export">
+  <div class="export-header">
+    <button class="btn btn-outline btn-sm" onclick="showScreen('editor',document.getElementById('tab-editor'))">← Back to editor</button>
+    <h2 style="margin-right:auto">Export &amp; Publish</h2>
+  </div>
+  <div class="export-body">
+
+    <!-- PDF export -->
+    <div class="export-card">
+      <div class="icon-big">📄</div>
+      <h3>PDF Briefing Document</h3>
+      <p>Full-page professional briefing — ready to upload to LinkedIn as a document post or send to clients.</p>
+      <div class="export-actions">
+        <button class="btn btn-navy" onclick="downloadPDF()">⬇ Download PDF</button>
+      </div>
+    </div>
+
+    <!-- LinkedIn thumbnail -->
+    <div class="export-card">
+      <div class="icon-big">🖼</div>
+      <h3>LinkedIn Thumbnail Card</h3>
+      <p>1200×627px image card for maximum scroll-stop. Use as the cover image on your document post or as a standalone visual post.</p>
+      <div class="thumb-preview" id="thumb-preview">
+        <div class="tb-bg"></div>
+        <div class="tb-bar"></div>
+        <div class="tb-brand">VIGINOTE</div>
+        <div class="tb-tags" id="thumb-tags"></div>
+        <div class="tb-over">Intelligence Briefing</div>
+        <div class="tb-headline" id="thumb-headline">Loading headline…</div>
+        <div class="tb-date" id="thumb-date"></div>
+      </div>
+      <div class="export-actions">
+        <button class="btn btn-navy" onclick="downloadThumbnail()">⬇ Download PNG</button>
+      </div>
+    </div>
+
+    <!-- LinkedIn caption -->
+    <div class="export-card" style="grid-column:1/-1">
+      <div class="icon-big">💼</div>
+      <h3>LinkedIn Caption</h3>
+      <p>AI-written post caption — proofread, copy, and paste when uploading the document or image.</p>
+      <div class="linkedin-preview" id="linkedin-preview">Your AI-generated caption will appear here after generating the briefing.</div>
+      <div class="export-actions">
+        <button class="btn btn-outline" onclick="copyCaption()">📋 Copy caption</button>
+        <button class="btn btn-outline btn-sm" onclick="showScreen('editor',document.getElementById('tab-editor'))">Edit caption</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API_BASE = window.location.origin;
+let allAlerts = [];
+let selectedIds = new Set();
+let generatedData = null;
+let selectedAlerts = [];
+
+function showScreen(name, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function sevClass(score, isCrit) {
+  if (isCrit || score >= 10) return 'crit';
+  if (score >= 7) return 'high';
+  return 'med';
+}
+function dotClass(score, isCrit) {
+  if (isCrit || score >= 10) return 'dot-crit';
+  if (score >= 7) return 'dot-high';
+  return 'dot-med';
+}
+function tierLabel(t) {
+  if (t===2) return '<span class="chip tier-local">Local/Specialist</span>';
+  if (t===1) return '<span class="chip tier-regional">Regional</span>';
+  return '<span class="chip tier-wire">Wire</span>';
+}
+function fmtTime(iso) {
+  try { return new Date(iso).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) + ' UTC'; }
+  catch(e){ return iso||''; }
+}
+function regionLabel(r) { return (r||'').replace(/_/g,' '); }
+
+async function fetchAlerts() {
+  const kw     = document.getElementById('kw-input').value.trim();
+  const region = document.getElementById('region-filter').value;
+  const hours  = document.getElementById('hours-filter').value;
+  const score  = document.getElementById('score-filter').value;
+  const tier   = document.getElementById('tier-filter').value;
+
+  let url = `${API_BASE}/alerts?hours=${hours}&min_score=${score}&limit=100`;
+  if (region) url += `&region=${region}`;
+  if (kw)     url += `&keyword=${encodeURIComponent(kw)}`;
+  if (tier!=='') url += `&tier=${tier}`;
+
+  document.getElementById('alert-list').innerHTML = '<div style="padding:30px;text-align:center;color:var(--text-3)"><div class="spinner spinner-dark" style="margin:0 auto 8px"></div>Loading…</div>';
+
+  try {
+    const r = await fetch(url);
+    const d = await r.json();
+    allAlerts = d.alerts || [];
+    renderAlertList();
+  } catch(e) {
+    document.getElementById('alert-list').innerHTML = `<div style="padding:20px;color:var(--red);font-size:13px">Error: ${e.message}</div>`;
+  }
+}
+
+function renderAlertList() {
+  const list = document.getElementById('alert-list');
+  document.getElementById('list-count').textContent = `${allAlerts.length} alert${allAlerts.length!==1?'s':''}`;
+  if (!allAlerts.length) {
+    list.innerHTML = '<div style="padding:30px;text-align:center;color:var(--text-3)">No alerts found. Try adjusting your filters.</div>';
+    return;
+  }
+  list.innerHTML = allAlerts.map(a => `
+    <div class="alert-item ${selectedIds.has(a.id)?'selected':''}" onclick="toggleAlert(${a.id})">
+      <input type="checkbox" class="cb" ${selectedIds.has(a.id)?'checked':''} onclick="event.stopPropagation();toggleAlert(${a.id})">
+      <div class="sev-dot ${dotClass(a.score,a.is_critical)}" style="margin-top:5px"></div>
+      <div class="info">
+        <div class="title">${a.title||''}</div>
+        <div class="meta">
+          <span>${regionLabel(a.region)}</span>
+          <span>${a.source_dom||''}</span>
+          <span>Score ${a.score}</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleAlert(id) {
+  if (selectedIds.has(id)) {
+    selectedIds.delete(id);
+  } else {
+    selectedIds.add(id);
+  }
+  updateSelectionUI();
+  renderAlertList();
+}
+
+function selectAll() {
+  allAlerts.forEach(a => selectedIds.add(a.id));
+  updateSelectionUI();
+  renderAlertList();
+}
+
+function clearSelection() {
+  selectedIds.clear();
+  updateSelectionUI();
+  renderAlertList();
+}
+
+function updateSelectionUI() {
+  const n = selectedIds.size;
+  document.getElementById('selected-count-bar').textContent = `${n} alert${n!==1?'s':''} selected`;
+  document.getElementById('gen-count').textContent = `${n} alert${n!==1?'s':''} selected`;
+  document.getElementById('sel-badge').textContent = n;
+  document.getElementById('sel-badge').style.display = n>0?'inline':'none';
+  document.getElementById('gen-btn').disabled = n===0;
+
+  const tray = document.getElementById('selected-tray');
+  selectedAlerts = allAlerts.filter(a => selectedIds.has(a.id));
+
+  if (selectedAlerts.length===0) {
+    tray.innerHTML = `<div class="empty-tray"><div class="icon">📋</div><div style="font-weight:600;font-size:14px">No alerts selected</div><div style="font-size:13px">Tick alerts from the list to build your briefing</div></div>`;
+    return;
+  }
+
+  tray.innerHTML = selectedAlerts.map(a => `
+    <div class="selected-card">
+      <div style="flex:1">
+        <div class="sc-title">${a.title||''}</div>
+        <div class="sc-meta" style="display:flex;gap:8px;align-items:center;margin-top:3px">
+          <span class="region-chip">${regionLabel(a.region)}</span>
+          <span>${a.source_dom||''}</span>
+          <span>Score ${a.score}</span>
+        </div>
+      </div>
+      <button class="remove" onclick="toggleAlert(${a.id})">✕</button>
+    </div>`).join('');
+}
+
+async function generateBriefing() {
+  if (selectedAlerts.length===0) return;
+  const briefType = document.getElementById('briefing-type').value;
+
+  showOverlay('Generating briefing…', 'Claude is writing your executive summary and alert analyses…');
+
+  try {
+    const resp = await fetch(`${API_BASE}/ai/generate`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({alerts: selectedAlerts, briefing_type: briefType})
+    });
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.detail || resp.statusText);
+    }
+    const data = await resp.json();
+    generatedData = data.generated;
+
+    populateEditor(generatedData);
+    renderPreview(generatedData);
+    populateExport(generatedData);
+
+    hideOverlay();
+    showScreen('editor', document.getElementById('tab-editor'));
+
+  } catch(e) {
+    hideOverlay();
+    alert('Generation failed: ' + e.message + '\n\nCheck that ANTHROPIC_API_KEY is set on your Render Web Service.');
+  }
+}
+
+function populateEditor(g) {
+  document.getElementById('edit-title').value = g.briefing_title || '';
+  document.getElementById('edit-exec').value = g.executive_summary || '';
+  document.getElementById('edit-linkedin').value = g.linkedin_caption || '';
+  document.getElementById('edit-thumb-headline').value = g.thumbnail_headline || '';
+  document.getElementById('editor-title').textContent = g.briefing_title || 'Briefing Editor';
+
+  const summMap = {};
+  (g.alert_summaries||[]).forEach(s => { summMap[s.id] = s.enhanced_summary; });
+
+  const wrap = document.getElementById('edit-summaries');
+  wrap.innerHTML = selectedAlerts.map((a,i) => `
+    <div class="field-group">
+      <label>Alert ${i+1} — ${regionLabel(a.region)}</label>
+      <div style="font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:5px;line-height:1.3">${a.title||''}</div>
+      <textarea id="sum-${a.id}" rows="3">${summMap[i+1]||a.precis||''}</textarea>
+    </div>`).join('');
+}
+
+function applyEdits() {
+  if (!generatedData) return;
+  generatedData.briefing_title    = document.getElementById('edit-title').value;
+  generatedData.executive_summary = document.getElementById('edit-exec').value;
+  generatedData.linkedin_caption  = document.getElementById('edit-linkedin').value;
+  generatedData.thumbnail_headline= document.getElementById('edit-thumb-headline').value;
+  selectedAlerts.forEach((a,i) => {
+    const el = document.getElementById('sum-'+a.id);
+    if (el && generatedData.alert_summaries && generatedData.alert_summaries[i]) {
+      generatedData.alert_summaries[i].enhanced_summary = el.value;
+    }
+  });
+  renderPreview(generatedData);
+  populateExport(generatedData);
+}
+
+function renderPreview(g) {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const timeStr = now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) + ' UTC';
+  const crits = selectedAlerts.filter(a=>a.is_critical||a.score>=10).length;
+  const regions = [...new Set(selectedAlerts.map(a=>a.region))];
+  const sources = [...new Set(selectedAlerts.map(a=>a.source_dom))];
+
+  const summMap = {};
+  (g.alert_summaries||[]).forEach((s,i) => { summMap[i] = s.enhanced_summary; });
+
+  const byRegion = {};
+  selectedAlerts.forEach((a,i) => {
+    if (!byRegion[a.region]) byRegion[a.region] = [];
+    byRegion[a.region].push({...a, esum: summMap[i]||a.precis||''});
+  });
+
+  let alertsHTML = '';
+  for (const [reg, items] of Object.entries(byRegion)) {
+    alertsHTML += `<div class="region-block"><div class="reg-head">◆ ${regionLabel(reg)}</div>`;
+    items.forEach(a => {
+      const ents = a.entities||{};
+      const locs = (ents.locations||[]).slice(0,2).map(l=>`<span class="chip chip-loc">${l}</span>`).join('');
+      const orgs = (ents.organizations||[]).slice(0,2).map(o=>`<span class="chip chip-org">${o}</span>`).join('');
+      const pers = (ents.persons||[]).slice(0,1).map(p=>`<span class="chip chip-per">${p}</span>`).join('');
+      const chips = locs+orgs+pers;
+      alertsHTML += `
+      <div class="alert-preview-card ${sevClass(a.score,a.is_critical)}">
+        <div class="ap-head">
+          <div class="ap-title">${a.title||''}</div>
+          ${a.is_critical?'<span class="crit-badge">Critical</span>':''}
+        </div>
+        <p class="ap-summary">${a.esum}</p>
+        ${chips?`<div class="ap-chips">${chips}</div>`:''}
+        <div class="ap-foot">
+          <span><strong>Source:</strong> ${a.source_dom||''} ${tierLabel(a.source_tier)}</span>
+          <span><strong>Score:</strong> ${a.score}</span>
+          <span>${fmtTime(a.ts_iso)}</span>
+          ${a.url?`<a href="${a.url}" target="_blank" style="color:var(--navy-mid)">Full report →</a>`:''}
+        </div>
+      </div>`;
+    });
+    alertsHTML += '</div>';
+  }
+
+  const srcChips = sources.map(s=>`<span class="source-chip">${s}</span>`).join('');
+
+  document.getElementById('briefing-preview').innerHTML = `
+  <div class="preview-header">
+    <div class="pre-over">VigiNote Intelligence</div>
+    <h1>${g.briefing_title||'Intelligence Briefing'}</h1>
+    <div class="pre-meta">
+      <span>📅 ${dateStr}</span>
+      <span>🕐 ${timeStr}</span>
+      <span>🛑 ${crits} Critical</span>
+      <span>📋 ${selectedAlerts.length} Alerts</span>
+      <span>🌍 ${regions.length} Regions</span>
+    </div>
+  </div>
+  <div class="preview-body">
+    <div class="exec-box">
+      <div class="exec-label">Executive Summary</div>
+      <p>${(g.executive_summary||'').replace(/\n/g,'<br>')}</p>
+    </div>
+    <div class="stats-strip">
+      <div class="stat-box"><div class="n">${selectedAlerts.length}</div><div class="l">Alerts</div></div>
+      <div class="stat-box"><div class="n">${crits}</div><div class="l">Critical</div></div>
+      <div class="stat-box"><div class="n">${regions.length}</div><div class="l">Regions</div></div>
+      <div class="stat-box"><div class="n">${sources.length}</div><div class="l">Sources</div></div>
+    </div>
+    <div class="sec-label">Regional Intelligence</div>
+    ${alertsHTML}
+    <div class="sources-foot">
+      <div class="sec-label">Sources cited</div>
+      <div class="source-chips">${srcChips}</div>
+    </div>
+    <div class="preview-footer">
+      <div class="brand-ft">VIGINOTE</div>
+      <div class="disc">Generated from open-source intelligence feeds. VigiNote does not verify third-party reporting accuracy. For professional use only.</div>
+    </div>
+  </div>`;
+}
+
+function populateExport(g) {
+  const headline = g.thumbnail_headline || 'VigiNote Intelligence Briefing';
+  const regions = [...new Set(selectedAlerts.map(a=>regionLabel(a.region)))].slice(0,4);
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+
+  document.getElementById('thumb-headline').textContent = headline;
+  document.getElementById('thumb-date').textContent = dateStr + ' · VigiNote Intelligence';
+  document.getElementById('thumb-tags').innerHTML = regions.map(r=>`<span class="tb-tag">${r}</span>`).join('');
+  document.getElementById('linkedin-preview').textContent = g.linkedin_caption || '';
+}
+
+async function regenerate() {
+  if (selectedAlerts.length === 0) {
+    showScreen('select', document.getElementById('tab-select'));
+    return;
+  }
+  await generateBriefing();
+}
+
+function downloadPDF() {
+  showScreen('editor', document.getElementById('tab-editor'));
+  setTimeout(() => window.print(), 300);
+}
+
+function copyCaption() {
+  const txt = document.getElementById('linkedin-preview').textContent;
+  navigator.clipboard.writeText(txt).then(() => {
+    const btn = event.target;
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = '📋 Copy caption', 2000);
+  });
+}
+
+function downloadThumbnail() {
+  const thumb = document.getElementById('thumb-preview');
+  const headline = document.getElementById('edit-thumb-headline')?.value || document.getElementById('thumb-headline').textContent;
+  const regions = [...new Set(selectedAlerts.map(a=>regionLabel(a.region)))].slice(0,4);
+  const now = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+
+  const script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  script.onload = () => {
+    html2canvas(thumb, {scale:2, useCORS:true, backgroundColor:'#0f1f5c'}).then(canvas => {
+      const link = document.createElement('a');
+      link.download = 'viginote-thumbnail.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+  };
+  document.head.appendChild(script);
+}
+
+function showOverlay(msg, sub) {
+  document.getElementById('overlay-msg').textContent = msg;
+  document.getElementById('overlay-sub').textContent = sub;
+  document.getElementById('overlay').classList.add('show');
+}
+function hideOverlay() {
+  document.getElementById('overlay').classList.remove('show');
+}
+</script>
+</body>
+</html>
