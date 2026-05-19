@@ -24,6 +24,7 @@ from pydantic import BaseModel
 DB_PATH          = os.getenv("DB_PATH", "/data/osint_alerts.db")
 ANTHROPIC_KEY    = os.getenv("ANTHROPIC_API_KEY", "")
 ANTHROPIC_MODEL  = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
+OPENAI_KEY       = os.getenv("OPENAI_API_KEY", "")
 
 app = FastAPI(
     title="VigiNote Briefing API",
@@ -328,6 +329,96 @@ Return ONLY the JSON object. No preamble, no markdown fences."""
         raise HTTPException(status_code=500, detail=f"AI response parse error: {e}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI generation error: {str(e)}")
+
+
+# =======================
+# AI IMAGE GENERATION
+# =======================
+class ImageRequest(BaseModel):
+    headline: str
+    regions: List[str]
+    organizations: List[str] = []
+    locations: List[str] = []
+    briefing_type: str = "morning"
+
+@app.post("/ai/image")
+async def ai_image(req: ImageRequest):
+    """
+    Generates a conflict-appropriate background image via DALL-E 3.
+    Returns the image URL for use in the LinkedIn thumbnail.
+    """
+    if not OPENAI_KEY:
+        raise HTTPException(status_code=503, detail="OPENAI_API_KEY not configured")
+
+    # Build a scene-appropriate prompt based on content
+    region_str  = ", ".join(req.regions[:3]) if req.regions else "global"
+    org_str     = ", ".join(req.organizations[:2]) if req.organizations else ""
+    loc_str     = ", ".join(req.locations[:2]) if req.locations else ""
+
+    # Detect conflict type from headline and orgs for scene selection
+    headline_lower = req.headline.lower()
+    orgs_lower     = " ".join(req.organizations).lower()
+    locs_lower     = " ".join(req.locations).lower()
+    combined       = headline_lower + " " + orgs_lower + " " + locs_lower
+
+    if any(w in combined for w in ["ebola","cholera","disease","outbreak","epidemic","pandemic","health","medical"]):
+        scene = "medical workers in white hazmat suits and masks conducting disease testing in a field camp in Africa, portable laboratory equipment, documentary photography style"
+    elif any(w in combined for w in ["airstrike","bombing","missile","drone","explosion","shelling","artillery"]):
+        scene = "aerial surveillance photograph of urban conflict zone, smoke rising from buildings, satellite imagery aesthetic, muted tones"
+    elif any(w in combined for w in ["flood","cyclone","hurricane","earthquake","tsunami","disaster","wildfire"]):
+        scene = "aerial view of natural disaster aftermath, emergency response teams on the ground, dramatic sky, photojournalism style"
+    elif any(w in combined for w in ["coup","protest","riot","unrest","demonstration","militia","rebel"]):
+        scene = "crowd of protesters in an urban square at dusk, dramatic lighting, documentary photography, wide angle"
+    elif any(w in combined for w in ["famine","drought","hunger","refugee","displacement","camp","idp"]):
+        scene = "wide angle photograph of a humanitarian aid distribution in an arid landscape, people queuing, golden hour lighting"
+    elif any(w in combined for w in ["navy","maritime","ship","vessel","sea","coast","port","strait"]):
+        scene = "dramatic aerial view of naval vessels at sea, stormy weather, cinematic photography"
+    elif any(w in combined for w in ["cartel","gang","narco","crime","smuggling","trafficking"]):
+        scene = "night time border surveillance photograph, dramatic lighting, security checkpoint, documentary style"
+    elif any(w in combined for w in ["nuclear","chemical","biological","weapon","wmd"]):
+        scene = "abstract representation of a global security threat map, dark atmospheric tones, intelligence briefing aesthetic"
+    elif "africa" in region_str.lower() or any(w in combined for w in ["sudan","somalia","congo","mali","niger","nigeria","ethiopia"]):
+        scene = "dramatic landscape photograph of sub-Saharan Africa, armed military convoy on a dusty road, golden hour, documentary style"
+    elif "middle east" in region_str.lower() or any(w in combined for w in ["gaza","israel","syria","yemen","iraq","iran","lebanon"]):
+        scene = "dramatic urban landscape of a Middle Eastern city at dusk, tension visible in the streets, photojournalism style"
+    elif "europe" in region_str.lower() or any(w in combined for w in ["ukraine","russia","nato","balkan","caucasus"]):
+        scene = "winter landscape with military vehicles on a snow covered Eastern European road, overcast sky, documentary photography"
+    elif "asia" in region_str.lower() or any(w in combined for w in ["china","taiwan","korea","myanmar","afghanistan","pakistan"]):
+        scene = "dramatic cityscape of an Asian capital at night with military presence, tense atmosphere, cinematic wide shot"
+    else:
+        scene = "dramatic world map with crisis hotspots highlighted, intelligence briefing room aesthetic, dark professional tones"
+
+    full_prompt = (
+        f"Professional photojournalism style image for an intelligence briefing. "
+        f"Scene: {scene}. "
+        f"Style: high contrast, dramatic lighting, no text, no watermarks, no logos, "
+        f"cinematic composition, suitable for a professional security briefing document. "
+        f"Dark navy and grey tones that work as a background for white text overlay."
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(
+                "https://api.openai.com/v1/images/generations",
+                headers={
+                    "Authorization": f"Bearer {OPENAI_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": "dall-e-3",
+                    "prompt": full_prompt,
+                    "n": 1,
+                    "size": "1792x1024",
+                    "quality": "standard",
+                    "style": "vivid",
+                },
+            )
+        resp.raise_for_status()
+        data = resp.json()
+        image_url = data["data"][0]["url"]
+        return {"status": "ok", "image_url": image_url, "scene_type": scene[:60]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Image generation error: {str(e)}")
 
 # =======================
 # DASHBOARD
