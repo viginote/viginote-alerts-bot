@@ -455,26 +455,70 @@ function fmtTime(iso) {
 function regionLabel(r) { return (r||'').replace(/_/g,' '); }
 
 async function fetchAlerts() {
-  const kw     = document.getElementById('kw-input').value.trim();
-  const region = document.getElementById('region-filter').value;
-  const hours  = document.getElementById('hours-filter').value;
-  const score  = document.getElementById('score-filter').value;
-  const tier   = document.getElementById('tier-filter').value;
+  // Read values safely — never let Safari validate them
+  let hours = 24, score = 5, limit = 100;
+  let region = null, kw = null, tier = null;
 
-  let url = `${API_BASE}/alerts?hours=${encodeURIComponent(hours)}&min_score=${encodeURIComponent(score)}&limit=100`;
-  if (region && region !== 'ALL') url += `&region=${encodeURIComponent(region)}`;
-  if (kw && kw !== '')         url += `&keyword=${encodeURIComponent(kw)}`;
-  if (tier && tier !== 'ALL')  url += `&tier=${encodeURIComponent(tier)}`;
+  try {
+    const hEl = document.getElementById('hours-filter');
+    const hVal = hEl ? parseInt(hEl.value, 10) : NaN;
+    if (!isNaN(hVal)) hours = hVal;
+  } catch(e){}
+
+  try {
+    const sEl = document.getElementById('score-filter');
+    const sVal = sEl ? parseInt(sEl.value, 10) : NaN;
+    if (!isNaN(sVal)) score = sVal;
+  } catch(e){}
+
+  try {
+    const rEl = document.getElementById('region-filter');
+    const rVal = rEl ? rEl.value : '';
+    if (rVal && rVal !== 'ALL' && rVal !== '') region = rVal;
+  } catch(e){}
+
+  try {
+    const tEl = document.getElementById('tier-filter');
+    const tVal = tEl ? tEl.value : '';
+    if (tVal && tVal !== 'ALL' && tVal !== '') tier = tVal;
+  } catch(e){}
+
+  try {
+    const kEl = document.getElementById('kw-input');
+    const kVal = kEl ? kEl.value.trim() : '';
+    if (kVal && kVal !== '') kw = kVal;
+  } catch(e){}
+
+  // Build URL with only defined params
+  const params = new URLSearchParams();
+  params.set('hours', String(hours));
+  params.set('min_score', String(score));
+  params.set('limit', String(limit));
+  if (region) params.set('region', region);
+  if (tier !== null) params.set('tier', String(tier));
+  if (kw) params.set('keyword', kw);
+
+  const url = API_BASE + '/alerts?' + params.toString();
 
   document.getElementById('alert-list').innerHTML = '<div style="padding:30px;text-align:center;color:var(--text-3)"><div class="spinner spinner-dark" style="margin:0 auto 8px"></div>Loading…</div>';
 
   try {
     const r = await fetch(url);
-    const d = await r.json();
+    const text = await r.text();
+    let d;
+    try { d = JSON.parse(text); }
+    catch(e) {
+      document.getElementById('alert-list').innerHTML = `<div style="padding:20px;color:var(--red);font-size:13px">API error: ${text.substring(0,200)}</div>`;
+      return;
+    }
     allAlerts = d.alerts || [];
+    if (d.error) {
+      document.getElementById('alert-list').innerHTML = `<div style="padding:20px;color:var(--red);font-size:13px">DB error: ${d.error}</div>`;
+      return;
+    }
     renderAlertList();
   } catch(e) {
-    document.getElementById('alert-list').innerHTML = `<div style="padding:20px;color:var(--red);font-size:13px">Error: ${e.message}</div>`;
+    document.getElementById('alert-list').innerHTML = `<div style="padding:20px;color:var(--red);font-size:13px">Network error: ${e.message}</div>`;
   }
 }
 
@@ -763,6 +807,11 @@ function showOverlay(msg, sub) {
 function hideOverlay() {
   document.getElementById('overlay').classList.remove('show');
 }
+
+// Auto-load alerts on page open — broadest defaults
+window.addEventListener('DOMContentLoaded', function() {
+  setTimeout(fetchAlerts, 300);
+});
 </script>
 </body>
 </html>
