@@ -537,25 +537,31 @@ async def ai_assessment(req: AssessmentRequest):
     alert_context = ""
 
     if req.mode in ("alerts", "combined"):
-        conn   = get_conn()
-        days   = max(1, req.hours // 24)
-        rows   = query_alerts(conn, days=days, limit=200)
-        loc_lc = req.location.lower()
-        matched = []
-        for r in rows:
-            text = f"{r.get('title','')} {r.get('precis','')} {r.get('entities_json','')}".lower()
-            if loc_lc in text or any(w in text for w in loc_lc.split(",")):
-                matched.append(r)
-        if matched:
-            alert_context = f"\n\nLIVE VIGINOTE ALERTS for {req.location} (last {req.hours}h):\n"
-            for a in matched[:15]:
-                alert_context += (
-                    f"- [{a.get('region','')}] Score {a.get('score',0)}: "
-                    f"{a.get('title','')} — {a.get('precis','')}\n"
-                )
-        elif req.mode == "alerts":
-            return {"message": f"No alerts found for {req.location}. Try Combined or AI mode.",
-                    "generated": None}
+        try:
+            conn   = get_conn()
+            days   = max(1, req.hours // 24)
+            rows   = [row_to_dict(r) for r in query_alerts(conn, days=days, limit=200)]
+            loc_lc = req.location.lower()
+            loc_words = [w.strip() for w in loc_lc.replace(",","").split() if len(w.strip()) > 3]
+            matched = []
+            for r in rows:
+                text = f"{r.get('title','')} {r.get('precis','')} {json.dumps(r.get('entities',{}))}".lower()
+                if loc_lc in text or any(w in text for w in loc_words):
+                    matched.append(r)
+            if matched:
+                alert_context = f"\n\nLIVE VIGINOTE ALERTS for {req.location} (last {req.hours}h):\n"
+                for a in matched[:10]:
+                    alert_context += (
+                        f"- [{a.get('region','')}] Score {a.get('score',0)}: "
+                        f"{a.get('title','')} — {a.get('precis','')}\n"
+                    )
+            elif req.mode == "alerts":
+                return {"message": f"No alerts found for {req.location}. Try Combined or AI mode.",
+                        "generated": None}
+        except Exception as db_err:
+            import traceback; traceback.print_exc()
+            print(f"[ASSESSMENT DB ERROR] {db_err}")
+            # Continue with AI-only mode if DB fails
 
     event_context = f"\nEvent context: {req.event}" if req.event else ""
 
@@ -600,7 +606,9 @@ Fill every field accurately for {req.location}. Return ONLY the JSON object."""
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Assessment error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Assessment error: {type(e).__name__}: {str(e)}")
 
 # =======================
 # AI — WEEKLY DIGEST
