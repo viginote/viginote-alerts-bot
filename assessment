@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VigiNote — Location Assessment Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ink:#0a0f1e;--ink2:#1e2840;--ink3:#2d3d5c;--steel:#4a6080;--mist:#8a9ab5;--border:#d0d8e8;--paper:#f7f8fc;--white:#ffffff;--navy:#0f1f5c;--navy2:#1a2f6e;--blue:#2d5be3;--blue-pale:#e8edf9;--low:#1a7a4a;--low-bg:#e8f5ee;--low-border:#a3d4b8;--medium:#b07d00;--medium-bg:#fff8e1;--medium-border:#ffd54f;--high:#c04a00;--high-bg:#fff0e8;--high-border:#ffab76;--critical:#a01515;--critical-bg:#fde8e8;--critical-border:#f09090;--extreme:#5a0080;--extreme-bg:#f5e8ff;--extreme-border:#d090f0}
+html{font-size:15px;-webkit-font-smoothing:antialiased}
+body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
+.topbar{background:var(--navy);height:56px;display:flex;align-items:center;padding:0 28px;gap:20px;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,255,255,0.06)}
+.topbar-brand{display:flex;align-items:center;gap:10px;margin-right:auto;text-decoration:none}
+.brand-text{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:#fff;letter-spacing:0.5px}
+.brand-sub{font-size:9px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:rgba(160,180,232,0.7);display:block;margin-top:-3px}
+.nav-link{font-size:12px;font-weight:500;color:rgba(255,255,255,0.5);text-decoration:none;padding:5px 12px;border-radius:4px;transition:all 0.15s}
+.nav-link:hover{color:#fff;background:rgba(255,255,255,0.08)}
+.nav-link.active{color:#fff;background:rgba(255,255,255,0.12)}
+.app{display:flex;height:calc(100vh - 56px)}
+.input-panel{width:320px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
+.ip-header{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.ip-header h2{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--ink);margin-bottom:3px}
+.ip-header p{font-size:12px;color:var(--mist);line-height:1.5}
+.ip-section{padding:16px 20px;border-bottom:1px solid var(--border)}
+.ip-section label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--mist);display:block;margin-bottom:7px}
+.ip-input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--ink);font-family:'DM Sans',sans-serif;background:var(--paper);transition:border-color 0.15s}
+.ip-input:focus{outline:none;border-color:var(--navy2);background:#fff}
+.ip-input::placeholder{color:var(--mist)}
+select.ip-input{cursor:pointer}
+.mode-cards{display:flex;flex-direction:column;gap:6px}
+.mode-card{border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;cursor:pointer;transition:all 0.15s;display:flex;align-items:flex-start;gap:10px}
+.mode-card:hover,.mode-card.selected{border-color:var(--navy2);background:var(--blue-pale)}
+.mode-card input[type=radio]{margin-top:2px;accent-color:var(--navy2)}
+.mode-card-body .mc-title{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:2px}
+.mode-card-body .mc-desc{font-size:11px;color:var(--mist);line-height:1.4}
+.ip-footer{padding:16px 20px;margin-top:auto}
+.btn-generate{width:100%;padding:11px;background:var(--navy2);color:#fff;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-generate:hover{background:var(--navy)}
+.btn-generate:disabled{opacity:0.5;cursor:not-allowed}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--ink);font-family:'DM Sans',sans-serif;transition:all 0.15s;text-decoration:none}
+.btn:hover{border-color:var(--navy2);background:var(--blue-pale);color:var(--navy2)}
+.btn-navy{background:var(--navy2);color:#fff;border-color:var(--navy2)}
+.btn-navy:hover{background:var(--navy)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:none}
+.btn-generate.loading .spin{display:block}
+.btn-generate.loading .btn-label{opacity:0.6}
+@keyframes spin{to{transform:rotate(360deg)}}
+.report-panel{flex:1;overflow-y:auto;background:var(--paper)}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:var(--mist);text-align:center;padding:40px}
+.empty-icon{width:64px;height:64px;border:2px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;opacity:0.4}
+.empty-state h3{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--ink3);font-weight:600}
+.empty-state p{font-size:13px;max-width:360px;line-height:1.6}
+.sample-locations{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:4px}
+.sample-loc{font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:20px;color:var(--steel);cursor:pointer;transition:all 0.12s;background:var(--white)}
+.sample-loc:hover{border-color:var(--navy2);color:var(--navy2);background:var(--blue-pale)}
+#report-output{display:none}
+.report-wrap{max-width:900px;margin:0 auto;padding:0 28px 80px}
+.report-topbar{padding:16px 0;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);margin-bottom:32px;position:sticky;top:0;background:var(--paper);z-index:50}
+.report-topbar h3{font-size:14px;font-weight:600;color:var(--ink);margin-right:auto}
+.report-header{background:var(--navy);border-radius:12px;padding:40px 44px 36px;margin-bottom:28px;position:relative;overflow:hidden}
+.rh-grid{position:absolute;inset:0;opacity:0.04;background-image:linear-gradient(rgba(255,255,255,0.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.5) 1px,transparent 1px);background-size:40px 40px}
+.rh-accent{position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#3a6fd8,#7a40d8,#3a6fd8)}
+.rh-content{position:relative;z-index:1}
+.rh-meta{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.rh-class{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);padding:3px 10px;border-radius:3px;border:1px solid rgba(255,255,255,0.15)}
+.rh-date{font-size:11px;color:rgba(255,255,255,0.4);margin-left:auto}
+.report-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;color:#fff;line-height:1.15;margin-bottom:16px}
+.rh-stats{display:flex;gap:20px;flex-wrap:wrap;margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.1)}
+.rh-stat{display:flex;flex-direction:column;gap:3px}
+.rh-stat .s-label{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.4)}
+.rh-stat .s-val{font-size:14px;font-weight:600;color:#fff}
+.risk-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border-radius:4px}
+.risk-badge .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.risk-LOW{background:var(--low-bg);color:var(--low);border:1px solid var(--low-border)}.risk-LOW .dot{background:var(--low)}
+.risk-MEDIUM{background:var(--medium-bg);color:var(--medium);border:1px solid var(--medium-border)}.risk-MEDIUM .dot{background:var(--medium)}
+.risk-HIGH{background:var(--high-bg);color:var(--high);border:1px solid var(--high-border)}.risk-HIGH .dot{background:var(--high)}
+.risk-CRITICAL{background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border)}.risk-CRITICAL .dot{background:var(--critical)}
+.risk-EXTREME{background:var(--extreme-bg);color:var(--extreme);border:1px solid var(--extreme-border)}.risk-EXTREME .dot{background:var(--extreme)}
+.trajectory-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:4px;border:1px solid var(--border);color:var(--steel);background:var(--white)}
+.report-section{margin-bottom:28px}
+.section-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:1.5px solid var(--border)}
+.section-num{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;color:var(--mist);letter-spacing:1px;flex-shrink:0}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--ink)}
+.exec-box{background:var(--white);border:1px solid var(--border);border-left:4px solid var(--navy2);border-radius:0 8px 8px 0;padding:20px 24px}
+.exec-box p{font-size:14px;line-height:1.8;color:var(--ink2);margin-bottom:12px}
+.exec-box p:last-child{margin-bottom:0}
+.profile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.profile-card{background:var(--white);border:1px solid var(--border);border-radius:7px;padding:12px 14px}
+.profile-card .pc-label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mist);margin-bottom:5px}
+.profile-card .pc-val{font-size:13px;font-weight:500;color:var(--ink);line-height:1.4}
+.profile-card .pc-list{list-style:none;font-size:12px;color:var(--ink2);line-height:1.6}
+.profile-card .pc-list li::before{content:"·  ";color:var(--mist)}
+.threat-grid{display:grid;gap:10px}
+.threat-row{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:16px 18px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start}
+.tr-left .tr-cat{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px}
+.tr-left .tr-assess{font-size:12px;color:var(--ink2);line-height:1.6;margin-bottom:8px}
+.tr-left .tr-impact{font-size:11px;color:var(--steel);line-height:1.5}
+.tr-left .tr-impact strong{color:var(--ink3)}
+.tr-indicators{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.ind-chip{font-size:10px;padding:2px 7px;border-radius:3px;background:var(--paper);border:1px solid var(--border);color:var(--steel)}
+.tr-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;min-width:110px}
+.score-bar-wrap{width:100%;background:var(--paper);border-radius:4px;height:5px;overflow:hidden}
+.score-bar{height:100%;border-radius:4px}
+.score-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--mist)}
+.hotspot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.hotspot-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:14px 16px;border-top:3px solid transparent}
+.hotspot-card.risk-LOW{border-top-color:var(--low)}.hotspot-card.risk-MEDIUM{border-top-color:var(--medium)}.hotspot-card.risk-HIGH{border-top-color:var(--high)}.hotspot-card.risk-CRITICAL{border-top-color:var(--critical)}.hotspot-card.risk-EXTREME{border-top-color:var(--extreme)}
+.hs-name{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hs-desc{font-size:12px;color:var(--ink2);line-height:1.55;margin-bottom:8px}
+.hs-rec{font-size:11px;color:var(--steel);line-height:1.5;padding-top:8px;border-top:1px solid var(--border)}
+.hs-rec strong{color:var(--ink3)}
+.advisory-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.adv-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.adv-card.full{grid-column:1/-1}
+.adv-title{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--navy2);margin-bottom:9px}
+.adv-list{list-style:none}
+.adv-list li{font-size:12px;color:var(--ink2);line-height:1.6;padding:4px 0;border-bottom:1px solid var(--paper);display:flex;gap:8px}
+.adv-list li:last-child{border-bottom:none}
+.adv-list li::before{content:"→";color:var(--navy2);font-weight:700;flex-shrink:0}
+.adv-text{font-size:12px;color:var(--ink2);line-height:1.6}
+.crime-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.crime-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.crime-card.full{grid-column:1/-1}
+.measures-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.measure-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.m-cat{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mist);margin-bottom:8px}
+.m-list{list-style:none}
+.m-list li{font-size:12px;color:var(--ink2);line-height:1.6;padding:3px 0;display:flex;gap:8px;border-bottom:1px dashed var(--border)}
+.m-list li:last-child{border-bottom:none}
+.m-list li::before{content:"✓";color:var(--low);font-weight:700;flex-shrink:0}
+.teaser-box{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);border-radius:10px;padding:24px 28px;color:#fff}
+.teaser-box .t-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(160,180,232,0.7);margin-bottom:10px}
+.teaser-box .t-text{font-size:14px;line-height:1.75;color:rgba(255,255,255,0.88);white-space:pre-wrap;margin-bottom:14px}
+.teaser-box .t-actions{display:flex;gap:8px}
+.btn-white{background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:600;padding:7px 14px;border-radius:5px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s}
+.btn-white:hover{background:rgba(255,255,255,0.2)}
+.report-footer{margin-top:40px;padding:20px 0;border-top:2px solid var(--navy2);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.rf-brand{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:700;color:var(--navy2)}
+.rf-disc{font-size:10px;color:var(--mist);max-width:400px;line-height:1.5;text-align:right}
+.overlay{position:fixed;inset:0;background:rgba(10,15,30,0.7);z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;backdrop-filter:blur(4px)}
+.overlay.show{display:flex}
+.ov-spinner{width:48px;height:48px;border:3px solid rgba(255,255,255,0.15);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite}
+.ov-msg{color:#fff;font-size:15px;font-weight:600}
+.ov-sub{color:rgba(255,255,255,0.55);font-size:12px;text-align:center;max-width:300px;line-height:1.5}
+.progress-steps{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.ps{font-size:10px;padding:3px 9px;border-radius:10px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);transition:all 0.3s}
+.ps.active{background:rgba(255,255,255,0.2);color:#fff}
+.ps.done{background:rgba(80,200,120,0.2);color:#80d0a0}
+@media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.topbar,.input-panel,.report-topbar,.teaser-box,.overlay{display:none!important}.app{display:block!important;height:auto!important}.report-panel{overflow:visible!important}body{background:#fff!important}.report-wrap{max-width:100%!important;padding:0 30px 40px!important}.threat-row,.hotspot-card,.adv-card,.measure-card{page-break-inside:avoid!important;break-inside:avoid!important}@page{size:A4;margin:0.5in 0.6in}}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay">
+  <div class="ov-spinner"></div>
+  <div class="ov-msg" id="ov-msg">Generating Assessment…</div>
+  <div class="ov-sub" id="ov-sub">Claude is analysing intelligence for this location</div>
+  <div class="progress-steps">
+    <span class="ps active" id="ps1">Profiling location</span>
+    <span class="ps" id="ps2">Assessing threats</span>
+    <span class="ps" id="ps3">Mapping hotspots</span>
+    <span class="ps" id="ps4">Building advisory</span>
+    <span class="ps" id="ps5">Finalising report</span>
+  </div>
+</div>
+<nav class="topbar">
+  <a href="/dashboard" class="topbar-brand">
+    <svg width="26" height="30" viewBox="0 0 72 84" fill="none">
+      <path d="M36 3 L66 14 L66 40 C66 58 36 72 36 72 C36 72 6 58 6 40 L6 14 Z" fill="#0d1e3a" stroke="#3a5070" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M12 32 C18 20 54 20 60 32 C54 44 18 44 12 32 Z" fill="none" stroke="#4a90c8" stroke-width="2.5"/>
+      <circle cx="36" cy="32" r="7" fill="none" stroke="#4a90c8" stroke-width="2.5"/>
+      <circle cx="36" cy="32" r="3" fill="#4a90c8"/>
+      <line x1="24" y1="47" x2="24" y2="58" stroke="#3a5878" stroke-width="2" stroke-linecap="round"/>
+      <line x1="30" y1="47" x2="30" y2="63" stroke="#3a5878" stroke-width="2" stroke-linecap="round"/>
+      <line x1="36" y1="47" x2="36" y2="60" stroke="#3a5878" stroke-width="2" stroke-linecap="round"/>
+      <line x1="42" y1="47" x2="42" y2="56" stroke="#3a5878" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="24" cy="58" r="2.5" fill="#3a5878"/>
+      <circle cx="30" cy="63" r="2.5" fill="#3a5878"/>
+      <circle cx="36" cy="60" r="2.5" fill="#3a5878"/>
+      <circle cx="42" cy="56" r="2.5" fill="#3a5878"/>
+    </svg>
+    <div><span class="brand-text">VIGINOTE</span><span class="brand-sub">Intelligence Platform</span></div>
+  </a>
+  <a href="/dashboard" class="nav-link">News Studio</a>
+  <a href="/assessment" class="nav-link active">Location Assessment</a>
+  <a href="/digest" class="nav-link">Weekly Digest</a>
+  <a href="/portal" class="nav-link">Client Portal</a>
+</nav>
+<div class="app">
+  <div class="input-panel">
+    <div class="ip-header">
+      <h2>Location Assessment</h2>
+      <p>Generate a structured security assessment for any city, region, or country</p>
+    </div>
+    <div class="ip-section">
+      <label>Location *</label>
+      <input type="search" class="ip-input" id="loc-input" placeholder="e.g. Khartoum, Sudan" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div class="ip-section">
+      <label>Event context (optional)</label>
+      <input type="search" class="ip-input" id="event-input" placeholder="e.g. FIFA World Cup 2026" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div class="ip-section">
+      <label>Intelligence mode</label>
+      <div class="mode-cards">
+        <label class="mode-card selected" id="mc-ai">
+          <input type="radio" name="mode" value="ai" checked onchange="selectMode(this)">
+          <div class="mode-card-body"><div class="mc-title">AI Knowledge</div><div class="mc-desc">Full assessment from Claude's intelligence knowledge. Works for any location worldwide.</div></div>
+        </label>
+        <label class="mode-card" id="mc-alerts">
+          <input type="radio" name="mode" value="alerts" onchange="selectMode(this)">
+          <div class="mode-card-body"><div class="mc-title">VigiNote Alerts</div><div class="mc-desc">Grounded in real alerts your bot has collected for this location.</div></div>
+        </label>
+        <label class="mode-card" id="mc-combined">
+          <input type="radio" name="mode" value="combined" onchange="selectMode(this)">
+          <div class="mode-card-body"><div class="mc-title">Combined ✦ Recommended</div><div class="mc-desc">AI knowledge enriched with your live alert database for maximum accuracy.</div></div>
+        </label>
+      </div>
+    </div>
+    <div class="ip-section" id="hours-section" style="display:none">
+      <label>Alert look-back window</label>
+      <select class="ip-input" id="hours-input">
+        <option value="72">Last 3 days</option>
+        <option value="168" selected>Last 7 days</option>
+        <option value="336">Last 2 weeks</option>
+        <option value="720">Last 30 days</option>
+      </select>
+    </div>
+    <div class="ip-footer">
+      <button type="button" class="btn-generate" id="gen-btn" onclick="generateAssessment()">
+        <div class="spin"></div><span class="btn-label">Generate Assessment</span>
+      </button>
+    </div>
+  </div>
+  <div class="report-panel" id="report-panel">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">◎</div>
+      <h3>Location Security Assessment</h3>
+      <p>Enter a city, country, or region and generate a comprehensive intelligence-grade security assessment in seconds.</p>
+      <div class="sample-locations">
+        <span class="sample-loc" onclick="quickLoad('Khartoum, Sudan')">Khartoum, Sudan</span>
+        <span class="sample-loc" onclick="quickLoad('Gaza, Palestine')">Gaza, Palestine</span>
+        <span class="sample-loc" onclick="quickLoad('Kyiv, Ukraine')">Kyiv, Ukraine</span>
+        <span class="sample-loc" onclick="quickLoad('Mexico City, Mexico')">Mexico City, Mexico</span>
+        <span class="sample-loc" onclick="quickLoad('Mogadishu, Somalia')">Mogadishu, Somalia</span>
+        <span class="sample-loc" onclick="quickLoad('Caracas, Venezuela')">Caracas, Venezuela</span>
+        <span class="sample-loc" onclick="quickLoad('Yangon, Myanmar')">Yangon, Myanmar</span>
+        <span class="sample-loc" onclick="quickLoad('Port-au-Prince, Haiti')">Port-au-Prince, Haiti</span>
+      </div>
+    </div>
+    <div id="report-output">
+      <div class="report-wrap">
+        <div class="report-topbar">
+          <h3 id="topbar-title">Assessment</h3>
+          <button type="button" class="btn btn-sm" onclick="generateAssessment()">↺ Regenerate</button>
+          <button type="button" class="btn btn-sm btn-navy" onclick="window.print()">⬇ Download PDF</button>
+        </div>
+        <div id="report-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const API_BASE = window.location.origin;
+function selectMode(radio){document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('selected'));radio.closest('.mode-card').classList.add('selected');document.getElementById('hours-section').style.display=radio.value!=='ai'?'block':'none'}
+function quickLoad(loc){document.getElementById('loc-input').value=loc}
+function riskBadge(level){const l=(level||'MEDIUM').toUpperCase();return`<span class="risk-badge risk-${l}"><span class="dot"></span>${l}</span>`}
+function scoreBarColor(level){const map={LOW:'#1a7a4a',MEDIUM:'#b07d00',HIGH:'#c04a00',CRITICAL:'#a01515',EXTREME:'#5a0080'};return map[(level||'MEDIUM').toUpperCase()]||'#4a6080'}
+function trajectoryIcon(t){if(!t)return'';const map={IMPROVING:'↑ Improving',STABLE:'→ Stable',DETERIORATING:'↓ Deteriorating'};const colors={IMPROVING:'color:var(--low)',STABLE:'color:var(--steel)',DETERIORATING:'color:var(--critical)'};return`<span class="trajectory-badge" style="${colors[t]||''}">${map[t]||t}</span>`}
+function listItems(arr,cls='adv-list'){if(!arr||!arr.length)return'<p style="font-size:12px;color:var(--mist)">No data available</p>';return`<ul class="${cls}">${arr.map(i=>`<li>${i}</li>`).join('')}</ul>`}
+function buildReport(g,mode){
+  const lp=g.location_profile||{};const ov=g.overall_risk_level||'MEDIUM';
+  const modeLabel={ai:'AI Knowledge Base',alerts:'VigiNote Alerts',combined:'Combined Intelligence'}[mode]||mode;
+  const threatHTML=(g.threat_matrix||[]).map(t=>{const score=t.risk_score||5;const pct=(score/10)*100;const color=scoreBarColor(t.risk_level);const indicators=(t.key_indicators||[]).map(i=>`<span class="ind-chip">${i}</span>`).join('');return`<div class="threat-row"><div class="tr-left"><div class="tr-cat">${t.category||''}</div><div class="tr-assess">${t.assessment||''}</div>${t.visitor_impact?`<div class="tr-impact"><strong>Visitor impact:</strong> ${t.visitor_impact}</div>`:''} ${indicators?`<div class="tr-indicators">${indicators}</div>`:''}</div><div class="tr-right">${riskBadge(t.risk_level)}<div class="score-bar-wrap"><div class="score-bar" style="width:${pct}%;background:${color}"></div></div><div class="score-num">${score}/10</div></div></div>`}).join('');
+  const hotspotsHTML=(g.hotspots||[]).map(h=>`<div class="hotspot-card risk-${(h.risk_level||'MEDIUM').toUpperCase()}"><div class="hs-name"><span>${h.name||''}</span>${riskBadge(h.risk_level)}</div><div class="hs-desc">${h.description||''}</div><div class="hs-rec"><strong>Advisory:</strong> ${h.recommendation||''}</div></div>`).join('');
+  const va=g.visitor_advisory||{};
+  const advisoryHTML=`<div class="advisory-grid"><div class="adv-card"><div class="adv-title">Before Travel</div>${listItems(va.before_travel)}</div><div class="adv-card"><div class="adv-title">Emergency Contacts</div>${listItems(va.emergency_contacts)}</div><div class="adv-card"><div class="adv-title">Areas to Avoid</div>${listItems(va.areas_to_avoid)}</div><div class="adv-card"><div class="adv-title">Safer Zones</div>${listItems(va.safe_zones)}</div><div class="adv-card full"><div class="adv-title">Transport</div><p class="adv-text">${va.transport||''}</p></div><div class="adv-card full"><div class="adv-title">Accommodation</div><p class="adv-text">${va.accommodation||''}</p></div><div class="adv-card full"><div class="adv-title">Communication Security</div><p class="adv-text">${va.communication||''}</p></div></div>`;
+  const oc=g.organised_crime_profile||{};
+  const crimeHTML=`<div class="crime-grid"><div class="crime-card"><div class="adv-title">Active Groups</div>${listItems(oc.active_groups)}</div><div class="crime-card"><div class="adv-title">Primary Methods</div>${listItems(oc.primary_methods)}</div><div class="crime-card full"><div class="adv-title">Visitor Targeting Risk</div><p class="adv-text">${oc.visitor_targeting||''}</p></div><div class="crime-card full"><div class="adv-title">Current Trend</div><p class="adv-text">${oc.trend||''}</p></div></div>`;
+  const measuresHTML=`<div class="measures-grid">${(g.recommended_measures||[]).map(m=>`<div class="measure-card"><div class="m-cat">${m.category||''}</div>${listItems(m.measures,'m-list')}</div>`).join('')}</div>`;
+  const execParas=(g.executive_summary||'').split('\n\n').filter(Boolean).map(p=>`<p>${p}</p>`).join('');
+  return`<div class="report-header"><div class="rh-grid"></div><div class="rh-accent"></div><div class="rh-content"><div class="rh-meta"><span class="rh-class">${g.classification||'CLIENT CONFIDENTIAL'}</span><span class="rh-date">${g.assessment_date||''}</span></div><div class="report-title">${g.report_title||g.location+' Security Assessment'}</div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">${riskBadge(ov)}<span style="font-size:13px;color:rgba(255,255,255,0.5)">Overall Risk</span>${trajectoryIcon(g.risk_trajectory)}</div><div class="rh-stats"><div class="rh-stat"><span class="s-label">Location</span><span class="s-val">${g.location||''}</span></div><div class="rh-stat"><span class="s-label">Risk Score</span><span class="s-val">${g.overall_risk_score||'—'}/10</span></div><div class="rh-stat"><span class="s-label">Threat Categories</span><span class="s-val">${(g.threat_matrix||[]).length}</span></div><div class="rh-stat"><span class="s-label">Hotspots</span><span class="s-val">${(g.hotspots||[]).length}</span></div></div></div></div>
+  <div class="report-section"><div class="section-head"><span class="section-num">01</span><span class="section-title">Executive Summary</span></div><div class="exec-box">${execParas}</div></div>
+  <div class="report-section"><div class="section-head"><span class="section-num">02</span><span class="section-title">Location Profile</span></div><div class="profile-grid"><div class="profile-card"><div class="pc-label">Country</div><div class="pc-val">${lp.country||g.location||''}</div></div><div class="profile-card"><div class="pc-label">Region</div><div class="pc-val">${lp.region||''}</div></div><div class="profile-card"><div class="pc-label">Population</div><div class="pc-val">${lp.population||''}</div></div><div class="profile-card" style="grid-column:1/-1"><div class="pc-label">Strategic Significance</div><div class="pc-val">${lp.strategic_significance||''}</div></div></div></div>
+  <div class="report-section"><div class="section-head"><span class="section-num">03</span><span class="section-title">Threat Matrix</span></div><div class="threat-grid">${threatHTML}</div></div>
+  ${g.hotspots&&g.hotspots.length?`<div class="report-section"><div class="section-head"><span class="section-num">04</span><span class="section-title">Area Hotspot Assessment</span></div><div class="hotspot-grid">${hotspotsHTML}</div></div>`:''}
+  <div class="report-section"><div class="section-head"><span class="section-num">05</span><span class="section-title">Visitor & Traveller Advisory</span></div>${advisoryHTML}</div>
+  <div class="report-section"><div class="section-head"><span class="section-num">06</span><span class="section-title">Organised Crime Profile</span></div>${crimeHTML}</div>
+  <div class="report-section"><div class="section-head"><span class="section-num">07</span><span class="section-title">Recommended Security Measures</span></div>${measuresHTML}</div>
+  ${g.linkedin_teaser?`<div class="report-section no-print"><div class="section-head"><span class="section-num">08</span><span class="section-title">LinkedIn Teaser Post</span></div><div class="teaser-box"><div class="t-label">Ready to post — edit as needed</div><div class="t-text" id="teaser-text">${g.linkedin_teaser}</div><div class="t-actions"><button type="button" class="btn-white" onclick="copyTeaser()">📋 Copy post</button><a href="https://www.linkedin.com" target="_blank" rel="noopener" class="btn-white" style="text-decoration:none">Open LinkedIn →</a></div></div></div>`:''}
+  <div class="report-footer"><div class="rf-brand">VIGINOTE</div><div class="rf-disc">Generated from open-source intelligence and AI analysis. For professional use only. Not for redistribution without authorisation.</div></div>`;
+}
+async function generateAssessment(){
+  const location=document.getElementById('loc-input').value.trim();
+  if(!location){document.getElementById('loc-input').focus();return}
+  const mode=document.querySelector('input[name=mode]:checked')?.value||'ai';
+  const event=document.getElementById('event-input').value.trim();
+  const hours=parseInt(document.getElementById('hours-input').value)||168;
+  const btn=document.getElementById('gen-btn');btn.disabled=true;btn.classList.add('loading');
+  document.getElementById('ov-msg').textContent='Generating Assessment…';
+  document.getElementById('ov-sub').textContent=`Analysing intelligence for ${location}`;
+  document.getElementById('overlay').classList.add('show');
+  const steps=['ps1','ps2','ps3','ps4','ps5'];let step=0;
+  const si=setInterval(()=>{if(step>0)document.getElementById(steps[step-1]).classList.replace('active','done');if(step<steps.length){document.getElementById(steps[step]).classList.add('active');step++}},14000/steps.length);
+  try{
+    const resp=await fetch(`${API_BASE}/ai/assessment`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location,event:event||null,mode,hours})});
+    const data=await resp.json();clearInterval(si);
+    if(!resp.ok)throw new Error(data.detail||'Assessment failed');
+    if(!data.generated){alert(data.message||'No data returned. Try AI or Combined mode.');return}
+    document.getElementById('report-body').innerHTML=buildReport(data.generated,mode);
+    document.getElementById('empty-state').style.display='none';
+    document.getElementById('report-output').style.display='block';
+    document.getElementById('topbar-title').textContent=data.generated.location+' Assessment';
+    document.getElementById('report-panel').scrollTo({top:0,behavior:'smooth'});
+  }catch(e){clearInterval(si);alert('Generation failed: '+e.message);}
+  finally{document.getElementById('overlay').classList.remove('show');btn.disabled=false;btn.classList.remove('loading');steps.forEach(s=>{document.getElementById(s).classList.remove('active','done')});document.getElementById('ps1').classList.add('active')}
+}
+function copyTeaser(){const txt=document.getElementById('teaser-text')?.textContent||'';navigator.clipboard.writeText(txt).then(()=>{const btn=event.target;btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent='📋 Copy post',2000)})}
+document.getElementById('loc-input').addEventListener('keydown',e=>{if(e.key==='Enter')generateAssessment()});
+</script>
+</body>
+</html>
