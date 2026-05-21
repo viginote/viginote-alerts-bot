@@ -406,50 +406,43 @@ body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--tex
     <div class="export-card">
       <div class="icon-big">🖼</div>
       <h3>LinkedIn Thumbnail Card</h3>
-      <p>AI-generated conflict image with VigiNote branding. 1792×1024px — optimised for LinkedIn document cover and standalone image posts.</p>
-      <div class="thumb-preview" id="thumb-preview" style="position:relative;overflow:hidden;border-radius:8px;aspect-ratio:1792/1024;background:#0f1f5c;min-height:180px">
-        <img id="thumb-bg-img" src="" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;opacity:0.7">
-        <div class="tb-bg" id="thumb-fallback-bg"></div>
-        <div class="tb-bar"></div>
-        <!-- VigiNote Logo top right — exact recreation -->
-        <div style="position:absolute;top:12px;right:14px;z-index:2;background:rgba(8,16,40,0.7);backdrop-filter:blur(6px);padding:8px 12px;border-radius:6px;border:1px solid rgba(100,160,220,0.2)">
-          <svg width="72" height="84" viewBox="0 0 72 84" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <!-- Shield outer — dark fill with blue-grey stroke -->
+      <p>Download a clean branded card (1200×627px) then open in Canva to add your background image before posting to LinkedIn.</p>
+
+      <div id="thumb-preview" style="position:relative;overflow:hidden;border-radius:8px;aspect-ratio:1200/627;background:linear-gradient(135deg,#1a2f6e 0%,#0f1f5c 100%);width:100%">
+        <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#3a6fd8,#1a2f6e)"></div>
+        <div style="position:absolute;top:10px;right:12px;background:rgba(8,16,40,0.7);padding:6px 10px;border-radius:5px;border:1px solid rgba(100,160,220,0.2);display:flex;align-items:center;gap:6px">
+          <svg width="20" height="24" viewBox="0 0 72 84" fill="none">
             <path d="M36 3 L66 14 L66 40 C66 58 36 72 36 72 C36 72 6 58 6 40 L6 14 Z" fill="#0d1e3a" stroke="#3a5070" stroke-width="2" stroke-linejoin="round"/>
-            <!-- Shield inner highlight line -->
-            <path d="M36 7 L62 17 L62 40 C62 55 36 68 36 68 C36 68 10 55 10 40 L10 17 Z" fill="none" stroke="#2a4060" stroke-width="1" stroke-linejoin="round"/>
-            <!-- Eye almond outer shape — blue -->
-            <path d="M12 32 C18 20 54 20 60 32 C54 44 18 44 12 32 Z" fill="none" stroke="#4a90c8" stroke-width="2.5" stroke-linejoin="round"/>
-            <!-- Eye iris circle -->
+            <path d="M12 32 C18 20 54 20 60 32 C54 44 18 44 12 32 Z" fill="none" stroke="#4a90c8" stroke-width="2.5"/>
             <circle cx="36" cy="32" r="7" fill="none" stroke="#4a90c8" stroke-width="2.5"/>
-            <!-- Eye pupil -->
             <circle cx="36" cy="32" r="3" fill="#4a90c8"/>
-            <!-- Circuit vertical lines — 4 lines, varying heights -->
             <line x1="24" y1="47" x2="24" y2="58" stroke="#3a5878" stroke-width="2" stroke-linecap="round"/>
             <line x1="30" y1="47" x2="30" y2="63" stroke="#3a5878" stroke-width="2" stroke-linecap="round"/>
             <line x1="36" y1="47" x2="36" y2="60" stroke="#3a5878" stroke-width="2" stroke-linecap="round"/>
             <line x1="42" y1="47" x2="42" y2="56" stroke="#3a5878" stroke-width="2" stroke-linecap="round"/>
-            <!-- Circuit dots at bottom of each line -->
             <circle cx="24" cy="58" r="2.5" fill="#3a5878"/>
             <circle cx="30" cy="63" r="2.5" fill="#3a5878"/>
             <circle cx="36" cy="60" r="2.5" fill="#3a5878"/>
             <circle cx="42" cy="56" r="2.5" fill="#3a5878"/>
-            <!-- VIGINOTE text -->
-            <text x="36" y="80" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" font-weight="700" fill="#b0bcc8" letter-spacing="3">VIGINOTE</text>
           </svg>
+          <span style="font-family:Arial,sans-serif;font-size:10px;font-weight:700;color:rgba(200,215,240,0.95);letter-spacing:2px">VIGINOTE</span>
         </div>
-        <!-- Bottom content -->
-        <div style="position:absolute;bottom:0;left:0;right:0;padding:16px 20px;background:linear-gradient(transparent,rgba(10,20,60,0.92));z-index:2">
-          <div class="tb-tags" id="thumb-tags" style="margin-bottom:8px"></div>
-          <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#a0b4e8;margin-bottom:5px">Intelligence Briefing</div>
-          <div class="tb-headline" id="thumb-headline" style="font-family:'Playfair Display',Georgia,serif;font-size:18px;font-weight:700;color:#fff;line-height:1.25;margin-bottom:6px">Generating…</div>
-          <div class="tb-date" id="thumb-date" style="font-size:10px;color:rgba(255,255,255,0.5)"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:14px 16px;background:linear-gradient(transparent,rgba(8,16,50,0.95))">
+          <div id="thumb-tags" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px"></div>
+          <div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#a0b4e8;margin-bottom:4px">Intelligence Briefing</div>
+          <div id="thumb-headline" style="font-family:'Playfair Display',Georgia,serif;font-size:15px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:4px">Generate a briefing to populate this card</div>
+          <div id="thumb-date" style="font-size:9px;color:rgba(255,255,255,0.45)"></div>
         </div>
       </div>
-      <div id="img-gen-status" style="font-size:12px;color:var(--text-3);min-height:18px;margin-top:4px"></div>
+
+      <div style="background:var(--navy-faint);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-size:12px;color:var(--text-2);line-height:1.6;margin-top:4px">
+        <strong style="color:var(--navy-mid)">Canva workflow:</strong>
+        Download PNG → open Canva → new 1200×627px design → add your background photo → upload this PNG as a transparent overlay layer → export.
+      </div>
+
       <div class="export-actions">
-        <button type="button" class="btn btn-navy" id="gen-img-btn" onclick="generateThumbnailImage()">✦ Generate AI Image</button>
-        <button type="button" class="btn btn-outline" onclick="downloadThumbnail()">⬇ Download PNG</button>
+        <button type="button" class="btn btn-navy" onclick="downloadThumbnail()">⬇ Download PNG</button>
+        <a href="https://www.canva.com" target="_blank" rel="noopener" class="btn btn-outline" style="text-decoration:none">Open Canva →</a>
       </div>
     </div>
 
@@ -698,6 +691,7 @@ function populateEditor(g) {
 
 function applyEdits() {
   if (!generatedData) return;
+  loadDiversityInline();
   generatedData.briefing_title    = document.getElementById('edit-title').value;
   generatedData.executive_summary = document.getElementById('edit-exec').value;
   generatedData.linkedin_caption  = document.getElementById('edit-linkedin').value;
@@ -782,6 +776,7 @@ function renderPreview(g) {
       <div class="stat-box"><div class="n">${regions.length}</div><div class="l">Regions</div></div>
       <div class="stat-box"><div class="n">${sources.length}</div><div class="l">Sources</div></div>
     </div>
+  <div id="diversity-inline" style="margin-bottom:20px"></div>
     <div class="sec-label">Regional Intelligence</div>
     ${alertsHTML}
     <div class="sources-foot">
@@ -829,236 +824,156 @@ function copyCaption() {
   });
 }
 
-async function generateThumbnailImage() {
-  if (!generatedData) { alert('Generate a briefing first.'); return; }
-
-  const btn = document.getElementById('gen-img-btn');
-  const status = document.getElementById('img-gen-status');
-  btn.disabled = true;
-  btn.textContent = '⏳ Finding image…';
-  status.textContent = 'Selecting editorial image for your briefing topic…';
-
-  const regions  = [...new Set(selectedAlerts.map(a => regionLabel(a.region)))];
-  const orgs     = [];
-  const locs     = [];
-  selectedAlerts.forEach(a => {
-    const e = a.entities || {};
-    (e.organizations||[]).forEach(o => { if(!orgs.includes(o)) orgs.push(o); });
-    (e.locations||[]).forEach(l => { if(!locs.includes(l)) locs.push(l); });
-  });
-
-  try {
-    const resp = await fetch(API_BASE + '/ai/image', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        headline:      generatedData.thumbnail_headline || generatedData.briefing_title || '',
-        regions:       regions,
-        organizations: orgs.slice(0,5),
-        locations:     locs.slice(0,5),
-        briefing_type: document.getElementById('briefing-type')?.value || 'morning',
-      })
-    });
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.detail || 'Image generation failed');
-
-    const img = document.getElementById('thumb-bg-img');
-    // Only set crossOrigin for external URLs, not base64 data URIs
-    if (!data.image_url.startsWith('data:')) {
-      img.crossOrigin = 'anonymous';
-    }
-    img.onload = () => {
-      img.style.display = 'block';
-      document.getElementById('thumb-fallback-bg').style.display = 'none';
-      const src = data.source === 'gpt-image-1' ? 'AI image ready (gpt-image-1)' : 'Editorial image loaded';
-      status.textContent = src + ' — click Download PNG to save.';
-    };
-    img.onerror = () => {
-      status.textContent = 'Image could not load — branded card will be used for download.';
-    };
-    img.src = data.image_url;
-    btn.textContent = '↺ Regenerate Image';
-  } catch(e) {
-    status.textContent = 'Image failed: ' + e.message + '. Using branded card instead.';
-    btn.textContent = '✦ Retry AI Image';
-  } finally {
-    btn.disabled = false;
-  }
-}
-
 function downloadThumbnail() {
-  // Canvas-based render — handles Unsplash CORS images correctly
   const W = 1200, H = 627;
   const canvas = document.createElement('canvas');
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
 
-  // Background
-  ctx.fillStyle = '#0f1f5c';
+  const headline  = document.getElementById('thumb-headline')?.textContent || 'VigiNote Intelligence Briefing';
+  const dateText  = document.getElementById('thumb-date')?.textContent || '';
+  const tagEls    = document.getElementById('thumb-tags')?.querySelectorAll('span') || [];
+  const tags      = Array.from(tagEls).map(t => t.textContent.trim()).filter(Boolean).slice(0,4);
+
+  // Navy gradient background
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, '#1a2f6e');
+  bg.addColorStop(1, '#0f1f5c');
+  ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
-  // Get current state
-  const headline  = document.getElementById('thumb-headline')?.textContent || '';
-  const dateText  = document.getElementById('thumb-date')?.textContent || '';
-  const tagEls    = document.getElementById('thumb-tags')?.querySelectorAll('.tb-tag') || [];
-  const tags      = Array.from(tagEls).map(t => t.textContent.trim()).slice(0,4);
-  const bgImg     = document.getElementById('thumb-bg-img');
-  const hasImage  = bgImg && bgImg.src && bgImg.style.display !== 'none' && bgImg.complete && bgImg.naturalWidth > 0;
+  // Top accent bar
+  const bar = ctx.createLinearGradient(0, 0, W, 0);
+  bar.addColorStop(0, '#3a6fd8');
+  bar.addColorStop(1, '#1a2f6e');
+  ctx.fillStyle = bar;
+  ctx.fillRect(0, 0, W, 6);
 
-  function renderCard() {
-    // Background gradient
-    const grad = ctx.createLinearGradient(0, 0, W, H);
-    grad.addColorStop(0, 'rgba(42,64,153,0.9)');
-    grad.addColorStop(1, 'rgba(10,20,60,1)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, H);
+  // Bottom gradient overlay
+  const bot = ctx.createLinearGradient(0, H * 0.4, 0, H);
+  bot.addColorStop(0, 'rgba(8,16,50,0)');
+  bot.addColorStop(1, 'rgba(8,16,50,0.96)');
+  ctx.fillStyle = bot;
+  ctx.fillRect(0, 0, W, H);
 
-    // Top accent bar
-    const barGrad = ctx.createLinearGradient(0, 0, W, 0);
-    barGrad.addColorStop(0, '#3a6fd8');
-    barGrad.addColorStop(1, '#1a2f6e');
-    ctx.fillStyle = barGrad;
-    ctx.fillRect(0, 0, W, 5);
+  // Logo panel — top right
+  const lpW = 170, lpH = 48, lpX = W - lpW - 20, lpY = 18;
+  ctx.fillStyle = 'rgba(8,16,40,0.72)';
+  rrect(ctx, lpX, lpY, lpW, lpH, 6); ctx.fill();
+  ctx.strokeStyle = 'rgba(100,160,220,0.22)'; ctx.lineWidth = 1;
+  rrect(ctx, lpX, lpY, lpW, lpH, 6); ctx.stroke();
 
-    // Logo panel top-right
-    const lpX = W - 180, lpY = 18, lpW = 162, lpH = 44;
-    ctx.fillStyle = 'rgba(8,16,40,0.7)';
-    roundRect(ctx, lpX, lpY, lpW, lpH, 6);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(100,160,220,0.2)';
-    ctx.lineWidth = 1;
-    roundRect(ctx, lpX, lpY, lpW, lpH, 6);
-    ctx.stroke();
+  // Shield icon
+  drawShield(ctx, lpX + 14, lpY + 8, 30);
 
-    // Shield icon (simplified)
-    drawShield(ctx, lpX + 16, lpY + 7, 28);
+  // VIGINOTE wordmark
+  ctx.fillStyle = 'rgba(200,215,240,0.95)';
+  ctx.font = 'bold 13px Arial';
+  ctx.letterSpacing = '2px';
+  ctx.fillText('VIGINOTE', lpX + 52, lpY + 28);
 
-    // VIGINOTE text
-    ctx.fillStyle = 'rgba(200,215,240,0.95)';
-    ctx.font = '700 13px Arial';
-    ctx.letterSpacing = '3px';
-    ctx.fillText('VIGINOTE', lpX + 52, lpY + 26);
-
-    // Bottom gradient overlay
-    const botGrad = ctx.createLinearGradient(0, H * 0.45, 0, H);
-    botGrad.addColorStop(0, 'transparent');
-    botGrad.addColorStop(1, 'rgba(8,16,50,0.95)');
-    ctx.fillStyle = botGrad;
-    ctx.fillRect(0, 0, W, H);
-
-    // Region tags
-    let tagX = 48;
-    ctx.font = '700 11px Arial';
-    tags.forEach(tag => {
-      const tw = ctx.measureText(tag).width + 20;
-      ctx.strokeStyle = 'rgba(160,180,232,0.35)';
-      ctx.lineWidth = 1;
-      ctx.fillStyle = 'rgba(160,180,232,0.15)';
-      roundRect(ctx, tagX, H - 146, tw, 20, 3);
-      ctx.fill();
-      roundRect(ctx, tagX, H - 146, tw, 20, 3);
-      ctx.stroke();
-      ctx.fillStyle = '#a0b4e8';
-      ctx.fillText(tag.toUpperCase(), tagX + 10, H - 132);
-      tagX += tw + 8;
-    });
-
-    // Intelligence Briefing label
+  // Region tags
+  let tx = 48;
+  ctx.font = 'bold 11px Arial';
+  tags.forEach(tag => {
+    const label = tag.toUpperCase();
+    const tw = ctx.measureText(label).width + 22;
+    ctx.fillStyle = 'rgba(160,180,232,0.14)';
+    rrect(ctx, tx, H - 150, tw, 22, 3); ctx.fill();
+    ctx.strokeStyle = 'rgba(160,180,232,0.32)'; ctx.lineWidth = 1;
+    rrect(ctx, tx, H - 150, tw, 22, 3); ctx.stroke();
     ctx.fillStyle = '#a0b4e8';
-    ctx.font = '700 11px Arial';
-    ctx.fillText('INTELLIGENCE BRIEFING', 48, H - 104);
+    ctx.fillText(label, tx + 11, H - 135);
+    tx += tw + 8;
+  });
 
-    // Main headline
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '700 36px Georgia, serif';
-    const words = headline.split(' ');
-    let line = '', lines = [], maxW = W - 96;
-    words.forEach(w => {
-      const test = line + (line ? ' ' : '') + w;
-      if (ctx.measureText(test).width > maxW && line) {
-        lines.push(line); line = w;
-      } else { line = test; }
-    });
-    if (line) lines.push(line);
-    lines.slice(0,2).forEach((l, i) => {
-      ctx.fillText(l, 48, H - 68 + (i * 44));
-    });
+  // Intelligence Briefing label
+  ctx.fillStyle = '#a0b4e8';
+  ctx.font = 'bold 12px Arial';
+  ctx.letterSpacing = '2px';
+  ctx.fillText('INTELLIGENCE BRIEFING', 48, H - 104);
 
-    // Date line
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.font = '400 13px Arial';
-    ctx.fillText(dateText, 48, H - 28);
+  // Headline — wrap at 2 lines max
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 38px Georgia, serif';
+  ctx.letterSpacing = '0px';
+  const words = headline.split(' ');
+  let line = '', lines = [];
+  words.forEach(w => {
+    const test = line + (line ? ' ' : '') + w;
+    if (ctx.measureText(test).width > W - 100 && line) { lines.push(line); line = w; }
+    else line = test;
+  });
+  if (line) lines.push(line);
+  lines.slice(0, 2).forEach((l, i) => ctx.fillText(l, 48, H - 56 + i * 46));
 
-    const link = document.createElement('a');
-    link.download = 'viginote-thumbnail.png';
-    link.href = canvas.toDataURL('image/png', 0.95);
-    link.click();
-  }
+  // Date
+  ctx.fillStyle = 'rgba(255,255,255,0.42)';
+  ctx.font = '400 14px Arial';
+  ctx.fillText(dateText, 48, H - 20);
 
-  function drawShield(ctx, x, y, size) {
-    const s = size / 32;
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(s, s);
-    ctx.strokeStyle = '#3a5070';
-    ctx.lineWidth = 2 / s;
-    ctx.fillStyle = '#0d1e3a';
-    ctx.beginPath();
-    ctx.moveTo(16, 1); ctx.lineTo(30, 6); ctx.lineTo(30, 18);
-    ctx.bezierCurveTo(30, 26, 16, 32, 16, 32);
-    ctx.bezierCurveTo(16, 32, 2, 26, 2, 18);
-    ctx.lineTo(2, 6); ctx.closePath();
-    ctx.fill(); ctx.stroke();
-    ctx.strokeStyle = '#4a90c8';
-    ctx.lineWidth = 1.5 / s;
-    ctx.beginPath();
-    ctx.moveTo(4, 16); ctx.bezierCurveTo(7, 10, 25, 10, 28, 16);
-    ctx.bezierCurveTo(25, 22, 7, 22, 4, 16);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(16, 16, 4, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.fillStyle = '#4a90c8';
-    ctx.beginPath();
-    ctx.arc(16, 16, 1.8, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
+  // Download
+  const link = document.createElement('a');
+  link.download = 'viginote-thumbnail.png';
+  link.href = canvas.toDataURL('image/png', 0.95);
+  link.click();
+}
 
-  function roundRect(ctx, x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + w - r, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-    ctx.lineTo(x + w, y + h - r);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    ctx.lineTo(x + r, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
-    ctx.closePath();
-  }
+function drawShield(ctx, x, y, size) {
+  const s = size / 36;
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  ctx.fillStyle = '#0d1e3a'; ctx.strokeStyle = '#3a5070'; ctx.lineWidth = 2 / s;
+  ctx.beginPath();
+  ctx.moveTo(18,1); ctx.lineTo(34,7); ctx.lineTo(34,20);
+  ctx.bezierCurveTo(34,30,18,38,18,38);
+  ctx.bezierCurveTo(18,38,2,30,2,20);
+  ctx.lineTo(2,7); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = '#4a90c8'; ctx.lineWidth = 1.8 / s;
+  ctx.beginPath();
+  ctx.moveTo(4,18); ctx.bezierCurveTo(8,11,28,11,32,18);
+  ctx.bezierCurveTo(28,25,8,25,4,18); ctx.stroke();
+  ctx.beginPath(); ctx.arc(18,18,4.5,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle = '#4a90c8';
+  ctx.beginPath(); ctx.arc(18,18,2,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
 
-  if (hasImage) {
-    // Draw the Unsplash image as background then overlay
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      // Scale to fill
-      const scale = Math.max(W / img.width, H / img.height);
-      const dw = img.width * scale, dh = img.height * scale;
-      const dx = (W - dw) / 2, dy = (H - dh) / 2;
-      ctx.drawImage(img, dx, dy, dw, dh);
-      // Dark overlay for readability
-      ctx.fillStyle = 'rgba(8,16,50,0.55)';
-      ctx.fillRect(0, 0, W, H);
-      renderCard();
-    };
-    img.onerror = () => renderCard(); // fallback if CORS blocks
-    img.src = bgImg.src;
-  } else {
-    renderCard();
-  }
+function rrect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+}
+
+
+
+async function loadDiversityInline() {
+  const el = document.getElementById('diversity-inline');
+  if (!el) return;
+  try {
+    const r = await fetch(API_BASE + '/analytics/diversity?hours=48');
+    const d = await r.json();
+    if (d.error || !d.breakdown) return;
+    const b = d.breakdown;
+    el.innerHTML = `
+    <div style="background:#f0f3fb;border:1px solid #c5d0ef;border-radius:6px;padding:10px 14px;font-size:12px;color:#2a3550;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8b9ab5">Source Diversity</span>
+      <div style="flex:1;height:6px;background:#dde2ee;border-radius:3px;overflow:hidden;min-width:100px;display:flex">
+        <div style="width:${b.local_specialist.pct}%;background:#1a7a4a;height:100%"></div>
+        <div style="width:${b.regional.pct}%;background:#2d5be3;height:100%"></div>
+        <div style="width:${b.wire.pct}%;background:#d0d8e8;height:100%"></div>
+      </div>
+      <span style="color:#1a7a4a;font-weight:600">${b.local_specialist.pct}% local</span>
+      <span style="color:#2d5be3;font-weight:600">${b.regional.pct}% regional</span>
+      <span style="color:#8b9ab5">${b.wire.pct}% wire</span>
+      <span style="margin-left:auto;font-family:DM Mono,monospace;font-weight:600;color:#1a2f6e">Score: ${d.diversity_score}/100</span>
+    </div>`;
+  } catch(e) {}
 }
 
 function showOverlay(msg, sub) {
