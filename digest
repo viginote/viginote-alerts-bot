@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VigiNote — Weekly Digest Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0f1f5c;--navy2:#1a2f6e;--paper:#f7f8fc;--white:#fff;--ink:#0a0f1e;--ink2:#1e2840;--mist:#8a9ab5;--border:#d0d8e8;--blue-pale:#e8edf9;--steel:#4a6080;--low:#1a7a4a;--high:#c04a00;--critical:#a01515}
+html{-webkit-font-smoothing:antialiased}
+body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
+.topbar{background:var(--navy);height:52px;display:flex;align-items:center;padding:0 24px;gap:16px;position:sticky;top:0;z-index:100}
+.topbar-brand{display:flex;align-items:center;gap:9px;margin-right:auto;text-decoration:none}
+.brand-text{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:#fff;letter-spacing:0.5px}
+.brand-sub{font-size:9px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:rgba(160,180,232,0.65);display:block;margin-top:-2px}
+.nav-link{font-size:12px;font-weight:500;color:rgba(255,255,255,0.5);text-decoration:none;padding:5px 12px;border-radius:4px;transition:all 0.15s}
+.nav-link:hover{color:#fff;background:rgba(255,255,255,0.08)}
+.nav-link.active{color:#fff;background:rgba(255,255,255,0.12)}
+.app{display:flex;height:calc(100vh - 52px)}
+.input-panel{width:300px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
+.ip-header{padding:20px;border-bottom:1px solid var(--border)}
+.ip-header h2{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;margin-bottom:3px}
+.ip-header p{font-size:12px;color:var(--mist);line-height:1.5}
+.ip-section{padding:16px 20px;border-bottom:1px solid var(--border)}
+.ip-section label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mist);display:block;margin-bottom:7px}
+.ip-input{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;color:var(--ink);font-family:'DM Sans',sans-serif;background:var(--paper)}
+.ip-input:focus{outline:none;border-color:var(--navy2);background:#fff}
+select.ip-input{cursor:pointer}
+.ip-footer{padding:16px 20px;margin-top:auto}
+.btn-gen{width:100%;padding:11px;background:var(--navy2);color:#fff;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.15s}
+.btn-gen:hover{background:var(--navy)}
+.btn-gen:disabled{opacity:0.5;cursor:not-allowed}
+.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:none}
+.btn-gen.loading .spin{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--ink);font-family:'DM Sans',sans-serif;transition:all 0.15s;text-decoration:none}
+.btn:hover{border-color:var(--navy2);background:var(--blue-pale);color:var(--navy2)}
+.btn-navy{background:var(--navy2);color:#fff;border-color:var(--navy2)}
+.btn-navy:hover{background:var(--navy)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.report-panel{flex:1;overflow-y:auto;background:var(--paper)}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:14px;color:var(--mist);text-align:center;padding:40px}
+.empty-icon{font-size:48px;opacity:0.25}
+.empty-state h3{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--ink2);font-weight:600}
+.report-wrap{max-width:860px;margin:0 auto;padding:0 28px 80px}
+.report-topbar{padding:14px 0;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);margin-bottom:28px;position:sticky;top:0;background:var(--paper);z-index:50}
+.report-topbar h3{font-size:14px;font-weight:600;color:var(--ink);margin-right:auto}
+.digest-header{background:var(--navy);border-radius:12px;padding:36px 40px 30px;margin-bottom:24px;position:relative;overflow:hidden}
+.dh-grid{position:absolute;inset:0;opacity:0.03;background-image:linear-gradient(rgba(255,255,255,0.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.5) 1px,transparent 1px);background-size:40px 40px}
+.dh-accent{position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#2d5be3,#7a40d8,#2d5be3)}
+.dh-content{position:relative;z-index:1}
+.dh-over{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(160,180,232,0.7);margin-bottom:8px}
+.digest-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:#fff;line-height:1.2;margin-bottom:10px}
+.dh-period{font-size:12px;color:rgba(255,255,255,0.45)}
+.dh-stats{display:flex;gap:20px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.1)}
+.dh-stat .s-label{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.35)}
+.dh-stat .s-val{font-size:15px;font-weight:700;color:#fff}
+.dsection{margin-bottom:24px}
+.ds-head{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:var(--ink);margin-bottom:12px;padding-bottom:8px;border-bottom:1.5px solid var(--border)}
+.review-box{background:var(--white);border:1px solid var(--border);border-left:4px solid var(--navy2);border-radius:0 8px 8px 0;padding:18px 22px}
+.review-box p{font-size:14px;line-height:1.8;color:var(--ink2);margin-bottom:10px}
+.review-box p:last-child{margin-bottom:0}
+.top-stories{display:flex;flex-direction:column;gap:8px}
+.story-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:14px 16px;display:flex;gap:14px;align-items:flex-start}
+.story-num{font-family:'DM Mono',monospace;font-size:20px;font-weight:500;color:var(--border);flex-shrink:0;line-height:1;margin-top:2px}
+.story-content .s-hl{font-size:13px;font-weight:600;color:var(--ink);line-height:1.4;margin-bottom:4px}
+.story-content .s-sig{font-size:12px;color:var(--ink2);line-height:1.55}
+.story-content .s-region{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--mist)}
+.region-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.region-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.rc-region{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--steel);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.rc-summary{font-size:12px;color:var(--ink2);line-height:1.55}
+.traj-pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:3px}
+.traj-IMPROVING{background:#e8f5ee;color:var(--low)}
+.traj-STABLE{background:#f0f3fb;color:var(--steel)}
+.traj-DETERIORATING{background:#fde8e8;color:var(--critical)}
+.watch-list{display:flex;flex-direction:column;gap:7px}
+.watch-item{background:var(--white);border:1px solid var(--border);border-radius:7px;padding:12px 16px;font-size:13px;color:var(--ink2);line-height:1.5;display:flex;gap:10px;align-items:flex-start}
+.watch-item::before{content:"⚠";flex-shrink:0;font-size:14px;margin-top:1px}
+.stat-callout{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);border-radius:8px;padding:20px 24px;display:flex;align-items:center;gap:16px}
+.sc-num{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:700;color:#fff;line-height:1;flex-shrink:0}
+.sc-text{font-size:14px;color:rgba(255,255,255,0.75);line-height:1.5}
+.li-box{background:var(--navy);border-radius:8px;padding:20px 24px}
+.li-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(160,180,232,0.7);margin-bottom:10px}
+.li-text{font-size:13px;line-height:1.7;color:rgba(255,255,255,0.85);white-space:pre-wrap;margin-bottom:14px}
+.li-actions{display:flex;gap:8px}
+.btn-white{background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);font-size:12px;font-weight:600;padding:7px 14px;border-radius:5px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s}
+.btn-white:hover{background:rgba(255,255,255,0.2)}
+.digest-footer{margin-top:32px;padding-top:16px;border-top:2px solid var(--navy2);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.df-brand{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:700;color:var(--navy2)}
+.df-disc{font-size:10px;color:var(--mist);text-align:right;line-height:1.5;max-width:380px}
+.overlay{position:fixed;inset:0;background:rgba(10,15,30,0.7);z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;backdrop-filter:blur(4px)}
+.overlay.show{display:flex}
+.ov-spin{width:44px;height:44px;border:3px solid rgba(255,255,255,0.15);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite}
+.ov-msg{color:#fff;font-size:15px;font-weight:600}
+.ov-sub{color:rgba(255,255,255,0.5);font-size:12px;text-align:center;max-width:280px;line-height:1.5}
+@media print{.topbar,.input-panel,.report-topbar,.li-box,.overlay{display:none!important}.app{display:block!important;height:auto!important}.report-panel{overflow:visible!important}body{background:#fff!important}.report-wrap{max-width:100%!important;padding:0 30px 40px!important}.story-card,.region-card,.watch-item{page-break-inside:avoid}@page{size:A4;margin:0.5in 0.6in}}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay">
+  <div class="ov-spin"></div>
+  <div class="ov-msg">Generating Weekly Digest…</div>
+  <div class="ov-sub">Claude is analysing your week's intelligence and writing the digest</div>
+</div>
+<nav class="topbar">
+  <a href="/dashboard" class="topbar-brand">
+    <svg width="22" height="26" viewBox="0 0 72 84" fill="none">
+      <path d="M36 3 L66 14 L66 40 C66 58 36 72 36 72 C36 72 6 58 6 40 L6 14 Z" fill="#0d1e3a" stroke="#3a5070" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M12 32 C18 20 54 20 60 32 C54 44 18 44 12 32 Z" fill="none" stroke="#4a90c8" stroke-width="2.5"/>
+      <circle cx="36" cy="32" r="7" fill="none" stroke="#4a90c8" stroke-width="2.5"/>
+      <circle cx="36" cy="32" r="3" fill="#4a90c8"/>
+    </svg>
+    <div><span class="brand-text">VIGINOTE</span><span class="brand-sub">Intelligence Platform</span></div>
+  </a>
+  <a href="/dashboard" class="nav-link">News Studio</a>
+  <a href="/assessment" class="nav-link">Location</a>
+  <a href="/digest" class="nav-link active">Weekly Digest</a>
+  <a href="/portal" class="nav-link">Client Portal</a>
+</nav>
+<div class="app">
+  <div class="input-panel">
+    <div class="ip-header">
+      <h2>Weekly Digest</h2>
+      <p>Generate your weekly intelligence digest. Auto-sends to Telegram every Monday at 07:00 UTC.</p>
+    </div>
+    <div class="ip-section">
+      <label>Time window</label>
+      <select class="ip-input" id="hours-input">
+        <option value="168" selected>Last 7 days</option>
+        <option value="336">Last 14 days</option>
+        <option value="720">Last 30 days</option>
+      </select>
+    </div>
+    <div class="ip-section">
+      <label>Region focus</label>
+      <select class="ip-input" id="region-input">
+        <option value="">All regions</option>
+        <option value="GLOBAL">Global</option>
+        <option value="MIDDLE_EAST">Middle East</option>
+        <option value="EUROPE">Europe</option>
+        <option value="ASIA">Asia</option>
+        <option value="WEST_EAST_AFRICA">West / East Africa</option>
+        <option value="SOUTHERN_AFRICA">Southern Africa</option>
+        <option value="SOUTH_AMERICA">South America</option>
+      </select>
+    </div>
+    <div class="ip-section">
+      <label>Minimum score</label>
+      <select class="ip-input" id="score-input">
+        <option value="4">4+ (broad)</option>
+        <option value="5" selected>5+ (standard)</option>
+        <option value="7">7+ (high severity)</option>
+      </select>
+    </div>
+    <div class="ip-footer">
+      <button type="button" class="btn-gen" id="gen-btn" onclick="generateDigest()">
+        <div class="spin"></div><span>Generate Digest</span>
+      </button>
+    </div>
+  </div>
+  <div class="report-panel" id="report-panel">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">📊</div>
+      <h3>Weekly Intelligence Digest</h3>
+      <p>Generate your week-in-review. Claude analyses your collected alerts and writes a comprehensive digest ready to send to clients and post on LinkedIn.</p>
+    </div>
+    <div id="report-output" style="display:none">
+      <div class="report-wrap">
+        <div class="report-topbar">
+          <h3 id="topbar-title">Weekly Digest</h3>
+          <button type="button" class="btn btn-sm" onclick="generateDigest()">↺ Regenerate</button>
+          <button type="button" class="btn btn-sm btn-navy" onclick="window.print()">⬇ Download PDF</button>
+        </div>
+        <div id="report-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const API=window.location.origin;
+async function generateDigest(){
+  const hours=parseInt(document.getElementById('hours-input').value)||168;
+  const region=document.getElementById('region-input').value||null;
+  const score=parseInt(document.getElementById('score-input').value)||5;
+  const btn=document.getElementById('gen-btn');btn.disabled=true;btn.classList.add('loading');
+  document.getElementById('overlay').classList.add('show');
+  try{
+    const resp=await fetch(`${API}/ai/digest`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({hours,region:region||null,min_score:score})});
+    const data=await resp.json();
+    if(!resp.ok)throw new Error(data.detail||'Digest generation failed');
+    if(!data.digest){alert(data.message||'No alerts found. Try a longer time window.');return}
+    buildDigest(data.digest,data.alert_count);
+    document.getElementById('empty-state').style.display='none';
+    document.getElementById('report-output').style.display='block';
+    document.getElementById('topbar-title').textContent='Weekly Digest — '+(data.digest.period||'');
+    document.getElementById('report-panel').scrollTo({top:0,behavior:'smooth'});
+  }catch(e){alert('Failed: '+e.message);}
+  finally{document.getElementById('overlay').classList.remove('show');btn.disabled=false;btn.classList.remove('loading')}
+}
+function buildDigest(d,alertCount){
+  const trajIcons={IMPROVING:'↑',STABLE:'→',DETERIORATING:'↓'};
+  const topStoriesHTML=(d.top_stories||[]).map((s,i)=>`<div class="story-card"><div class="story-num">0${i+1}</div><div class="story-content"><div class="s-region">${s.region||''}</div><div class="s-hl">${s.headline||''}</div><div class="s-sig">${s.significance||''}</div></div></div>`).join('');
+  const roundupHTML=(d.regional_roundup||[]).map(r=>`<div class="region-card"><div class="rc-region"><span>${(r.region||'').replace(/_/g,' ')}</span><span class="traj-pill traj-${r.trend||'STABLE'}">${trajIcons[r.trend]||'→'} ${r.trend||'STABLE'}</span></div><div class="rc-summary">${r.summary||''}</div>${r.alert_count?`<div style="font-size:10px;color:var(--mist);margin-top:6px">${r.alert_count} alerts this period</div>`:''}</div>`).join('');
+  const watchHTML=(d.watch_next_week||[]).map(w=>`<div class="watch-item">${w}</div>`).join('');
+  const reviewParas=(d.week_in_review||'').split('\n\n').filter(Boolean).map(p=>`<p>${p}</p>`).join('');
+  document.getElementById('report-body').innerHTML=`
+  <div class="digest-header"><div class="dh-grid"></div><div class="dh-accent"></div><div class="dh-content"><div class="dh-over">VigiNote Intelligence · Weekly Digest</div><div class="digest-title">${d.digest_title||'Weekly Intelligence Digest'}</div><div class="dh-period">${d.period||''}</div><div class="dh-stats"><div class="dh-stat"><div class="s-label">Alerts Analysed</div><div class="s-val">${alertCount||'—'}</div></div><div class="dh-stat"><div class="s-label">Top Stories</div><div class="s-val">${(d.top_stories||[]).length}</div></div><div class="dh-stat"><div class="s-label">Regions Covered</div><div class="s-val">${(d.regional_roundup||[]).length}</div></div></div></div></div>
+  <div class="dsection"><div class="ds-head">Week in Review</div><div class="review-box">${reviewParas}</div></div>
+  ${topStoriesHTML?`<div class="dsection"><div class="ds-head">Top Stories</div><div class="top-stories">${topStoriesHTML}</div></div>`:''}
+  ${roundupHTML?`<div class="dsection"><div class="ds-head">Regional Roundup</div><div class="region-grid">${roundupHTML}</div></div>`:''}
+  ${watchHTML?`<div class="dsection"><div class="ds-head">Watch Next Week</div><div class="watch-list">${watchHTML}</div></div>`:''}
+  ${d.stat_headline?`<div class="dsection"><div class="stat-callout"><div class="sc-num">📈</div><div class="sc-text">${d.stat_headline}</div></div></div>`:''}
+  ${d.linkedin_post?`<div class="dsection no-print"><div class="ds-head">LinkedIn Post</div><div class="li-box"><div class="li-label">Ready to post — edit as needed</div><div class="li-text" id="li-text">${d.linkedin_post}</div><div class="li-actions"><button type="button" class="btn-white" onclick="copyLinkedIn()">📋 Copy post</button><a href="https://www.linkedin.com" target="_blank" rel="noopener" class="btn-white" style="text-decoration:none">Open LinkedIn →</a></div></div></div>`:''}
+  <div class="digest-footer"><div class="df-brand">VIGINOTE</div><div class="df-disc">Weekly Intelligence Digest. Generated from open-source intelligence feeds. For professional use only.</div></div>`;
+}
+function copyLinkedIn(){const txt=document.getElementById('li-text')?.textContent||'';navigator.clipboard.writeText(txt).then(()=>{const btn=event.target;btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent='📋 Copy post',2000)})}
+</script>
+</body>
+</html>
