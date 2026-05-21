@@ -637,7 +637,7 @@ Return ONLY the JSON. Be specific and accurate for {req.location}. No generic ad
                 "https://api.anthropic.com/v1/messages",
                 headers={"x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01",
                          "content-type": "application/json"},
-                json={"model": ANTHROPIC_MODEL, "max_tokens": 4000,
+                json={"model": ANTHROPIC_MODEL, "max_tokens": 8000,
                       "messages": [{"role": "user", "content": prompt}]},
             )
         resp.raise_for_status()
@@ -645,9 +645,24 @@ Return ONLY the JSON. Be specific and accurate for {req.location}. No generic ad
         if raw.startswith("```"):
             raw = raw.split("```")[1]
             if raw.startswith("json"): raw = raw[4:]
-        return {"status": "ok", "generated": json.loads(raw.strip())}
-    except json.JSONDecodeError as e:
-        raise HTTPException(status_code=500, detail=f"Assessment parse error: {e}")
+        raw = raw.strip()
+        # Handle truncated JSON by finding the last complete top-level key
+        try:
+            result = json.loads(raw)
+        except json.JSONDecodeError:
+            # Try to recover by finding the last valid closing brace
+            for i in range(len(raw), 0, -1):
+                if raw[i-1] == '}':
+                    try:
+                        result = json.loads(raw[:i])
+                        break
+                    except json.JSONDecodeError:
+                        continue
+            else:
+                raise HTTPException(status_code=500, detail="Assessment parse error: response was truncated. Try a shorter location or use AI mode.")
+        return {"status": "ok", "generated": result}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Assessment error: {str(e)}")
 
