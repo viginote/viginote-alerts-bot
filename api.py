@@ -559,77 +559,13 @@ async def ai_assessment(req: AssessmentRequest):
 
     event_context = f"\nEvent context: {req.event}" if req.event else ""
 
-    prompt = f"""You are a senior security analyst producing an intelligence-grade location security assessment.
+    prompt = f"""You are a senior security analyst. Produce a security assessment for {req.location} on {now_str}.{event_context}{alert_context}
 
-Location: {req.location}
-Assessment date: {now_str}{event_context}
-Intelligence mode: {req.mode}{alert_context}
+Return ONLY valid JSON with these exact keys. Be concise but specific — max 2 sentences per field unless stated:
 
-Produce a comprehensive security assessment. Respond ONLY with this JSON structure:
+{{"report_title":"Security Assessment: {req.location}","location":"{req.location}","assessment_date":"{now_str}","classification":"CLIENT CONFIDENTIAL","event_context":"{req.event or ''}","overall_risk_level":"HIGH","overall_risk_score":7,"risk_trajectory":"STABLE","risk_trajectory_note":"One sentence.","intelligence_note":"","executive_summary":"Write 2 focused paragraphs on the security environment, key threats, and visitor risk for {req.location}.","location_profile":{{"country":"","region":"","population":"","strategic_significance":"One sentence.","key_infrastructure":["item1","item2"],"upcoming_events":[]}},"threat_matrix":[{{"category":"Political Violence","assessment":"2 sentences.","risk_level":"HIGH","risk_score":7,"visitor_impact":"1 sentence.","key_indicators":["indicator1","indicator2"]}},{{"category":"Terrorism & Extremism","assessment":"2 sentences.","risk_level":"MEDIUM","risk_score":5,"visitor_impact":"1 sentence.","key_indicators":["ind1"]}},{{"category":"Organised Crime","assessment":"2 sentences.","risk_level":"MEDIUM","risk_score":5,"visitor_impact":"1 sentence.","key_indicators":["ind1"]}},{{"category":"Civil Unrest","assessment":"2 sentences.","risk_level":"MEDIUM","risk_score":4,"visitor_impact":"1 sentence.","key_indicators":["ind1"]}},{{"category":"Natural Hazards","assessment":"1 sentence.","risk_level":"LOW","risk_score":3,"visitor_impact":"1 sentence.","key_indicators":[]}},{{"category":"Health & Medical","assessment":"1 sentence.","risk_level":"LOW","risk_score":3,"visitor_impact":"1 sentence.","key_indicators":[]}}],"hotspots":[{{"name":"Area name","description":"1 sentence.","risk_level":"HIGH","recommendation":"1 sentence."}},{{"name":"Area name","description":"1 sentence.","risk_level":"MEDIUM","recommendation":"1 sentence."}}],"visitor_advisory":{{"before_travel":["Action 1","Action 2","Action 3"],"areas_to_avoid":["Area — reason","Area — reason"],"safe_zones":["Safe area 1","Safe area 2"],"transport":"1 sentence on transport safety.","accommodation":"1 sentence on accommodation security.","communication":"1 sentence on comms security.","emergency_contacts":["Police: xxx","Embassy: xxx","Medical: xxx"]}},"organised_crime_profile":{{"active_groups":["Group — activity"],"primary_methods":["Method 1","Method 2"],"visitor_targeting":"1 sentence.","trend":"1 sentence."}},"recommended_measures":[{{"category":"Pre-Deployment","measures":["Action 1","Action 2","Action 3"]}},{{"category":"In-Country","measures":["Action 1","Action 2","Action 3"]}},{{"category":"Digital Security","measures":["Action 1","Action 2"]}},{{"category":"Emergency Response","measures":["Action 1","Action 2"]}}],"linkedin_teaser":"100-word LinkedIn post on security in {req.location}. End with 3 hashtags."}}
 
-{{
-  "report_title": "Security Assessment: {req.location}",
-  "location": "{req.location}",
-  "assessment_date": "{now_str}",
-  "classification": "CLIENT CONFIDENTIAL",
-  "event_context": "{req.event or ''}",
-  "overall_risk_level": "LOW|MEDIUM|HIGH|CRITICAL|EXTREME",
-  "overall_risk_score": 6,
-  "risk_trajectory": "IMPROVING|STABLE|DETERIORATING",
-  "risk_trajectory_note": "One sentence on direction of travel",
-  "intelligence_note": "Source note if alerts mode used",
-  "executive_summary": "3-4 paragraph professional security assessment. Cover political stability, security environment, key threat actors, and visitor risk. Authoritative intelligence tone.",
-  "location_profile": {{
-    "country": "",
-    "region": "",
-    "population": "",
-    "strategic_significance": "",
-    "key_infrastructure": ["item1", "item2"],
-    "upcoming_events": ["event1"]
-  }},
-  "threat_matrix": [
-    {{
-      "category": "Political Violence",
-      "assessment": "Detailed threat assessment paragraph",
-      "risk_level": "HIGH",
-      "risk_score": 7,
-      "visitor_impact": "How this affects visitors/travellers",
-      "key_indicators": ["indicator1", "indicator2"]
-    }},
-    {{"category": "Terrorism & Extremism", "assessment": "", "risk_level": "", "risk_score": 5, "visitor_impact": "", "key_indicators": []}},
-    {{"category": "Organised Crime", "assessment": "", "risk_level": "", "risk_score": 4, "visitor_impact": "", "key_indicators": []}},
-    {{"category": "Civil Unrest", "assessment": "", "risk_level": "", "risk_score": 4, "visitor_impact": "", "key_indicators": []}},
-    {{"category": "Natural Hazards", "assessment": "", "risk_level": "", "risk_score": 3, "visitor_impact": "", "key_indicators": []}},
-    {{"category": "Health & Medical", "assessment": "", "risk_level": "", "risk_score": 3, "visitor_impact": "", "key_indicators": []}}
-  ],
-  "hotspots": [
-    {{"name": "Area/District name", "description": "Why this area is higher risk", "risk_level": "HIGH", "recommendation": "Specific advisory for this area"}}
-  ],
-  "visitor_advisory": {{
-    "before_travel": ["Register with embassy", "Obtain travel insurance"],
-    "areas_to_avoid": ["Area 1 — reason", "Area 2 — reason"],
-    "safe_zones": ["Safer area 1", "Safer area 2"],
-    "transport": "Transport safety guidance paragraph",
-    "accommodation": "Accommodation security guidance paragraph",
-    "communication": "Communication and digital security guidance",
-    "emergency_contacts": ["Local police: xxx", "Embassy: xxx", "Medical: xxx"]
-  }},
-  "organised_crime_profile": {{
-    "active_groups": ["Group name — activity"],
-    "primary_methods": ["Method 1", "Method 2"],
-    "visitor_targeting": "How organised crime specifically targets visitors/expats",
-    "trend": "Current trend direction and recent developments"
-  }},
-  "recommended_measures": [
-    {{"category": "Pre-Deployment", "measures": ["Action 1", "Action 2", "Action 3"]}},
-    {{"category": "In-Country", "measures": ["Action 1", "Action 2", "Action 3"]}},
-    {{"category": "Digital Security", "measures": ["Action 1", "Action 2"]}},
-    {{"category": "Emergency Response", "measures": ["Action 1", "Action 2"]}}
-  ],
-  "linkedin_teaser": "A compelling 100-word LinkedIn teaser post about security considerations in {req.location}. Professional, educational tone. End with 3 hashtags."
-}}
-
-Return ONLY the JSON. Be specific and accurate for {req.location}. No generic advice."""
+Fill every field accurately for {req.location}. Return ONLY the JSON object."""
 
     try:
         async with httpx.AsyncClient(timeout=90.0) as client:
