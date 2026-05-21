@@ -574,12 +574,12 @@ Return ONLY valid JSON with these exact keys. Be concise but specific — max 2 
 Fill every field accurately for {req.location}. Return ONLY the JSON object."""
 
     try:
-        async with httpx.AsyncClient(timeout=90.0) as client:
+        async with httpx.AsyncClient(timeout=120.0) as client:
             resp = await client.post(
                 "https://api.anthropic.com/v1/messages",
                 headers={"x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01",
                          "content-type": "application/json"},
-                json={"model": ANTHROPIC_MODEL, "max_tokens": 8000,
+                json={"model": "claude-haiku-4-5-20251001", "max_tokens": 6000,
                       "messages": [{"role": "user", "content": prompt}]},
             )
         resp.raise_for_status()
@@ -695,7 +695,7 @@ Write the weekly digest. Respond ONLY with this JSON:
 Return ONLY the JSON. Base everything on the actual alerts provided."""
 
     try:
-        async with httpx.AsyncClient(timeout=90.0) as client:
+        async with httpx.AsyncClient(timeout=120.0) as client:
             resp = await client.post(
                 "https://api.anthropic.com/v1/messages",
                 headers={"x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01",
