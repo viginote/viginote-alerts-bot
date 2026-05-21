@@ -6,6 +6,7 @@
 <title>VigiNote — Location Assessment Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--ink:#0a0f1e;--ink2:#1e2840;--ink3:#2d3d5c;--steel:#4a6080;--mist:#8a9ab5;--border:#d0d8e8;--paper:#f7f8fc;--white:#ffffff;--navy:#0f1f5c;--navy2:#1a2f6e;--blue:#2d5be3;--blue-pale:#e8edf9;--low:#1a7a4a;--low-bg:#e8f5ee;--low-border:#a3d4b8;--medium:#b07d00;--medium-bg:#fff8e1;--medium-border:#ffd54f;--high:#c04a00;--high-bg:#fff0e8;--high-border:#ffab76;--critical:#a01515;--critical-bg:#fde8e8;--critical-border:#f09090;--extreme:#5a0080;--extreme-bg:#f5e8ff;--extreme-border:#d090f0}
@@ -105,6 +106,16 @@ select.ip-input{cursor:pointer}
 .score-bar-wrap{width:100%;background:var(--paper);border-radius:4px;height:5px;overflow:hidden}
 .score-bar{height:100%;border-radius:4px}
 .score-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--mist)}
+/* Map styles */
+.hotspot-map-wrap{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px;position:relative}
+#hotspot-map{height:380px;width:100%;z-index:1}
+.map-legend{position:absolute;bottom:16px;left:16px;z-index:400;background:rgba(255,255,255,0.95);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-size:11px;backdrop-filter:blur(4px)}
+.map-legend-title{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mist);margin-bottom:7px}
+.legend-item{display:flex;align-items:center;gap:7px;margin-bottom:4px;color:var(--ink2)}
+.legend-item:last-child{margin-bottom:0}
+.legend-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;border:2px solid rgba(0,0,0,0.15)}
+.map-loading{position:absolute;inset:0;background:var(--paper);display:flex;align-items:center;justify-content:center;z-index:500;font-size:13px;color:var(--mist);gap:8px}
+.map-loading .s{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--navy2);border-radius:50%;animation:spin 0.7s linear infinite}
 .hotspot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
 .hotspot-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:14px 16px;border-top:3px solid transparent}
 .hotspot-card.risk-LOW{border-top-color:var(--low)}.hotspot-card.risk-MEDIUM{border-top-color:var(--medium)}.hotspot-card.risk-HIGH{border-top-color:var(--high)}.hotspot-card.risk-CRITICAL{border-top-color:var(--critical)}.hotspot-card.risk-EXTREME{border-top-color:var(--extreme)}
@@ -140,7 +151,7 @@ select.ip-input{cursor:pointer}
 .report-footer{margin-top:40px;padding:20px 0;border-top:2px solid var(--navy2);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
 .rf-brand{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:700;color:var(--navy2)}
 .rf-disc{font-size:10px;color:var(--mist);max-width:400px;line-height:1.5;text-align:right}
-.overlay{position:fixed;inset:0;background:rgba(10,15,30,0.7);z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;backdrop-filter:blur(4px)}
+.overlay{position:fixed;inset:0;background:rgba(10,15,30,0.7);z-index:1000;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;backdrop-filter:blur(4px)}
 .overlay.show{display:flex}
 .ov-spinner{width:48px;height:48px;border:3px solid rgba(255,255,255,0.15);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite}
 .ov-msg{color:#fff;font-size:15px;font-weight:600}
@@ -149,7 +160,7 @@ select.ip-input{cursor:pointer}
 .ps{font-size:10px;padding:3px 9px;border-radius:10px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);transition:all 0.3s}
 .ps.active{background:rgba(255,255,255,0.2);color:#fff}
 .ps.done{background:rgba(80,200,120,0.2);color:#80d0a0}
-@media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.topbar,.input-panel,.report-topbar,.teaser-box,.overlay{display:none!important}.app{display:block!important;height:auto!important}.report-panel{overflow:visible!important}body{background:#fff!important}.report-wrap{max-width:100%!important;padding:0 30px 40px!important}.threat-row,.hotspot-card,.adv-card,.measure-card{page-break-inside:avoid!important;break-inside:avoid!important}@page{size:A4;margin:0.5in 0.6in}}
+@media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.topbar,.input-panel,.report-topbar,.teaser-box,.overlay{display:none!important}.app{display:block!important;height:auto!important}.report-panel{overflow:visible!important}body{background:#fff!important}.report-wrap{max-width:100%!important;padding:0 30px 40px!important}.threat-row,.hotspot-card,.adv-card,.measure-card{page-break-inside:avoid!important;break-inside:avoid!important}#hotspot-map{height:300px!important}@page{size:A4;margin:0.5in 0.6in}}
 </style>
 </head>
 <body>
@@ -238,7 +249,7 @@ select.ip-input{cursor:pointer}
     <div class="empty-state" id="empty-state">
       <div class="empty-icon">◎</div>
       <h3>Location Security Assessment</h3>
-      <p>Enter a city, country, or region and generate a comprehensive intelligence-grade security assessment in seconds.</p>
+      <p>Enter a city, country, or region and generate a comprehensive intelligence-grade security assessment with interactive hotspot mapping.</p>
       <div class="sample-locations">
         <span class="sample-loc" onclick="quickLoad('Khartoum, Sudan')">Khartoum, Sudan</span>
         <span class="sample-loc" onclick="quickLoad('Gaza, Palestine')">Gaza, Palestine</span>
@@ -262,63 +273,378 @@ select.ip-input{cursor:pointer}
     </div>
   </div>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 const API_BASE = window.location.origin;
-function selectMode(radio){document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('selected'));radio.closest('.mode-card').classList.add('selected');document.getElementById('hours-section').style.display=radio.value!=='ai'?'block':'none'}
-function quickLoad(loc){document.getElementById('loc-input').value=loc}
-function riskBadge(level){const l=(level||'MEDIUM').toUpperCase();return`<span class="risk-badge risk-${l}"><span class="dot"></span>${l}</span>`}
-function scoreBarColor(level){const map={LOW:'#1a7a4a',MEDIUM:'#b07d00',HIGH:'#c04a00',CRITICAL:'#a01515',EXTREME:'#5a0080'};return map[(level||'MEDIUM').toUpperCase()]||'#4a6080'}
-function trajectoryIcon(t){if(!t)return'';const map={IMPROVING:'↑ Improving',STABLE:'→ Stable',DETERIORATING:'↓ Deteriorating'};const colors={IMPROVING:'color:var(--low)',STABLE:'color:var(--steel)',DETERIORATING:'color:var(--critical)'};return`<span class="trajectory-badge" style="${colors[t]||''}">${map[t]||t}</span>`}
-function listItems(arr,cls='adv-list'){if(!arr||!arr.length)return'<p style="font-size:12px;color:var(--mist)">No data available</p>';return`<ul class="${cls}">${arr.map(i=>`<li>${i}</li>`).join('')}</ul>`}
-function buildReport(g,mode){
-  const lp=g.location_profile||{};const ov=g.overall_risk_level||'MEDIUM';
-  const modeLabel={ai:'AI Knowledge Base',alerts:'VigiNote Alerts',combined:'Combined Intelligence'}[mode]||mode;
-  const threatHTML=(g.threat_matrix||[]).map(t=>{const score=t.risk_score||5;const pct=(score/10)*100;const color=scoreBarColor(t.risk_level);const indicators=(t.key_indicators||[]).map(i=>`<span class="ind-chip">${i}</span>`).join('');return`<div class="threat-row"><div class="tr-left"><div class="tr-cat">${t.category||''}</div><div class="tr-assess">${t.assessment||''}</div>${t.visitor_impact?`<div class="tr-impact"><strong>Visitor impact:</strong> ${t.visitor_impact}</div>`:''} ${indicators?`<div class="tr-indicators">${indicators}</div>`:''}</div><div class="tr-right">${riskBadge(t.risk_level)}<div class="score-bar-wrap"><div class="score-bar" style="width:${pct}%;background:${color}"></div></div><div class="score-num">${score}/10</div></div></div>`}).join('');
-  const hotspotsHTML=(g.hotspots||[]).map(h=>`<div class="hotspot-card risk-${(h.risk_level||'MEDIUM').toUpperCase()}"><div class="hs-name"><span>${h.name||''}</span>${riskBadge(h.risk_level)}</div><div class="hs-desc">${h.description||''}</div><div class="hs-rec"><strong>Advisory:</strong> ${h.recommendation||''}</div></div>`).join('');
-  const va=g.visitor_advisory||{};
-  const advisoryHTML=`<div class="advisory-grid"><div class="adv-card"><div class="adv-title">Before Travel</div>${listItems(va.before_travel)}</div><div class="adv-card"><div class="adv-title">Emergency Contacts</div>${listItems(va.emergency_contacts)}</div><div class="adv-card"><div class="adv-title">Areas to Avoid</div>${listItems(va.areas_to_avoid)}</div><div class="adv-card"><div class="adv-title">Safer Zones</div>${listItems(va.safe_zones)}</div><div class="adv-card full"><div class="adv-title">Transport</div><p class="adv-text">${va.transport||''}</p></div><div class="adv-card full"><div class="adv-title">Accommodation</div><p class="adv-text">${va.accommodation||''}</p></div><div class="adv-card full"><div class="adv-title">Communication Security</div><p class="adv-text">${va.communication||''}</p></div></div>`;
-  const oc=g.organised_crime_profile||{};
-  const crimeHTML=`<div class="crime-grid"><div class="crime-card"><div class="adv-title">Active Groups</div>${listItems(oc.active_groups)}</div><div class="crime-card"><div class="adv-title">Primary Methods</div>${listItems(oc.primary_methods)}</div><div class="crime-card full"><div class="adv-title">Visitor Targeting Risk</div><p class="adv-text">${oc.visitor_targeting||''}</p></div><div class="crime-card full"><div class="adv-title">Current Trend</div><p class="adv-text">${oc.trend||''}</p></div></div>`;
-  const measuresHTML=`<div class="measures-grid">${(g.recommended_measures||[]).map(m=>`<div class="measure-card"><div class="m-cat">${m.category||''}</div>${listItems(m.measures,'m-list')}</div>`).join('')}</div>`;
-  const execParas=(g.executive_summary||'').split('\n\n').filter(Boolean).map(p=>`<p>${p}</p>`).join('');
-  return`<div class="report-header"><div class="rh-grid"></div><div class="rh-accent"></div><div class="rh-content"><div class="rh-meta"><span class="rh-class">${g.classification||'CLIENT CONFIDENTIAL'}</span><span class="rh-date">${g.assessment_date||''}</span></div><div class="report-title">${g.report_title||g.location+' Security Assessment'}</div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">${riskBadge(ov)}<span style="font-size:13px;color:rgba(255,255,255,0.5)">Overall Risk</span>${trajectoryIcon(g.risk_trajectory)}</div><div class="rh-stats"><div class="rh-stat"><span class="s-label">Location</span><span class="s-val">${g.location||''}</span></div><div class="rh-stat"><span class="s-label">Risk Score</span><span class="s-val">${g.overall_risk_score||'—'}/10</span></div><div class="rh-stat"><span class="s-label">Threat Categories</span><span class="s-val">${(g.threat_matrix||[]).length}</span></div><div class="rh-stat"><span class="s-label">Hotspots</span><span class="s-val">${(g.hotspots||[]).length}</span></div></div></div></div>
-  <div class="report-section"><div class="section-head"><span class="section-num">01</span><span class="section-title">Executive Summary</span></div><div class="exec-box">${execParas}</div></div>
-  <div class="report-section"><div class="section-head"><span class="section-num">02</span><span class="section-title">Location Profile</span></div><div class="profile-grid"><div class="profile-card"><div class="pc-label">Country</div><div class="pc-val">${lp.country||g.location||''}</div></div><div class="profile-card"><div class="pc-label">Region</div><div class="pc-val">${lp.region||''}</div></div><div class="profile-card"><div class="pc-label">Population</div><div class="pc-val">${lp.population||''}</div></div><div class="profile-card" style="grid-column:1/-1"><div class="pc-label">Strategic Significance</div><div class="pc-val">${lp.strategic_significance||''}</div></div></div></div>
-  <div class="report-section"><div class="section-head"><span class="section-num">03</span><span class="section-title">Threat Matrix</span></div><div class="threat-grid">${threatHTML}</div></div>
-  ${g.hotspots&&g.hotspots.length?`<div class="report-section"><div class="section-head"><span class="section-num">04</span><span class="section-title">Area Hotspot Assessment</span></div><div class="hotspot-grid">${hotspotsHTML}</div></div>`:''}
-  <div class="report-section"><div class="section-head"><span class="section-num">05</span><span class="section-title">Visitor & Traveller Advisory</span></div>${advisoryHTML}</div>
-  <div class="report-section"><div class="section-head"><span class="section-num">06</span><span class="section-title">Organised Crime Profile</span></div>${crimeHTML}</div>
-  <div class="report-section"><div class="section-head"><span class="section-num">07</span><span class="section-title">Recommended Security Measures</span></div>${measuresHTML}</div>
-  ${g.linkedin_teaser?`<div class="report-section no-print"><div class="section-head"><span class="section-num">08</span><span class="section-title">LinkedIn Teaser Post</span></div><div class="teaser-box"><div class="t-label">Ready to post — edit as needed</div><div class="t-text" id="teaser-text">${g.linkedin_teaser}</div><div class="t-actions"><button type="button" class="btn-white" onclick="copyTeaser()">📋 Copy post</button><a href="https://www.linkedin.com" target="_blank" rel="noopener" class="btn-white" style="text-decoration:none">Open LinkedIn →</a></div></div></div>`:''}
-  <div class="report-footer"><div class="rf-brand">VIGINOTE</div><div class="rf-disc">Generated from open-source intelligence and AI analysis. For professional use only. Not for redistribution without authorisation.</div></div>`;
+let _map = null;
+let _currentLocation = '';
+
+function selectMode(radio){
+  document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('selected'));
+  radio.closest('.mode-card').classList.add('selected');
+  document.getElementById('hours-section').style.display=radio.value!=='ai'?'block':'none';
 }
+function quickLoad(loc){document.getElementById('loc-input').value=loc;}
+
+function riskBadge(level){
+  const l=(level||'MEDIUM').toUpperCase();
+  return `<span class="risk-badge risk-${l}"><span class="dot"></span>${l}</span>`;
+}
+function scoreBarColor(level){
+  return {LOW:'#1a7a4a',MEDIUM:'#b07d00',HIGH:'#c04a00',CRITICAL:'#a01515',EXTREME:'#5a0080'}[(level||'MEDIUM').toUpperCase()]||'#4a6080';
+}
+function markerColor(level){
+  return {LOW:'#1a7a4a',MEDIUM:'#e6a800',HIGH:'#c04a00',CRITICAL:'#a01515',EXTREME:'#5a0080'}[(level||'MEDIUM').toUpperCase()]||'#4a6080';
+}
+function trajectoryIcon(t){
+  if(!t)return'';
+  const map={IMPROVING:'↑ Improving',STABLE:'→ Stable',DETERIORATING:'↓ Deteriorating'};
+  const colors={IMPROVING:'color:var(--low)',STABLE:'color:var(--steel)',DETERIORATING:'color:var(--critical)'};
+  return `<span class="trajectory-badge" style="${colors[t]||''}">${map[t]||t}</span>`;
+}
+function listItems(arr,cls='adv-list'){
+  if(!arr||!arr.length)return'<p style="font-size:12px;color:var(--mist)">No data available</p>';
+  return `<ul class="${cls}">${arr.map(i=>`<li>${i}</li>`).join('')}</ul>`;
+}
+
+// ── LEAFLET MAP ──────────────────────────────────────────────────────────────
+
+function createSvgIcon(color){
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="38" viewBox="0 0 28 38">
+    <path d="M14 0C6.27 0 0 6.27 0 14c0 9.63 14 24 14 24S28 23.63 28 14C28 6.27 21.73 0 14 0z" fill="${color}" stroke="white" stroke-width="2"/>
+    <circle cx="14" cy="14" r="5" fill="white" fill-opacity="0.9"/>
+  </svg>`;
+  return L.divIcon({
+    html: svg,
+    className: '',
+    iconSize: [28, 38],
+    iconAnchor: [14, 38],
+    popupAnchor: [0, -38],
+  });
+}
+
+async function geocode(name, locationContext){
+  // Search for the hotspot name within the broader location context
+  const query = encodeURIComponent(`${name}, ${locationContext}`);
+  try {
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`,
+      {headers:{'Accept-Language':'en','User-Agent':'VigiNote/2.0'}}
+    );
+    const d = await r.json();
+    if(d && d[0]) return {lat: parseFloat(d[0].lat), lon: parseFloat(d[0].lon), name: d[0].display_name};
+    // Fallback: try just the hotspot name
+    const r2 = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=json&limit=1`,
+      {headers:{'Accept-Language':'en','User-Agent':'VigiNote/2.0'}}
+    );
+    const d2 = await r2.json();
+    if(d2 && d2[0]) return {lat: parseFloat(d2[0].lat), lon: parseFloat(d2[0].lon), name: d2[0].display_name};
+  } catch(e){}
+  return null;
+}
+
+async function geocodeLocation(name){
+  try {
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=json&limit=1`,
+      {headers:{'Accept-Language':'en','User-Agent':'VigiNote/2.0'}}
+    );
+    const d = await r.json();
+    if(d && d[0]) return {lat: parseFloat(d[0].lat), lon: parseFloat(d[0].lon)};
+  } catch(e){}
+  return null;
+}
+
+async function buildMap(hotspots, locationName){
+  // Destroy existing map instance
+  if(_map){_map.remove();_map=null;}
+
+  // Show loading
+  const loadEl = document.getElementById('map-loading');
+  if(loadEl) loadEl.style.display='flex';
+
+  // Init map
+  _map = L.map('hotspot-map', {zoomControl:true, scrollWheelZoom:false});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom:18,
+  }).addTo(_map);
+
+  // Geocode the main location first to set map center
+  const center = await geocodeLocation(locationName);
+  if(center){
+    _map.setView([center.lat, center.lon], 10);
+  }
+
+  const bounds = [];
+  const pinned = [];
+
+  // Geocode and pin each hotspot
+  for(const hs of (hotspots||[])){
+    const geo = await geocode(hs.name, locationName);
+    if(geo){
+      const color = markerColor(hs.risk_level);
+      const marker = L.marker([geo.lat, geo.lon], {icon: createSvgIcon(color)})
+        .addTo(_map)
+        .bindPopup(`
+          <div style="font-family:'DM Sans',sans-serif;min-width:180px">
+            <div style="font-weight:700;font-size:13px;margin-bottom:4px">${hs.name}</div>
+            <div style="display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;padding:2px 7px;border-radius:3px;background:${color}22;color:${color};border:1px solid ${color}44;margin-bottom:7px">${hs.risk_level||'MEDIUM'}</div>
+            <div style="font-size:12px;color:#4a5568;line-height:1.5;margin-bottom:6px">${hs.description||''}</div>
+            <div style="font-size:11px;color:#718096"><strong>Advisory:</strong> ${hs.recommendation||''}</div>
+          </div>
+        `, {maxWidth:260});
+      bounds.push([geo.lat, geo.lon]);
+      pinned.push(hs.name);
+    }
+    // Small delay to respect Nominatim rate limits
+    await new Promise(r => setTimeout(r, 300));
+  }
+
+  // Fit map to all pins if we have them
+  if(bounds.length > 1){
+    _map.fitBounds(bounds, {padding:[40,40]});
+  } else if(bounds.length === 1 && !center){
+    _map.setView(bounds[0], 12);
+  }
+
+  // Hide loading
+  if(loadEl) loadEl.style.display='none';
+
+  // Invalidate size after render
+  setTimeout(() => { if(_map) _map.invalidateSize(); }, 200);
+
+  return pinned;
+}
+
+// ── REPORT BUILDER ───────────────────────────────────────────────────────────
+
+function buildReport(g, mode){
+  const lp = g.location_profile||{};
+  const ov = g.overall_risk_level||'MEDIUM';
+  const modeLabel = {ai:'AI Knowledge Base',alerts:'VigiNote Alerts',combined:'Combined Intelligence'}[mode]||mode;
+
+  const threatHTML = (g.threat_matrix||[]).map(t=>{
+    const score=t.risk_score||5;const pct=(score/10)*100;const color=scoreBarColor(t.risk_level);
+    const indicators=(t.key_indicators||[]).map(i=>`<span class="ind-chip">${i}</span>`).join('');
+    return `<div class="threat-row">
+      <div class="tr-left">
+        <div class="tr-cat">${t.category||''}</div>
+        <div class="tr-assess">${t.assessment||''}</div>
+        ${t.visitor_impact?`<div class="tr-impact"><strong>Visitor impact:</strong> ${t.visitor_impact}</div>`:''}
+        ${indicators?`<div class="tr-indicators">${indicators}</div>`:''}
+      </div>
+      <div class="tr-right">
+        ${riskBadge(t.risk_level)}
+        <div class="score-bar-wrap"><div class="score-bar" style="width:${pct}%;background:${color}"></div></div>
+        <div class="score-num">${score}/10</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const hotspotsHTML = (g.hotspots||[]).map(h=>`
+    <div class="hotspot-card risk-${(h.risk_level||'MEDIUM').toUpperCase()}">
+      <div class="hs-name"><span>${h.name||''}</span>${riskBadge(h.risk_level)}</div>
+      <div class="hs-desc">${h.description||''}</div>
+      <div class="hs-rec"><strong>Advisory:</strong> ${h.recommendation||''}</div>
+    </div>`).join('');
+
+  const va = g.visitor_advisory||{};
+  const advisoryHTML = `
+    <div class="advisory-grid">
+      <div class="adv-card"><div class="adv-title">Before Travel</div>${listItems(va.before_travel)}</div>
+      <div class="adv-card"><div class="adv-title">Emergency Contacts</div>${listItems(va.emergency_contacts)}</div>
+      <div class="adv-card"><div class="adv-title">Areas to Avoid</div>${listItems(va.areas_to_avoid)}</div>
+      <div class="adv-card"><div class="adv-title">Safer Zones</div>${listItems(va.safe_zones)}</div>
+      <div class="adv-card full"><div class="adv-title">Transport</div><p class="adv-text">${va.transport||''}</p></div>
+      <div class="adv-card full"><div class="adv-title">Accommodation</div><p class="adv-text">${va.accommodation||''}</p></div>
+      <div class="adv-card full"><div class="adv-title">Communication Security</div><p class="adv-text">${va.communication||''}</p></div>
+    </div>`;
+
+  const oc = g.organised_crime_profile||{};
+  const crimeHTML = `
+    <div class="crime-grid">
+      <div class="crime-card"><div class="adv-title">Active Groups</div>${listItems(oc.active_groups)}</div>
+      <div class="crime-card"><div class="adv-title">Primary Methods</div>${listItems(oc.primary_methods)}</div>
+      <div class="crime-card full"><div class="adv-title">Visitor Targeting Risk</div><p class="adv-text">${oc.visitor_targeting||''}</p></div>
+      <div class="crime-card full"><div class="adv-title">Current Trend</div><p class="adv-text">${oc.trend||''}</p></div>
+    </div>`;
+
+  const measuresHTML = `<div class="measures-grid">${(g.recommended_measures||[]).map(m=>`
+    <div class="measure-card"><div class="m-cat">${m.category||''}</div>${listItems(m.measures,'m-list')}</div>`).join('')}</div>`;
+
+  const execParas = (g.executive_summary||'').split('\n\n').filter(Boolean).map(p=>`<p>${p}</p>`).join('');
+
+  return `
+  <div class="report-header">
+    <div class="rh-grid"></div><div class="rh-accent"></div>
+    <div class="rh-content">
+      <div class="rh-meta">
+        <span class="rh-class">${g.classification||'CLIENT CONFIDENTIAL'}</span>
+        <span style="font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(160,180,232,0.7);font-family:'DM Mono',monospace">${modeLabel}</span>
+        <span class="rh-date">${g.assessment_date||''}</span>
+      </div>
+      <div class="report-title">${g.report_title||g.location+' Security Assessment'}</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        ${riskBadge(ov)}
+        <span style="font-size:13px;color:rgba(255,255,255,0.5)">Overall Risk</span>
+        ${trajectoryIcon(g.risk_trajectory)}
+        <span style="font-size:12px;color:rgba(255,255,255,0.4)">${g.risk_trajectory_note||''}</span>
+      </div>
+      <div class="rh-stats">
+        <div class="rh-stat"><span class="s-label">Location</span><span class="s-val">${g.location||''}</span></div>
+        <div class="rh-stat"><span class="s-label">Risk Score</span><span class="s-val">${g.overall_risk_score||'—'}/10</span></div>
+        <div class="rh-stat"><span class="s-label">Threat Categories</span><span class="s-val">${(g.threat_matrix||[]).length}</span></div>
+        <div class="rh-stat"><span class="s-label">Hotspots Mapped</span><span class="s-val">${(g.hotspots||[]).length}</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="report-section">
+    <div class="section-head"><span class="section-num">01</span><span class="section-title">Executive Summary</span></div>
+    <div class="exec-box">${execParas}</div>
+  </div>
+
+  <div class="report-section">
+    <div class="section-head"><span class="section-num">02</span><span class="section-title">Location Profile</span></div>
+    <div class="profile-grid">
+      <div class="profile-card"><div class="pc-label">Country</div><div class="pc-val">${lp.country||g.location||''}</div></div>
+      <div class="profile-card"><div class="pc-label">Region</div><div class="pc-val">${lp.region||''}</div></div>
+      <div class="profile-card"><div class="pc-label">Population</div><div class="pc-val">${lp.population||''}</div></div>
+      <div class="profile-card" style="grid-column:1/-1"><div class="pc-label">Strategic Significance</div><div class="pc-val">${lp.strategic_significance||''}</div></div>
+    </div>
+  </div>
+
+  <div class="report-section">
+    <div class="section-head"><span class="section-num">03</span><span class="section-title">Threat Matrix</span></div>
+    <div class="threat-grid">${threatHTML}</div>
+  </div>
+
+  ${g.hotspots&&g.hotspots.length?`
+  <div class="report-section">
+    <div class="section-head"><span class="section-num">04</span><span class="section-title">Area Hotspot Map</span></div>
+    <div class="hotspot-map-wrap">
+      <div id="hotspot-map"></div>
+      <div class="map-loading" id="map-loading">
+        <div class="s"></div> Geocoding hotspots…
+      </div>
+      <div class="map-legend">
+        <div class="map-legend-title">Risk Level</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#a01515"></div>Critical</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#c04a00"></div>High</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#e6a800"></div>Medium</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1a7a4a"></div>Low</div>
+      </div>
+    </div>
+    <div class="hotspot-grid">${hotspotsHTML}</div>
+  </div>`:''}
+
+  <div class="report-section">
+    <div class="section-head"><span class="section-num">05</span><span class="section-title">Visitor & Traveller Advisory</span></div>
+    ${advisoryHTML}
+  </div>
+
+  <div class="report-section">
+    <div class="section-head"><span class="section-num">06</span><span class="section-title">Organised Crime Profile</span></div>
+    ${crimeHTML}
+  </div>
+
+  <div class="report-section">
+    <div class="section-head"><span class="section-num">07</span><span class="section-title">Recommended Security Measures</span></div>
+    ${measuresHTML}
+  </div>
+
+  ${g.linkedin_teaser?`
+  <div class="report-section no-print">
+    <div class="section-head"><span class="section-num">08</span><span class="section-title">LinkedIn Teaser Post</span></div>
+    <div class="teaser-box">
+      <div class="t-label">Ready to post — edit as needed</div>
+      <div class="t-text" id="teaser-text">${g.linkedin_teaser}</div>
+      <div class="t-actions">
+        <button type="button" class="btn-white" onclick="copyTeaser()">📋 Copy post</button>
+        <a href="https://www.linkedin.com" target="_blank" rel="noopener" class="btn-white" style="text-decoration:none">Open LinkedIn →</a>
+      </div>
+    </div>
+  </div>`:''}
+
+  <div class="report-footer">
+    <div class="rf-brand">VIGINOTE</div>
+    <div class="rf-disc">Generated from open-source intelligence and AI analysis. For professional use only. Not for redistribution without authorisation.</div>
+  </div>`;
+}
+
+// ── MAIN GENERATE ────────────────────────────────────────────────────────────
+
 async function generateAssessment(){
-  const location=document.getElementById('loc-input').value.trim();
-  if(!location){document.getElementById('loc-input').focus();return}
-  const mode=document.querySelector('input[name=mode]:checked')?.value||'ai';
-  const event=document.getElementById('event-input').value.trim();
-  const hours=parseInt(document.getElementById('hours-input').value)||168;
-  const btn=document.getElementById('gen-btn');btn.disabled=true;btn.classList.add('loading');
+  const location = document.getElementById('loc-input').value.trim();
+  if(!location){document.getElementById('loc-input').focus();return;}
+  _currentLocation = location;
+
+  const mode  = document.querySelector('input[name=mode]:checked')?.value||'ai';
+  const event = document.getElementById('event-input').value.trim();
+  const hours = parseInt(document.getElementById('hours-input').value)||168;
+
+  const btn = document.getElementById('gen-btn');
+  btn.disabled=true; btn.classList.add('loading');
   document.getElementById('ov-msg').textContent='Generating Assessment…';
   document.getElementById('ov-sub').textContent=`Analysing intelligence for ${location}`;
   document.getElementById('overlay').classList.add('show');
-  const steps=['ps1','ps2','ps3','ps4','ps5'];let step=0;
-  const si=setInterval(()=>{if(step>0)document.getElementById(steps[step-1]).classList.replace('active','done');if(step<steps.length){document.getElementById(steps[step]).classList.add('active');step++}},14000/steps.length);
+
+  const steps=['ps1','ps2','ps3','ps4','ps5'];
+  let step=0;
+  const si=setInterval(()=>{
+    if(step>0) document.getElementById(steps[step-1]).classList.replace('active','done');
+    if(step<steps.length){document.getElementById(steps[step]).classList.add('active');step++;}
+  },14000/steps.length);
+
   try{
-    const resp=await fetch(`${API_BASE}/ai/assessment`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location,event:event||null,mode,hours})});
-    const data=await resp.json();clearInterval(si);
-    if(!resp.ok)throw new Error(data.detail||'Assessment failed');
-    if(!data.generated){alert(data.message||'No data returned. Try AI or Combined mode.');return}
-    document.getElementById('report-body').innerHTML=buildReport(data.generated,mode);
+    const resp = await fetch(`${API_BASE}/ai/assessment`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({location,event:event||null,mode,hours})
+    });
+    const data = await resp.json();
+    clearInterval(si);
+
+    if(!resp.ok) throw new Error(data.detail||'Assessment failed');
+    if(!data.generated){alert(data.message||'No data returned. Try AI or Combined mode.');return;}
+
+    // Render report
+    document.getElementById('report-body').innerHTML = buildReport(data.generated, mode);
     document.getElementById('empty-state').style.display='none';
     document.getElementById('report-output').style.display='block';
-    document.getElementById('topbar-title').textContent=data.generated.location+' Assessment';
+    document.getElementById('topbar-title').textContent = data.generated.location+' Assessment';
     document.getElementById('report-panel').scrollTo({top:0,behavior:'smooth'});
-  }catch(e){clearInterval(si);alert('Generation failed: '+e.message);}
-  finally{document.getElementById('overlay').classList.remove('show');btn.disabled=false;btn.classList.remove('loading');steps.forEach(s=>{document.getElementById(s).classList.remove('active','done')});document.getElementById('ps1').classList.add('active')}
+
+    // Build interactive map after DOM is ready
+    if(data.generated.hotspots && data.generated.hotspots.length){
+      setTimeout(() => buildMap(data.generated.hotspots, location), 400);
+    }
+
+  }catch(e){
+    clearInterval(si);
+    alert('Generation failed: '+e.message);
+  }finally{
+    document.getElementById('overlay').classList.remove('show');
+    btn.disabled=false; btn.classList.remove('loading');
+    steps.forEach(s=>{document.getElementById(s).classList.remove('active','done');});
+    document.getElementById('ps1').classList.add('active');
+  }
 }
-function copyTeaser(){const txt=document.getElementById('teaser-text')?.textContent||'';navigator.clipboard.writeText(txt).then(()=>{const btn=event.target;btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent='📋 Copy post',2000)})}
-document.getElementById('loc-input').addEventListener('keydown',e=>{if(e.key==='Enter')generateAssessment()});
+
+function copyTeaser(){
+  const txt = document.getElementById('teaser-text')?.textContent||'';
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=event.target; btn.textContent='✓ Copied!';
+    setTimeout(()=>btn.textContent='📋 Copy post',2000);
+  });
+}
+
+document.getElementById('loc-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter') generateAssessment();
+});
 </script>
 </body>
 </html>
