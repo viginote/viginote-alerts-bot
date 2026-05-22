@@ -35,7 +35,7 @@ from viginote.db import (
 from viginote.feed_monitor import maybe_send_health_digest
 from viginote.feeds import FEEDS, domain_of
 from viginote.ner import extract_entities
-from viginote.scoring import severity_icon, build_selection_reason, source_tier
+from viginote.scoring import build_selection_reason, source_tier
 from viginote.summary import concise_summary
 
 # =======================
@@ -198,31 +198,60 @@ def run_once():
         )
 
         # ── Telegram message ──────────────────────────────────────────────────
-        ico        = severity_icon(c["score"])
-        region_tag = c["region"].replace("_", " ").title()
+        from datetime import datetime as _dt
+        now_utc     = _dt.utcnow().strftime("%d %b %Y · %H:%M UTC").upper()
+        region_tag  = c["region"].replace("_", " ").upper()
+        score       = c["score"]
 
-        if c["tier"] == 2:
-            source_label = f"{html_escape(c['dom'])} 🔍"
-        elif c["tier"] == 1:
-            source_label = f"{html_escape(c['dom'])} 📡"
+        # Severity label
+        if is_critical or score >= 9:
+            sev_label = "CRITICAL"
+        elif score >= 7:
+            sev_label = "HIGH"
+        elif score >= 5:
+            sev_label = "MEDIUM"
         else:
-            source_label = html_escape(c["dom"])
+            sev_label = "LOW"
 
-        corroboration = ""
-        if source_count >= 2:
-            corroboration = f" | ✅ {source_count} sources"
+        # Header line 1 — severity · region · score
+        header_line = f"▌ {sev_label} · {region_tag} · SCR {score}"
 
-        # Named entity snippet for Telegram
+        # Ref line — with corroboration if present
+        corr_str = f" · ✦ {source_count} SRC" if source_count >= 2 else ""
+        ref_line = f"VGN · {now_utc}{corr_str}"
+
+        # Source tier label
+        if c["tier"] == 2:
+            tier_label = "LOCAL"
+        elif c["tier"] == 1:
+            tier_label = "REGIONAL"
+        else:
+            tier_label = "WIRE"
+
+        source_line = f"SOURCE  {html_escape(c['dom'])} · {tier_label}"
+
+        # Locations — only if detected
         locs = entities.get("locs", [])[:3]
-        ents_snippet = f"\n📍 {', '.join(locs)}" if locs else ""
+        locs_line = f"LOCS     📍 {' · '.join(locs)}" if locs else ""
 
-        msg = (
-            f"{ico} <b>[{html_escape(region_tag)}] {html_escape(c['raw_title'])}</b>\n"
-            f"<code>{html_escape(precis)}</code>"
-            f"{ents_snippet}\n"
-            f"• Source: {source_label}  |  Score: {c['score']}{corroboration}\n\n"
-            f"🔗 <a href=\"{html_escape(c['link'])}\">Full report</a>"
-        )
+        # Build message
+        msg_parts = [
+            f"<b>{header_line}</b>",
+            f"<code>{ref_line}</code>",
+            "",
+            f"<b>{html_escape(c['raw_title'])}</b>",
+            "",
+            f"<code>{html_escape(precis)}</code>",
+            "",
+            f"<i>{source_line}</i>",
+        ]
+        if locs_line:
+            msg_parts.append(f"<i>{locs_line}</i>")
+        msg_parts += [
+            "",
+            "<a href=\"{url}\">FULL REPORT →</a>".format(url=html_escape(c["link"])),
+        ]
+        msg = "\n".join(msg_parts)
 
         if send_tg(msg):
             insert_sent(
