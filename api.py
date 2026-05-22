@@ -114,6 +114,9 @@ async def page_assessment(): return _serve("assessment.html")
 @app.get("/digest", response_class=HTMLResponse)
 async def page_digest(): return _serve("digest.html")
 
+@app.get("/brief", response_class=HTMLResponse)
+async def page_brief(): return _serve("brief.html")
+
 @app.get("/portal", response_class=HTMLResponse)
 async def page_portal():
     """Serve client portal with config injected."""
