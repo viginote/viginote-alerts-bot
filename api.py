@@ -30,9 +30,11 @@ System:
   GET  /health             — Heartbeat
 """
 
+import hashlib
 import json
 import os
 import pathlib
+import secrets
 import time
 from collections import defaultdict
 from datetime import datetime, timezone, timedelta
@@ -55,6 +57,34 @@ from viginote.db import (
 ANTHROPIC_KEY   = os.getenv("ANTHROPIC_API_KEY", "")
 ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
 OPENAI_KEY      = os.getenv("OPENAI_API_KEY", "")
+
+# Feed access credentials — set FEED_USERS=user1:pass1,user2:pass2 on Render
+def _load_feed_users():
+    raw = os.getenv("FEED_USERS", "")
+    users = {}
+    for pair in raw.split(","):
+        pair = pair.strip()
+        if ":" in pair:
+            u, p = pair.split(":", 1)
+            users[u.strip().lower()] = p.strip()
+    return users
+
+# Active sessions: token -> {username, created}
+_feed_sessions: dict = {}
+
+def _make_token(username: str) -> str:
+    return hashlib.sha256(f"{username}{secrets.token_hex(16)}".encode()).hexdigest()
+
+def _verify_token(token: str) -> str | None:
+    """Return username if token is valid, None otherwise."""
+    sess = _feed_sessions.get(token)
+    if not sess:
+        return None
+    # Sessions expire after 12 hours
+    if time.time() - sess["created"] > 43200:
+        del _feed_sessions[token]
+        return None
+    return sess["username"]
 
 # Client portal watchlist — comma-separated terms to monitor
 WATCHLIST = [w.strip() for w in os.getenv("WATCHLIST", "").split(",") if w.strip()]
@@ -116,6 +146,48 @@ async def page_digest(): return _serve("digest.html")
 
 @app.get("/brief", response_class=HTMLResponse)
 async def page_brief(): return _serve("brief.html")
+
+@app.get("/intelligence", response_class=HTMLResponse)
+async def page_intelligence(): return _serve("feed.html")
+
+# ── AUTH ENDPOINTS ────────────────────────────────────────────────────────────
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+@app.post("/auth/login")
+async def auth_login(req: LoginRequest):
+    users = _load_feed_users()
+    uname = req.username.strip().lower()
+    if not users:
+        raise HTTPException(status_code=503, detail="Feed access not configured. Set FEED_USERS env var.")
+    if uname not in users or users[uname] != req.password:
+        # Log failed attempt
+        print(f"[AUTH] Failed login: user={req.username} ts={int(time.time())}")
+        raise HTTPException(status_code=401, detail="Invalid credentials.")
+    token = _make_token(uname)
+    _feed_sessions[token] = {"username": uname, "created": time.time()}
+    print(f"[AUTH] Login: user={uname} ts={int(time.time())} sessions={len(_feed_sessions)}")
+    return {"token": token, "username": uname}
+
+@app.post("/auth/logout")
+async def auth_logout(token: str):
+    if token in _feed_sessions:
+        del _feed_sessions[token]
+    return {"status": "ok"}
+
+@app.get("/auth/sessions")
+async def auth_sessions():
+    """Admin endpoint — shows active sessions."""
+    return {
+        "active_sessions": len(_feed_sessions),
+        "sessions": [
+            {"username": v["username"], "created": int(v["created"]),
+             "age_minutes": round((time.time()-v["created"])/60)}
+            for v in _feed_sessions.values()
+        ]
+    }
 
 @app.get("/portal", response_class=HTMLResponse)
 async def page_portal():
