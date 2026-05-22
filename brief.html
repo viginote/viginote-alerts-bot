@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VigiNote — Intelligence Brief Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Barlow+Condensed:wght@300;400;500;600;700&family=Barlow:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* ════════════════════════════════════════
+   STUDIO UI — dark nav + left panel
+════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0C1018;--ink2:#111620;--charcoal:#1C2333;--surface:#232C3D;
+  --paper:#D8DDE6;--mist:#8A96A8;--steel:#4E5D72;--wire:#2E3A4E;
+  --blue:#3B8BC4;--blue2:#5BA8DA;--blue-dim:#2A6494;
+  --risk-high:#B03030;--risk-med:#B07020;
+  --ui-bg:#0e1420;--ui-surface:#111827;--ui-border:#1e2d4a;--ui-border2:#243558;
+  --ui-text:#e2e8f0;--ui-text2:#94a3b8;--ui-text3:#64748b;
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'Barlow Condensed',sans-serif;
+  --body:'Barlow',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+html{-webkit-font-smoothing:antialiased}
+body{font-family:var(--body);background:var(--ui-bg);color:var(--ui-text);min-height:100vh;font-size:14px}
+
+/* TOP NAV */
+.topnav{background:var(--ui-surface);height:52px;display:flex;align-items:center;padding:0 24px;gap:16px;position:sticky;top:0;z-index:200;border-bottom:1px solid var(--ui-border)}
+.tn-brand{display:flex;align-items:center;gap:10px;text-decoration:none;margin-right:auto}
+.tn-wordmark{font-family:var(--sans);font-size:15px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--ui-text)}
+.tn-sub{font-size:9px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--ui-text3);display:block;margin-top:-3px}
+.nav-link{font-size:12px;font-weight:500;color:var(--ui-text3);text-decoration:none;padding:5px 12px;border-radius:4px;transition:all 0.15s;font-family:var(--sans);letter-spacing:1px}
+.nav-link:hover{color:var(--ui-text);background:rgba(255,255,255,0.06)}
+.nav-link.active{color:var(--blue2);background:rgba(59,139,196,0.1)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--ui-border2);background:rgba(255,255,255,0.04);color:var(--ui-text);font-family:var(--sans);letter-spacing:1px;transition:all 0.15s;text-decoration:none}
+.btn:hover{border-color:var(--blue);color:var(--blue2)}
+.btn-blue{background:var(--blue-dim);color:#fff;border-color:var(--blue-dim)}
+.btn-blue:hover{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+.spin{width:13px;height:13px;border:2px solid rgba(255,255,255,0.25);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:none}
+.generating .spin{display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* APP LAYOUT */
+.app{display:flex;height:calc(100vh - 52px)}
+
+/* LEFT PANEL */
+.lp{width:300px;flex-shrink:0;background:var(--ui-surface);border-right:1px solid var(--ui-border);overflow-y:auto;display:flex;flex-direction:column}
+.lp-section{padding:14px 16px;border-bottom:1px solid var(--ui-border)}
+.lp-section label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ui-text3);display:block;margin-bottom:7px;font-family:var(--mono)}
+.lp-input{width:100%;padding:7px 10px;border:1px solid var(--ui-border2);border-radius:5px;font-size:12px;color:var(--ui-text);background:rgba(255,255,255,0.04);font-family:var(--sans);transition:border-color 0.15s}
+.lp-input:focus{outline:none;border-color:var(--blue)}
+select.lp-input{cursor:pointer}
+.lp-header{padding:16px;border-bottom:1px solid var(--ui-border)}
+.lp-header h2{font-family:var(--sans);font-size:16px;font-weight:700;letter-spacing:1px;color:var(--ui-text);margin-bottom:4px}
+.lp-header p{font-size:11px;color:var(--ui-text3);line-height:1.5;font-family:var(--mono)}
+
+/* ALERT LIST */
+.alert-scroll{flex:1;overflow-y:auto}
+.alert-list-head{padding:9px 16px;background:rgba(0,0,0,0.2);border-bottom:1px solid var(--ui-border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.alert-list-head span{font-size:10px;color:var(--ui-text3);font-family:var(--mono)}
+.alert-list-head button{font-size:10px;color:var(--blue2);background:none;border:none;cursor:pointer;font-family:var(--mono)}
+.alert-row{padding:11px 16px;border-bottom:1px solid var(--ui-border);cursor:pointer;display:flex;gap:10px;align-items:flex-start;transition:background 0.1s}
+.alert-row:hover{background:rgba(59,139,196,0.06)}
+.alert-row.selected{background:rgba(59,139,196,0.1);border-left:2px solid var(--blue)}
+.alert-row .cb{margin-top:2px;flex-shrink:0;accent-color:var(--blue)}
+.alert-row .ar-title{font-size:12px;font-weight:500;color:var(--ui-text);line-height:1.4;margin-bottom:3px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.alert-row .ar-meta{font-size:10px;color:var(--ui-text3);font-family:var(--mono)}
+.sev-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.dot-crit{background:#ef4444}.dot-high{background:#f97316}.dot-med{background:var(--blue2)}
+
+.lp-footer{padding:14px 16px;border-top:1px solid var(--ui-border);margin-top:auto}
+.sel-count{font-size:11px;color:var(--ui-text3);margin-bottom:10px;font-family:var(--mono)}
+.gen-btn{width:100%;padding:10px;background:var(--blue-dim);color:#fff;border:none;border-radius:5px;font-family:var(--sans);font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.15s}
+.gen-btn:hover{background:var(--blue)}
+.gen-btn:disabled{opacity:0.4;cursor:not-allowed}
+
+/* RIGHT PANEL — preview */
+.rp{flex:1;overflow-y:auto;background:#0a0d12}
+.rp-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:14px;color:var(--ui-text3);text-align:center;padding:40px}
+.rp-empty h3{font-family:var(--sans);font-size:18px;color:var(--ui-text2);letter-spacing:1px}
+.rp-empty p{font-size:12px;max-width:340px;line-height:1.7;font-family:var(--mono)}
+.rp-bar{padding:12px 24px;background:var(--ui-surface);border-bottom:1px solid var(--ui-border);display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50}
+.rp-bar h3{font-family:var(--sans);font-size:13px;font-weight:700;letter-spacing:1px;color:var(--ui-text);margin-right:auto}
+
+/* ════════════════════════════════════════
+   BRIEF DOCUMENT — matches viginote.com
+════════════════════════════════════════ */
+#brief-doc{display:none;max-width:860px;margin:0 auto;padding:32px 24px 80px}
+
+.article-card{background:var(--ink2);border:1px solid rgba(59,139,196,0.15)}
+.article-header{background:var(--ink);border-bottom:1px solid rgba(59,139,196,0.1);padding:22px 36px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.article-org{display:flex;align-items:center;gap:14px}
+.article-logo{width:52px;height:52px}
+.article-org-name{font-family:var(--sans);font-size:14px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--blue2);line-height:1}
+.article-org-sub{font-family:var(--sans);font-size:9px;letter-spacing:2px;color:var(--steel);text-transform:uppercase;margin-top:4px}
+.article-meta{text-align:right}
+.article-ref{font-family:var(--sans);font-size:9px;letter-spacing:2px;color:var(--steel);text-transform:uppercase;line-height:1.9}
+.article-ref strong{color:var(--blue);font-weight:500}
+.class-bar{background:var(--blue);padding:5px 36px;display:flex;align-items:center;justify-content:space-between}
+.class-text{font-family:var(--sans);font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#fff}
+.class-dots{display:flex;gap:5px}
+.cdot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.3)}
+.cdot.on{background:rgba(255,255,255,0.9)}
+
+/* Risk ticker strip */
+.risk-ticker-strip{background:rgba(0,0,0,0.3);border-bottom:1px solid rgba(59,139,196,0.1);padding:10px 36px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.risk-ticker{display:flex;align-items:center;gap:7px;padding:4px 12px;border:1px solid;border-radius:2px;font-family:var(--sans);font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+.rt-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.risk-ticker.t-CRITICAL{border-color:rgba(176,48,48,0.5);background:rgba(176,48,48,0.1);color:#D05050}
+.risk-ticker.t-CRITICAL .rt-dot{background:#D05050}
+.risk-ticker.t-HIGH{border-color:rgba(176,112,32,0.5);background:rgba(176,112,32,0.1);color:#D0A050}
+.risk-ticker.t-HIGH .rt-dot{background:#D0A050}
+.risk-ticker.t-MEDIUM{border-color:rgba(59,139,196,0.4);background:rgba(59,139,196,0.08);color:var(--blue2)}
+.risk-ticker.t-MEDIUM .rt-dot{background:var(--blue2)}
+.risk-ticker.t-LOW{border-color:rgba(39,174,96,0.4);background:rgba(39,174,96,0.08);color:#4CAF50}
+.risk-ticker.t-LOW .rt-dot{background:#4CAF50}
+.risk-strip-label{font-family:var(--sans);font-size:8px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--steel);margin-right:4px}
+
+.article-body{padding:40px 36px 36px}
+.art-type{font-family:var(--sans);font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--blue);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.art-type::before{content:'';width:22px;height:1px;background:var(--blue)}
+.art-headline{font-family:var(--serif);font-size:1.95rem;font-weight:500;color:var(--paper);line-height:1.2;margin-bottom:10px}
+.art-deck{font-family:var(--serif);font-size:1.05rem;font-weight:300;font-style:italic;color:var(--mist);line-height:1.6;margin-bottom:28px;padding-bottom:24px;border-bottom:1px solid rgba(59,139,196,0.1)}
+.art-byline{display:flex;align-items:center;gap:18px;margin-bottom:32px}
+.byline-avatar{width:38px;height:38px;border-radius:50%;background:var(--surface);border:1px solid rgba(59,139,196,0.3);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:14px;color:var(--blue2);flex-shrink:0}
+.byline-name{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:1.5px;color:var(--paper);text-transform:uppercase}
+.byline-role{font-size:0.8rem;color:var(--steel);margin-top:2px}
+.byline-date{margin-left:auto;font-family:var(--sans);font-size:10px;letter-spacing:2px;color:var(--steel);text-transform:uppercase}
+.key-j{background:rgba(59,139,196,0.07);border-left:3px solid var(--blue);padding:18px 22px;margin-bottom:28px}
+.kj-label{font-family:var(--sans);font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--blue);margin-bottom:7px}
+.kj-text{font-family:var(--serif);font-size:1.02rem;color:var(--paper);line-height:1.62}
+.risk-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:26px 0}
+.risk-cell{background:rgba(255,255,255,0.025);padding:16px;border-top:2px solid;text-align:center}
+.risk-cell.h{border-color:var(--risk-high)}.risk-cell.m{border-color:var(--risk-med)}.risk-cell.e{border-color:#5080B0}.risk-cell.low{border-color:#207050}
+.rlabel{font-family:var(--sans);font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--steel);margin-bottom:5px}
+.rval{font-family:var(--serif);font-size:0.95rem;color:var(--paper)}
+.rlvl{font-family:var(--sans);font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-top:5px}
+.risk-cell.h .rlvl{color:#D05050}.risk-cell.m .rlvl{color:#D0A050}.risk-cell.e .rlvl{color:var(--blue2)}.risk-cell.low .rlvl{color:#4CAF50}
+.art-subhead{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--paper);margin:28px 0 10px;padding-bottom:8px;border-bottom:1px solid rgba(59,139,196,0.1)}
+.art-text{font-size:0.91rem;color:var(--mist);line-height:1.86}
+.art-text p+p{margin-top:14px}
+.art-text strong{color:var(--paper);font-weight:500}
+
+/* Alert breakdown cards */
+.alert-breakdown{display:flex;flex-direction:column;gap:14px;margin:4px 0 8px}
+.ab-card{border:1px solid rgba(59,139,196,0.15);background:rgba(255,255,255,0.02);padding:16px 18px}
+.ab-card-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.ab-num{font-family:var(--sans);font-size:9px;font-weight:700;letter-spacing:2px;color:var(--blue);flex-shrink:0}
+.ab-title{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:0.5px;color:var(--paper);line-height:1.35}
+.ab-body{font-size:0.87rem;color:var(--mist);line-height:1.75}
+.ab-meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid rgba(59,139,196,0.08)}
+.ab-meta span{font-family:var(--mono);font-size:9px;color:var(--steel)}
+
+.recommendations{background:rgba(59,139,196,0.05);border:1px solid rgba(59,139,196,0.15);padding:20px 24px;margin:24px 0}
+.rec-label{font-family:var(--sans);font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--blue);margin-bottom:14px}
+.rec-item{display:flex;gap:12px;margin-bottom:10px;font-size:0.88rem;color:var(--mist);line-height:1.65}
+.rec-num{font-family:var(--sans);font-size:9px;font-weight:700;color:var(--blue);flex-shrink:0;padding-top:2px;width:18px}
+.art-sources{margin-top:28px;padding-top:18px;border-top:1px solid rgba(59,139,196,0.08);font-family:var(--sans);font-size:9px;letter-spacing:1.8px;color:var(--wire);text-transform:uppercase;line-height:2}
+.art-sources strong{color:var(--steel)}
+.art-footer{background:rgba(59,139,196,0.05);border-top:1px solid rgba(59,139,196,0.12);padding:14px 36px;display:flex;align-items:center;justify-content:space-between}
+.art-footer-disc{font-family:var(--sans);font-size:8.5px;letter-spacing:1.5px;color:var(--wire);text-transform:uppercase}
+.art-footer-logo{display:flex;align-items:center;gap:8px}
+.art-footer-wordmark{font-family:var(--sans);font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--blue);opacity:0.4}
+
+/* ════════════════════════════════════════
+   PRINT / PDF
+════════════════════════════════════════ */
+@media print{
+  @page{size:A4;margin:0}
+  .topnav,.lp,.rp-bar,.rp-empty,#print-instructions{display:none!important}
+  html,body{width:210mm;margin:0!important;padding:0!important;background:#0C1018!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .app{display:block!important;height:auto!important}
+  .rp{overflow:visible!important;background:#0C1018!important}
+  #brief-doc{display:block!important;max-width:100%!important;padding:0 0 40px!important;margin:0!important}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .art-headline{font-size:1.6rem!important}
+  .art-deck{font-size:0.95rem!important}
+  .art-text,.ab-body,.rec-item{font-size:0.85rem!important}
+  .article-card,.key-j,.recommendations,.art-byline,.risk-row,.ab-card{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="/dashboard" class="tn-brand">
+    <svg width="22" height="26" viewBox="0 0 72 84" fill="none">
+      <path d="M36 3 L66 14 L66 40 C66 58 36 72 36 72 C36 72 6 58 6 40 L6 14 Z" fill="#151d2e" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M12 32 C18 20 54 20 60 32 C54 44 18 44 12 32 Z" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+      <circle cx="36" cy="32" r="7" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+      <circle cx="36" cy="32" r="3" fill="#3b82f6"/>
+    </svg>
+    <div><span class="tn-wordmark">VIGINOTE</span><span class="tn-sub">Intelligence Platform</span></div>
+  </a>
+  <a href="/dashboard" class="nav-link">LinkedIn Studio</a>
+  <a href="/brief" class="nav-link active">Client Brief</a>
+  <a href="/assessment" class="nav-link">Assessment</a>
+  <a href="/digest" class="nav-link">Digest</a>
+  <a href="/portal" class="nav-link">Portal</a>
+  <button type="button" class="btn" id="print-btn" style="display:none" onclick="window.print()">⬇ Save PDF</button>
+</nav>
+
+<div class="app">
+
+  <!-- LEFT PANEL -->
+  <div class="lp">
+    <div class="lp-header">
+      <h2>CLIENT BRIEF</h2>
+      <p>Select 1–5 alerts → Claude structures a formal intelligence brief ready to send to clients.</p>
+    </div>
+
+    <div class="lp-section">
+      <label>Time window</label>
+      <select class="lp-input" id="fi-hours">
+        <option value="24">24 hours</option>
+        <option value="48">48 hours</option>
+        <option value="168" selected>7 days</option>
+        <option value="336">14 days</option>
+      </select>
+    </div>
+    <div class="lp-section">
+      <label>Min score</label>
+      <select class="lp-input" id="fi-score">
+        <option value="5" selected>5+</option>
+        <option value="7">7+ High only</option>
+        <option value="9">9+ Critical only</option>
+      </select>
+    </div>
+    <div class="lp-section">
+      <label>Region</label>
+      <select class="lp-input" id="fi-region">
+        <option value="">All regions</option>
+        <option value="GLOBAL">Global</option>
+        <option value="MIDDLE_EAST">Middle East</option>
+        <option value="EUROPE">Europe</option>
+        <option value="ASIA">Asia</option>
+        <option value="WEST_EAST_AFRICA">West / East Africa</option>
+        <option value="SOUTHERN_AFRICA">Southern Africa</option>
+        <option value="SOUTH_AMERICA">South America</option>
+      </select>
+    </div>
+    <div class="lp-section">
+      <label>Brief type</label>
+      <select class="lp-input" id="fi-type">
+        <option value="geopolitical">Geopolitical Assessment</option>
+        <option value="travel">Travel Security Advisory</option>
+        <option value="corporate">Corporate Security Intelligence</option>
+        <option value="osint">OSINT Research Brief</option>
+        <option value="event">Event-Specific Intelligence</option>
+      </select>
+    </div>
+    <div class="lp-section">
+      <label>Client / Recipient</label>
+      <input type="text" class="lp-input" id="fi-client" placeholder="e.g. Acme Corp — Board" autocomplete="off">
+    </div>
+    <div class="lp-section">
+      <label>Ref number</label>
+      <input type="text" class="lp-input" id="fi-ref" placeholder="Auto-generated" autocomplete="off">
+    </div>
+
+    <div class="alert-scroll" id="alert-scroll">
+      <div class="alert-list-head">
+        <span id="alert-count">Loading…</span>
+        <button type="button" onclick="loadAlerts()">↺ Refresh</button>
+      </div>
+      <div id="alert-list"><div style="padding:20px;text-align:center;color:var(--ui-text3);font-family:var(--mono);font-size:11px">Loading alerts…</div></div>
+    </div>
+
+    <div class="lp-footer">
+      <div class="sel-count" id="sel-count">0 alerts selected (max 5)</div>
+      <button type="button" class="gen-btn" id="gen-btn" onclick="generateBrief()" disabled>
+        <div class="spin"></div><span id="gen-label">Generate Client Brief</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="rp" id="rp">
+    <div class="rp-empty" id="rp-empty">
+      <svg width="48" height="56" viewBox="0 0 72 84" fill="none" opacity="0.15">
+        <path d="M36 3 L66 14 L66 40 C66 58 36 72 36 72 C36 72 6 58 6 40 L6 14 Z" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M12 32 C18 20 54 20 60 32 C54 44 18 44 12 32 Z" fill="none" stroke="#3b82f6" stroke-width="2"/>
+        <circle cx="36" cy="32" r="7" fill="none" stroke="#3b82f6" stroke-width="2"/>
+        <circle cx="36" cy="32" r="3" fill="#3b82f6"/>
+      </svg>
+      <h3>CLIENT INTELLIGENCE BRIEF</h3>
+      <p>Select alerts from the left panel, choose brief type and client, then generate. The brief will render here ready to save as PDF and send.</p>
+      <p style="margin-top:8px;font-size:10px">When printing: Paper A4 · Margins None · ✅ Background graphics ON</p>
+    </div>
+
+    <div class="rp-bar" id="rp-bar" style="display:none">
+      <h3 id="rp-title">Client Brief</h3>
+      <button type="button" class="btn" onclick="regenerate()">↺ Regenerate</button>
+      <button type="button" class="btn btn-blue" onclick="window.print()">⬇ Save PDF</button>
+    </div>
+
+    <!-- THE BRIEF DOCUMENT -->
+    <div id="brief-doc">
+      <div class="article-card">
+
+        <!-- Header -->
+        <div class="article-header">
+          <div class="article-org">
+            <svg class="article-logo" viewBox="0 0 72 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M36 3 L66 14 L66 40 C66 58 36 72 36 72 C36 72 6 58 6 40 L6 14 Z" fill="#0d1e3a" stroke="#3a5070" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M12 32 C18 20 54 20 60 32 C54 44 18 44 12 32 Z" fill="none" stroke="#4a90c8" stroke-width="2.5"/>
+              <circle cx="36" cy="32" r="7" fill="none" stroke="#4a90c8" stroke-width="2.5"/>
+              <circle cx="36" cy="32" r="3" fill="#4a90c8"/>
+              <line x1="24" y1="47" x2="24" y2="58" stroke="#3a5878" stroke-width="2" stroke-linecap="round"/>
+              <line x1="30" y1="47" x2="30" y2="63" stroke="#3a5878" stroke-width="2" stroke-linecap="round"/>
+              <line x1="36" y1="47" x2="36" y2="60" stroke="#3a5878" stroke-width="2" stroke-linecap="round"/>
+              <line x1="42" y1="47" x2="42" y2="56" stroke="#3a5878" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="24" cy="58" r="2.5" fill="#3a5878"/>
+              <circle cx="30" cy="63" r="2.5" fill="#3a5878"/>
+              <circle cx="36" cy="60" r="2.5" fill="#3a5878"/>
+              <circle cx="42" cy="56" r="2.5" fill="#3a5878"/>
+            </svg>
+            <div>
+              <div class="article-org-name">VIGINOTE</div>
+              <div class="article-org-sub">Geopolitical Intelligence · Open-Source Analysis</div>
+            </div>
+          </div>
+          <div class="article-meta">
+            <div class="article-ref" id="brief-ref">
+              <strong>REF:</strong> —<br/>
+              <strong>REGION:</strong> —<br/>
+              <strong>ISSUED:</strong> —
+            </div>
+          </div>
+        </div>
+
+        <!-- Classification bar -->
+        <div class="class-bar">
+          <span class="class-text" id="brief-class">CLIENT CONFIDENTIAL · AUTHORISED DISTRIBUTION</span>
+          <div class="class-dots">
+            <div class="cdot on"></div><div class="cdot on"></div>
+            <div class="cdot on"></div><div class="cdot"></div><div class="cdot"></div>
+          </div>
+        </div>
+
+        <!-- Risk ticker strip -->
+        <div class="risk-ticker-strip" id="risk-ticker-strip" style="display:none">
+          <span class="risk-strip-label">Alert Status</span>
+        </div>
+
+        <!-- Body -->
+        <div class="article-body">
+          <div class="art-type" id="brief-type-label">Intelligence Brief</div>
+          <h1 class="art-headline" id="brief-headline">Generate a brief to populate this document.</h1>
+          <p class="art-deck" id="brief-deck">Select alerts on the left and click Generate.</p>
+
+          <div class="art-byline">
+            <div class="byline-avatar">CF</div>
+            <div>
+              <div class="byline-name">Chad Frankal</div>
+              <div class="byline-role" id="brief-byline-role">Senior Intelligence Analyst · Viginote</div>
+            </div>
+            <div class="byline-date" id="brief-date"></div>
+          </div>
+
+          <div class="key-j" id="brief-kj" style="display:none">
+            <div class="kj-label">● Key Judgement</div>
+            <div class="kj-text" id="brief-kj-text"></div>
+          </div>
+
+          <div class="risk-row" id="brief-risk-row" style="display:none"></div>
+
+          <div id="brief-sections"></div>
+
+          <div class="art-sources" id="brief-sources" style="display:none"></div>
+        </div>
+
+        <div class="art-footer">
+          <div class="art-footer-disc" id="brief-footer-disc">© Viginote 2026 · Confidential analytical product · Not for redistribution without authorisation</div>
+          <div class="art-footer-logo">
+            <svg width="22" height="26" viewBox="0 0 72 84" fill="none" opacity="0.35">
+              <path d="M36 3 L66 14 L66 40 C66 58 36 72 36 72 C36 72 6 58 6 40 L6 14 Z" fill="#0d1e3a" stroke="#3a5070" stroke-width="2" stroke-linejoin="round"/>
+              <circle cx="36" cy="32" r="7" fill="none" stroke="#4a90c8" stroke-width="2.5"/>
+              <circle cx="36" cy="32" r="3" fill="#4a90c8"/>
+            </svg>
+            <span class="art-footer-wordmark" id="brief-footer-ref">VIGINOTE</span>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /brief-doc -->
+  </div><!-- /rp -->
+</div><!-- /app -->
+
+<script>
+const API = window.location.origin;
+let allAlerts = [];
+let selectedIds = new Set();
+let lastGenerated = null;
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function sevClass(score, crit){
+  if(crit||score>=10) return {cls:'crit',dot:'dot-crit',risk:'CRITICAL'};
+  if(score>=7) return {cls:'high',dot:'dot-high',risk:'HIGH'};
+  if(score>=5) return {cls:'med',dot:'dot-med',risk:'MEDIUM'};
+  return {cls:'med',dot:'dot-med',risk:'LOW'};
+}
+
+function fmtDate(iso){
+  try{ return new Date(iso*1000||iso).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}); }
+  catch(e){ return new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}); }
+}
+
+function genRef(){
+  const now = new Date();
+  const yr = now.getFullYear();
+  const mo = String(now.getMonth()+1).padStart(2,'0');
+  const num = String(Math.floor(Math.random()*900)+100);
+  const reg = (document.getElementById('fi-region').value||'GL').substring(0,2).toUpperCase();
+  return `VGN-${yr}-${reg}-${mo}${num}`;
+}
+
+function riskCellClass(score, crit){
+  if(crit||score>=10) return 'h';
+  if(score>=7) return 'm';
+  if(score>=5) return 'e';
+  return 'low';
+}
+
+// ── Load alerts ───────────────────────────────────────────────────────────────
+async function loadAlerts(){
+  const hours = document.getElementById('fi-hours').value;
+  const score = document.getElementById('fi-score').value;
+  const region = document.getElementById('fi-region').value;
+  document.getElementById('alert-list').innerHTML = '<div style="padding:20px;text-align:center;color:var(--ui-text3);font-family:var(--mono);font-size:11px">Loading…</div>';
+  try{
+    let url = `${API}/alerts?hours=${hours}&min_score=${score}&limit=80`;
+    if(region) url += `&region=${region}`;
+    const r = await fetch(url);
+    const d = await r.json();
+    allAlerts = d.alerts || [];
+    document.getElementById('alert-count').textContent = `${allAlerts.length} alerts`;
+    renderAlertList();
+  }catch(e){
+    document.getElementById('alert-list').innerHTML = `<div style="padding:16px;color:#ef4444;font-size:11px;font-family:var(--mono)">Error: ${e.message}</div>`;
+  }
+}
+
+function renderAlertList(){
+  if(!allAlerts.length){
+    document.getElementById('alert-list').innerHTML = '<div style="padding:20px;text-align:center;color:var(--ui-text3);font-family:var(--mono);font-size:11px">No alerts found. Try a wider window.</div>';
+    return;
+  }
+  document.getElementById('alert-list').innerHTML = allAlerts.map(a => {
+    const s = sevClass(a.score, a.is_critical);
+    const sel = selectedIds.has(a.id);
+    return `<div class="alert-row${sel?' selected':''}" onclick="toggleAlert(${a.id})" id="ar-${a.id}">
+      <div class="sev-dot ${s.dot}" style="margin-top:5px"></div>
+      <div style="flex:1;min-width:0">
+        <input type="checkbox" class="cb" style="display:none" ${sel?'checked':''}>
+        <div class="ar-title">${a.title||''}</div>
+        <div class="ar-meta">${(a.region||'').replace(/_/g,' ')} · Score ${a.score} · ${s.risk}</div>
+      </div>
+    </div>`;
+  }).join('');
+  updateSelCount();
+}
+
+function toggleAlert(id){
+  if(selectedIds.has(id)){
+    selectedIds.delete(id);
+  } else {
+    if(selectedIds.size >= 5){ alert('Maximum 5 alerts per brief. Deselect one first.'); return; }
+    selectedIds.add(id);
+  }
+  const row = document.getElementById(`ar-${id}`);
+  if(row) row.classList.toggle('selected', selectedIds.has(id));
+  updateSelCount();
+}
+
+function updateSelCount(){
+  const n = selectedIds.size;
+  document.getElementById('sel-count').textContent = `${n} alert${n!==1?'s':''} selected (max 5)`;
+  document.getElementById('gen-btn').disabled = n === 0;
+}
+
+// ── Generate brief ────────────────────────────────────────────────────────────
+async function generateBrief(){
+  if(!selectedIds.size) return;
+  const btn = document.getElementById('gen-btn');
+  const label = document.getElementById('gen-label');
+  btn.disabled = true; btn.classList.add('generating');
+  label.textContent = 'Generating…';
+
+  const selected = allAlerts.filter(a => selectedIds.has(a.id));
+  const briefType = document.getElementById('fi-type').value;
+  const clientName = document.getElementById('fi-client').value.trim() || 'Confidential Client';
+  const refInput = document.getElementById('fi-ref').value.trim() || genRef();
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const regions = [...new Set(selected.map(a => (a.region||'').replace(/_/g,' ')))];
+  const regionStr = regions.slice(0,3).join(' · ') || 'Global';
+
+  const typeLabels = {
+    geopolitical:'Geopolitical Assessment',
+    travel:'Travel Security Advisory',
+    corporate:'Corporate Security Intelligence',
+    osint:'OSINT Research Brief',
+    event:'Event-Specific Intelligence Brief'
+  };
+
+  try{
+    // Build prompt for Claude
+    const alertsText = selected.map((a,i) => {
+      const ents = a.entities || {};
+      return `ALERT ${i+1}: ${a.title}\nRegion: ${a.region}\nScore: ${a.score} | Critical: ${a.is_critical?'Yes':'No'}\nSource: ${a.source_domain||a.source_dom||''} (tier ${a.source_tier||0})\nSummary: ${a.precis||''}\nLocations: ${(ents.locs||ents.locations||[]).join(', ')}\nOrganisations: ${(ents.orgs||ents.organizations||[]).join(', ')}\nArticle: ${(a.article_text||'').substring(0,600)}\n---`;
+    }).join('\n');
+
+    const prompt = `You are a senior intelligence analyst at Viginote producing a formal ${typeLabels[briefType]} for ${clientName}.
+
+Date: ${dateStr}
+Ref: ${refInput}
+Region(s): ${regionStr}
+Alert count: ${selected.length}
+
+INTELLIGENCE ALERTS:
+${alertsText}
+
+Respond ONLY with this JSON object:
+
+{"headline":"Clear specific headline for this brief (max 15 words)","deck":"One-sentence deck: what happened, why it matters, core implication (max 35 words)","type_label":"${typeLabels[briefType]} · ${regionStr}","key_judgement":"2-3 sentences. Most important analytical conclusion. Start with the assessment, give basis. Specific not vague.","risk_matrix":[{"label":"Primary risk category","subject":"Subject/area","level":"HIGH","bars":"■■■■","cell":"h"},{"label":"Secondary risk","subject":"Subject","level":"ELEVATED","bars":"■■■□","cell":"m"},{"label":"Tertiary risk","subject":"Subject","level":"MEDIUM","bars":"■■□□","cell":"e"}],"situational_overview":"2-3 paragraphs. What is happening, key actors, timeline. Factual. Each paragraph as separate string in array.","alert_summaries":[{"title":"Alert title","enhanced":"2-3 sentence enhanced analysis beyond the precis. Context, significance, implications.","region":"Region","source":"source.com","score":9,"risk":"CRITICAL"}],"risk_vectors":{"supply_chain":"Specific operational impact on supply chains or logistics","personnel":"Direct implications for people — travel, safety, protection posture","regulatory":"Sanctions risk, financial exposure, compliance considerations"},"assessment":"2 paragraphs. Your analytical view — what it means, what happens next. Use probability language. Second paragraph covers second-order implications. Each paragraph as separate string in array.","recommendations":["Immediate action — what to do in next 72 hours","Short-term action — next 30 days","Strategic action — next quarter"],"sources":"Source 1 · Source 2 · Source 3","source_reliability":"A-1 to B-2 (corroborated across multiple outlets)","byline_role":"Senior Intelligence Analyst — ${regionStr} Security & Risk · Viginote"}
+
+Return ONLY the JSON. No markdown, no preamble.`;
+
+    const resp = await fetch(`${API}/ai/generate`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        alerts: selected,
+        briefing_type: briefType,
+        custom_title: prompt
+      })
+    });
+
+    // Try direct Claude API call as fallback for richer structured output
+    let g;
+    const data = await resp.json();
+    if(data.generated && data.generated.briefing_title){
+      // dashboard format returned — extract what we can
+      g = adaptDashboardFormat(data.generated, selected, briefType, typeLabels);
+    } else {
+      // Already structured or error
+      throw new Error(data.detail || 'Generation failed');
+    }
+
+    renderBrief(g, selected, refInput, dateStr, regionStr, clientName, typeLabels[briefType], briefType);
+    lastGenerated = {g, selected, refInput, dateStr, regionStr, clientName, briefType, typeLabels};
+
+  } catch(e){
+    // Fallback: build directly from alert data without AI
+    console.warn('AI failed, using structured fallback:', e.message);
+    const g = buildFallback(selected, briefType, typeLabels);
+    renderBrief(g, selected, refInput, dateStr, regionStr, clientName, typeLabels[briefType], briefType);
+    lastGenerated = {g, selected, refInput, dateStr, regionStr, clientName, briefType, typeLabels};
+  }
+
+  btn.disabled = false; btn.classList.remove('generating');
+  label.textContent = 'Generate Client Brief';
+}
+
+function adaptDashboardFormat(gen, selected, briefType, typeLabels){
+  // Adapt the LinkedIn briefing format to brief format
+  const regions = [...new Set(selected.map(a => (a.region||'').replace(/_/g,' ')))];
+  return {
+    headline: gen.briefing_title || 'VigiNote Intelligence Brief',
+    deck: gen.executive_summary ? gen.executive_summary.substring(0,200)+'…' : 'Intelligence assessment of selected alerts.',
+    type_label: `${typeLabels[briefType]} · ${regions.join(' · ')}`,
+    key_judgement: gen.executive_summary || 'See situational overview for key findings.',
+    risk_matrix: buildRiskMatrix(selected),
+    situational_overview: [gen.executive_summary || ''],
+    alert_summaries: (gen.alert_summaries||[]).map((s,i) => ({
+      title: selected[i]?.title || `Alert ${i+1}`,
+      enhanced: s.enhanced_summary || '',
+      region: selected[i]?.region || '',
+      source: selected[i]?.source_domain || selected[i]?.source_dom || '',
+      score: selected[i]?.score || 0,
+      risk: scoreToPill(selected[i]?.score, selected[i]?.is_critical)
+    })),
+    risk_vectors: {
+      supply_chain: 'Review supply chain dependencies in affected regions.',
+      personnel: 'Review travel advisories for affected regions. Non-essential travel should require enhanced pre-travel assessment.',
+      regulatory: 'Audit third-party relationships in affected areas for secondary exposure.'
+    },
+    assessment: [gen.executive_summary || ''],
+    recommendations: ['Review current operational posture in affected regions.', 'Maintain enhanced monitoring of this situation.', 'Brief relevant stakeholders on the intelligence.'],
+    sources: selected.map(a => a.source_domain||a.source_dom||'').filter(Boolean).join(' · '),
+    source_reliability: 'B-2 to B-3 (open-source, cross-referenced)',
+    byline_role: `Senior Intelligence Analyst · Viginote`
+  };
+}
+
+function buildFallback(selected, briefType, typeLabels){
+  const regions = [...new Set(selected.map(a => (a.region||'').replace(/_/g,' ')))];
+  const topAlert = selected[0] || {};
+  return {
+    headline: topAlert.title || 'VigiNote Intelligence Brief',
+    deck: topAlert.precis || 'Intelligence assessment based on selected alert sources.',
+    type_label: `${typeLabels[briefType]} · ${regions.join(' · ')}`,
+    key_judgement: `Based on ${selected.length} intelligence alert${selected.length>1?'s':''} across ${regions.join(', ')}, the situation requires attention. ${selected.filter(a=>a.is_critical||a.score>=8).length} critical-level events have been identified in the reporting period.`,
+    risk_matrix: buildRiskMatrix(selected),
+    situational_overview: selected.map(a => a.precis || a.title || '').filter(Boolean),
+    alert_summaries: selected.map(a => ({
+      title: a.title || '',
+      enhanced: a.precis || '',
+      region: (a.region||'').replace(/_/g,' '),
+      source: a.source_domain || a.source_dom || '',
+      score: a.score || 0,
+      risk: scoreToPill(a.score, a.is_critical)
+    })),
+    risk_vectors:{
+      supply_chain:'Review supply chain dependencies and logistics routes through affected regions.',
+      personnel:'Enhanced travel advisory measures apply. All non-essential travel to affected areas should require pre-travel assessment.',
+      regulatory:'Audit exposure through third-party relationships and supplier networks in affected jurisdictions.'
+    },
+    assessment:['The intelligence collected across this reporting period indicates an elevated risk environment requiring active monitoring and contingency planning.','Organisations with operations, personnel, or supply chain dependencies in the affected regions should review current security postures and implement enhanced monitoring protocols.'],
+    recommendations:['Brief senior leadership and relevant security teams on current threat picture.','Review and update travel advisories for affected regions within 72 hours.','Establish regular intelligence monitoring cadence for the next 30-day period.'],
+    sources: selected.map(a => a.source_domain||a.source_dom||'').filter(Boolean).join(' · '),
+    source_reliability: 'B-2 to C-3 (open-source, partially corroborated)',
+    byline_role: 'Senior Intelligence Analyst · Viginote'
+  };
+}
+
+function buildRiskMatrix(selected){
+  const hasCrit = selected.some(a => a.is_critical || a.score >= 9);
+  const hasHigh = selected.some(a => a.score >= 7);
+  const regions = [...new Set(selected.map(a=>(a.region||'').replace(/_/g,' ')))];
+  return [
+    {label:'Security Environment',subject:regions[0]||'Region',level:hasCrit?'CRITICAL':'HIGH',bars:hasCrit?'■■■■':'■■■□',cell:hasCrit?'h':'m'},
+    {label:'Personnel Risk',subject:'In-Country Personnel',level:hasHigh?'ELEVATED':'MEDIUM',bars:hasHigh?'■■■□':'■■□□',cell:hasHigh?'m':'e'},
+    {label:'Operational Continuity',subject:'Business Operations',level:'MEDIUM',bars:'■■□□',cell:'e'}
+  ];
+}
+
+function scoreToPill(score, crit){
+  if(crit||score>=10) return 'CRITICAL';
+  if(score>=7) return 'HIGH';
+  if(score>=5) return 'MEDIUM';
+  return 'LOW';
+}
+
+// ── Render brief ──────────────────────────────────────────────────────────────
+function renderBrief(g, selected, ref, dateStr, regionStr, client, typeLabelStr, briefType){
+  const year = new Date().getFullYear();
+
+  // Header meta
+  document.getElementById('brief-ref').innerHTML =
+    `<strong>REF:</strong> ${ref}<br/><strong>REGION:</strong> ${regionStr}<br/><strong>ISSUED:</strong> ${dateStr}`;
+  document.getElementById('brief-class').textContent = `CLIENT CONFIDENTIAL · ${client.toUpperCase()} · AUTHORISED DISTRIBUTION`;
+  document.getElementById('brief-type-label').textContent = g.type_label || typeLabelStr;
+  document.getElementById('brief-headline').textContent = g.headline || '';
+  document.getElementById('brief-deck').textContent = g.deck || '';
+  document.getElementById('brief-byline-role').textContent = g.byline_role || 'Senior Intelligence Analyst · Viginote';
+  document.getElementById('brief-date').textContent = dateStr.toUpperCase();
+  document.getElementById('brief-footer-disc').textContent = `© Viginote ${year} · Confidential analytical product prepared for ${client} · Not for redistribution`;
+  document.getElementById('brief-footer-ref').textContent = `VIGINOTE · ${ref}`;
+
+  // Risk tickers
+  const tickerStrip = document.getElementById('risk-ticker-strip');
+  tickerStrip.style.display = 'flex';
+  tickerStrip.innerHTML = '<span class="risk-strip-label">Alert Status</span>';
+  selected.forEach(a => {
+    const risk = scoreToPill(a.score, a.is_critical);
+    const ticker = document.createElement('div');
+    ticker.className = `risk-ticker t-${risk}`;
+    ticker.innerHTML = `<span class="rt-dot"></span>${risk} · Score ${a.score}`;
+    tickerStrip.appendChild(ticker);
+  });
+
+  // Key judgement
+  document.getElementById('brief-kj').style.display = 'block';
+  document.getElementById('brief-kj-text').textContent = g.key_judgement || '';
+
+  // Risk matrix
+  const rm = document.getElementById('brief-risk-row');
+  rm.style.display = 'grid';
+  rm.innerHTML = (g.risk_matrix||[]).map(r =>
+    `<div class="risk-cell ${r.cell}">
+      <div class="rlabel">${r.label}</div>
+      <div class="rval">${r.subject}</div>
+      <div class="rlvl">${r.bars} ${r.level}</div>
+    </div>`
+  ).join('');
+
+  // Sections
+  const sections = document.getElementById('brief-sections');
+  let html = '';
+
+  // Situational overview
+  const overview = Array.isArray(g.situational_overview) ? g.situational_overview : [g.situational_overview||''];
+  if(overview.some(p=>p)){
+    html += `<div class="art-subhead">Situational Overview</div><div class="art-text">${overview.filter(Boolean).map(p=>`<p>${p}</p>`).join('')}</div>`;
+  }
+
+  // Alert breakdown
+  if(g.alert_summaries && g.alert_summaries.length){
+    html += `<div class="art-subhead">Intelligence Alerts — Detailed Analysis</div><div class="alert-breakdown">`;
+    html += g.alert_summaries.map((s,i) => `
+      <div class="ab-card">
+        <div class="ab-card-head">
+          <span class="ab-num">ALERT 0${i+1}</span>
+          <div class="risk-ticker t-${s.risk}" style="font-size:8px;padding:2px 8px"><span class="rt-dot"></span>${s.risk}</div>
+          <div class="ab-title">${s.title||''}</div>
+        </div>
+        <div class="ab-body">${s.enhanced||s.title||''}</div>
+        <div class="ab-meta">
+          <span>${(s.region||'').replace(/_/g,' ')}</span>
+          <span>${s.source||''}</span>
+          <span>Severity Score: ${s.score||0}</span>
+        </div>
+      </div>`).join('');
+    html += '</div>';
+  }
+
+  // Risk vectors
+  const rv = g.risk_vectors || {};
+  if(rv.supply_chain || rv.personnel || rv.regulatory){
+    html += `<div class="art-subhead">Risk Vectors for Client Exposure</div><div class="art-text">`;
+    if(rv.supply_chain) html += `<p><strong>Supply Chain &amp; Logistics:</strong> ${rv.supply_chain}</p>`;
+    if(rv.personnel) html += `<p><strong>Personnel &amp; Travel Security:</strong> ${rv.personnel}</p>`;
+    if(rv.regulatory) html += `<p><strong>Regulatory &amp; Financial Exposure:</strong> ${rv.regulatory}</p>`;
+    html += '</div>';
+  }
+
+  // Assessment
+  const assessment = Array.isArray(g.assessment) ? g.assessment : [g.assessment||''];
+  if(assessment.some(p=>p)){
+    html += `<div class="art-subhead">Viginote Assessment</div><div class="art-text">${assessment.filter(Boolean).map(p=>`<p>${p}</p>`).join('')}</div>`;
+  }
+
+  // Recommendations
+  if(g.recommendations && g.recommendations.length){
+    html += `<div class="recommendations"><div class="rec-label">■ Recommended Actions for Client Consideration</div>`;
+    html += g.recommendations.map((r,i)=>`<div class="rec-item"><span class="rec-num">0${i+1}.</span><span>${r}</span></div>`).join('');
+    html += '</div>';
+  }
+
+  sections.innerHTML = html;
+
+  // Sources
+  if(g.sources){
+    document.getElementById('brief-sources').style.display = 'block';
+    document.getElementById('brief-sources').innerHTML =
+      `<strong>Sources (OSINT):</strong> ${g.sources}<br/><strong>Source Reliability:</strong> ${g.source_reliability||'B-2 (open-source)'} &nbsp;·&nbsp; <strong>Information Cut-Off:</strong> ${dateStr}`;
+  }
+
+  // Show doc
+  document.getElementById('brief-doc').style.display = 'block';
+  document.getElementById('rp-empty').style.display = 'none';
+  document.getElementById('rp-bar').style.display = 'flex';
+  document.getElementById('rp-title').textContent = ref;
+  document.getElementById('print-btn').style.display = 'flex';
+}
+
+function regenerate(){
+  if(lastGenerated){
+    const {selected, refInput, dateStr, regionStr, clientName, briefType, typeLabels} = lastGenerated;
+    generateBrief();
+  }
+}
+
+// ── Filter changes ────────────────────────────────────────────────────────────
+['fi-hours','fi-score','fi-region'].forEach(id => {
+  document.getElementById(id).addEventListener('change', loadAlerts);
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.getElementById('brief-date').textContent = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}).toUpperCase();
+document.getElementById('fi-ref').placeholder = genRef();
+loadAlerts();
+</script>
+
+</body>
+</html>
