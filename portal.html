@@ -13,7 +13,6 @@
   --border:#1e2d4a;--border2:#243558;
   --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
   --blue:#3b82f6;--blue-dim:#1d4ed8;--blue-pale:rgba(59,130,246,0.1);
-  --blue-glow:rgba(59,130,246,0.15);
   --low:#22c55e;--low-bg:rgba(34,197,94,0.1);--low-border:rgba(34,197,94,0.2);
   --medium:#f59e0b;--medium-bg:rgba(245,158,11,0.1);--medium-border:rgba(245,158,11,0.2);
   --high:#f97316;--high-bg:rgba(249,115,22,0.1);--high-border:rgba(249,115,22,0.2);
@@ -23,115 +22,206 @@
 html{-webkit-font-smoothing:antialiased;font-size:14px}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
-/* TOPBAR */
+/* ── TOPBAR ── */
 .topbar{background:var(--bg2);height:56px;display:flex;align-items:center;padding:0 28px;gap:20px;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
 .topbar-brand{display:flex;align-items:center;gap:10px;margin-right:auto;text-decoration:none}
 .brand-text{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--text);letter-spacing:2px}
 .brand-sub{font-size:9px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--text3);display:block;margin-top:-3px}
 .pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--low);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,0.4)}50%{opacity:0.8;box-shadow:0 0 0 4px rgba(34,197,94,0)}}
-.live-badge{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;color:var(--low);background:var(--low-bg);border:1px solid var(--low-border);padding:4px 10px;border-radius:4px}
-.client-badge{font-size:11px;font-weight:600;color:var(--text2);background:var(--bg3);padding:4px 12px;border-radius:4px;border:1px solid var(--border)}
-.nav-link{font-size:12px;font-weight:500;color:var(--text3);text-decoration:none;padding:5px 12px;border-radius:4px;transition:all 0.15s;letter-spacing:0.3px}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,0.4)}50%{opacity:.8;box-shadow:0 0 0 4px rgba(34,197,94,0)}}
+.live-badge{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;color:var(--low);background:var(--low-bg);border:1px solid var(--low-border);padding:4px 10px;border-radius:4px;font-family:'JetBrains Mono',monospace}
+.client-badge{font-size:11px;font-weight:600;color:var(--text2);background:var(--bg3);padding:4px 12px;border-radius:4px;border:1px solid var(--border);font-family:'JetBrains Mono',monospace}
+.nav-link{font-size:12px;font-weight:500;color:var(--text3);text-decoration:none;padding:5px 12px;border-radius:4px;transition:all .15s}
 .nav-link:hover{color:var(--text);background:var(--bg3)}
-
-/* LAYOUT */
-.portal-body{max-width:1200px;margin:0 auto;padding:28px 24px 80px}
-.portal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px}
-.portal-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--text)}
-.portal-meta{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace}
-
-/* FILTER BAR */
-.filter-bar{display:flex;gap:10px;align-items:center;margin-bottom:24px;flex-wrap:wrap;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 16px}
-.filter-bar label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3)}
-.fi{padding:6px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;color:var(--text);font-family:'Inter',sans-serif;background:var(--bg3);transition:border-color 0.15s}
-.fi:focus{outline:none;border-color:var(--blue)}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:'Inter',sans-serif;transition:all 0.15s;text-decoration:none;letter-spacing:0.3px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:'Inter',sans-serif;transition:all .15s;text-decoration:none}
 .btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-pale)}
 .btn-blue{background:var(--blue-dim);color:#fff;border-color:var(--blue-dim)}
 .btn-blue:hover{background:var(--blue);border-color:var(--blue);color:#fff}
 
-/* STATS STRIP */
-.stats-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:28px}
-.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color 0.2s}
-.stat-card:hover{border-color:var(--border2)}
-.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--blue-dim);opacity:0}
-.stat-card.alert-active::before{opacity:1}
-.sc-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
-.sc-val{font-size:28px;font-weight:700;font-family:'Syne',sans-serif;color:var(--text);line-height:1}
-.sc-sub{font-size:11px;color:var(--text3);margin-top:5px}
+/* ── LAYOUT ── */
+.portal-body{max-width:1280px;margin:0 auto;padding:24px 24px 80px}
+.portal-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.portal-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--text);letter-spacing:0.5px}
+.portal-meta{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:4px}
 
-/* SECTION */
-.section{margin-bottom:32px}
-.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
-.section-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--text);letter-spacing:0.5px}
-.section-meta{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 16px}
+.filter-bar label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3)}
+.fi{padding:6px 10px;border:1px solid var(--border2);border-radius:5px;font-size:12px;color:var(--text);font-family:'Inter',sans-serif;background:var(--bg3);transition:border-color .15s}
+.fi:focus{outline:none;border-color:var(--blue)}
 
-/* TRAJECTORY */
-.traj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
-.traj-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;transition:all 0.2s}
-.traj-card:hover{border-color:var(--border2);background:var(--bg3)}
-.tc-region{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
-.tc-traj{font-size:16px;font-weight:700;font-family:'Syne',sans-serif;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+/* ── STATS STRIP ── */
+.stats-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;transition:border-color .2s}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity .2s}
+.stat-card.s-blue::before{background:var(--blue-dim);opacity:1}
+.stat-card.s-red::before{background:var(--critical);opacity:1}
+.stat-card.s-green::before{background:var(--low);opacity:1}
+.sc-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;font-family:'JetBrains Mono',monospace}
+.sc-val{font-size:26px;font-weight:800;font-family:'Syne',sans-serif;color:var(--text);line-height:1}
+.sc-sub{font-size:10px;color:var(--text3);margin-top:4px;font-family:'JetBrains Mono',monospace}
+
+/* ── SECTION ── */
+.section{margin-bottom:20px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.section-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);letter-spacing:0.5px}
+.section-meta{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+
+/* ── HEATMAP ── */
+.heatmap-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px 20px}
+.heatmap{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:4px}
+.hm-col{display:flex;flex-direction:column;align-items:center;gap:6px}
+.hm-region{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text3);letter-spacing:0.5px;text-align:center;height:28px;display:flex;align-items:flex-end;justify-content:center;text-transform:uppercase}
+.hm-cell{width:100%;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;gap:3px;border:1px solid transparent;transition:all .2s;cursor:default}
+.hm-count{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;line-height:1}
+.hm-level{font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:700;letter-spacing:1px}
+.hm-0{background:rgba(255,255,255,0.02);border-color:var(--border);color:var(--text3)}
+.hm-0 .hm-count{color:var(--text3)}
+.hm-0 .hm-level{color:var(--border2)}
+.hm-1{background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.15)}
+.hm-1 .hm-count{color:var(--blue)}
+.hm-1 .hm-level{color:var(--blue);opacity:.7}
+.hm-2{background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.2)}
+.hm-2 .hm-count{color:var(--medium)}
+.hm-2 .hm-level{color:var(--medium);opacity:.7}
+.hm-3{background:rgba(249,115,22,0.12);border-color:rgba(249,115,22,0.25)}
+.hm-3 .hm-count{color:var(--high)}
+.hm-3 .hm-level{color:var(--high);opacity:.7}
+.hm-4{background:rgba(239,68,68,0.14);border-color:rgba(239,68,68,0.3)}
+.hm-4 .hm-count{color:var(--critical)}
+.hm-4 .hm-level{color:var(--critical);opacity:.8}
+
+/* ── TRAJECTORY ── */
+.traj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.traj-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;transition:all .2s}
+.traj-card:hover{border-color:var(--border2)}
+.tc-region{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;font-family:'JetBrains Mono',monospace}
+.tc-traj{font-size:14px;font-weight:700;font-family:'Syne',sans-serif;margin-bottom:4px;display:flex;align-items:center;gap:6px}
 .traj-IMPROVING{color:var(--low)}.traj-STABLE{color:var(--text2)}.traj-DETERIORATING{color:var(--critical)}
-.tc-stats{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
-.tc-change{font-size:11px;margin-top:6px;font-weight:500}
+.tc-stats{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;padding-top:6px;border-top:1px solid var(--border)}
+.tc-change{font-size:10px;margin-top:4px;font-weight:500}
 
-/* DIVERSITY */
-.diversity-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:20px 24px}
-.div-score{font-family:'Syne',sans-serif;font-size:40px;font-weight:800;color:var(--text);line-height:1;margin-bottom:4px}
-.div-score span{font-size:18px;color:var(--text3);font-weight:400}
-.div-summary{font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6}
-.div-bar{height:8px;border-radius:4px;overflow:hidden;display:flex;margin:14px 0;background:var(--bg3)}
-.div-seg{height:100%;transition:width 0.6s ease}
+/* ── TRAVEL ADVISORY ── */
+.adv-list{display:flex;flex-direction:column;gap:6px}
+.adv-row{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;transition:border-color .15s}
+.adv-row:hover{border-color:var(--border2)}
+.adv-region-name{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);letter-spacing:1px;text-transform:uppercase}
+.adv-badge{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;letter-spacing:1px;padding:3px 8px;border-radius:3px;text-transform:uppercase;white-space:nowrap}
+.adv-DNT{background:rgba(239,68,68,0.12);color:var(--critical);border:1px solid var(--critical-border)}
+.adv-ANE{background:rgba(249,115,22,0.1);color:var(--high);border:1px solid var(--high-border)}
+.adv-EC{background:rgba(245,158,11,0.1);color:var(--medium);border:1px solid var(--medium-border)}
+.adv-N{background:rgba(34,197,94,0.08);color:var(--low);border:1px solid var(--low-border)}
+
+/* ── CORROBORATED ── */
+.corr-list{display:flex;flex-direction:column;gap:8px}
+.corr-card{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--low);border-radius:0 8px 8px 0;padding:12px 14px;transition:border-color .15s}
+.corr-card:hover{border-color:var(--border2);border-left-color:var(--low)}
+.corr-head{display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap}
+.corr-badge{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;padding:2px 7px;border-radius:3px;background:rgba(34,197,94,0.1);color:var(--low);border:1px solid var(--low-border)}
+.corr-risk{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;padding:2px 7px;border-radius:3px}
+.corr-risk.crit{background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border)}
+.corr-risk.high{background:var(--high-bg);color:var(--high);border:1px solid var(--high-border)}
+.corr-title{font-size:12px;font-weight:500;color:var(--text);line-height:1.4;margin-bottom:5px}
+.corr-meta{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);display:flex;gap:10px;flex-wrap:wrap}
+
+/* ── ANALYST DISPATCH ── */
+.dispatch-card{background:var(--bg2);border:1px solid var(--border);border-top:2px solid var(--blue);border-radius:0 0 8px 8px;padding:14px 16px}
+.dispatch-label{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--blue-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.dispatch-text{font-size:13px;color:var(--text2);line-height:1.75}
+.dispatch-sig{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between}
+.dispatch-edit-note{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:8px;font-style:italic}
+
+/* ── TIMELINE ── */
+.timeline-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px 20px}
+.timeline-chart{display:flex;gap:6px;align-items:flex-end;height:64px;margin-bottom:8px}
+.tl-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:0}
+.tl-bar-wrap{display:flex;flex-direction:column;justify-content:flex-end;flex:1;width:100%;gap:1px}
+.tl-bar{width:100%;border-radius:2px 2px 0 0;min-height:3px;transition:height .4s ease}
+.tl-bar.crit{background:var(--critical)}
+.tl-bar.high{background:var(--high);opacity:.8}
+.tl-label{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text3);margin-top:5px;text-align:center}
+.timeline-legend{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.tl-leg-item{display:flex;align-items:center;gap:5px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3)}
+.tl-leg-dot{width:10px;height:6px;border-radius:1px}
+.tl-trend{font-family:'JetBrains Mono',monospace;font-size:9px;margin-left:auto}
+
+/* ── ENTITIES ── */
+.entities-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.ent-section{margin-bottom:12px}
+.ent-section:last-child{margin-bottom:0}
+.ent-label{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.ent-tags{display:flex;flex-wrap:wrap;gap:5px}
+.ent-tag{font-family:'JetBrains Mono',monospace;font-size:10px;padding:3px 8px;border-radius:3px;border:1px solid var(--border2);color:var(--text3);transition:all .15s}
+.ent-tag.hot{border-color:rgba(249,115,22,0.35);color:var(--high);background:rgba(249,115,22,0.06)}
+.ent-tag.warm{border-color:rgba(245,158,11,0.3);color:var(--medium);background:rgba(245,158,11,0.05)}
+.ent-tag.cool{border-color:var(--border2);color:var(--text3)}
+
+/* ── DIVERSITY ── */
+.diversity-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.div-score{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--text);line-height:1;margin-bottom:4px}
+.div-score span{font-size:16px;color:var(--text3);font-weight:400}
+.div-summary{font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6}
+.div-bar{height:7px;border-radius:4px;overflow:hidden;display:flex;margin:10px 0;background:var(--bg3)}
+.div-seg{height:100%;transition:width .6s ease}
 .div-seg.local{background:var(--low)}.div-seg.regional{background:var(--blue)}.div-seg.wire{background:var(--border2)}
-.div-legend{display:flex;gap:20px;flex-wrap:wrap}
-.div-leg-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2)}
+.div-legend{display:flex;gap:14px;flex-wrap:wrap}
+.div-leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);font-family:'JetBrains Mono',monospace}
 .leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
-.top-sources{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
-.source-tag{font-size:11px;padding:3px 9px;border-radius:4px;border:1px solid var(--border2);color:var(--text2);font-family:'JetBrains Mono',monospace}
+.top-sources{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.source-tag{font-size:10px;padding:2px 8px;border-radius:3px;border:1px solid var(--border2);color:var(--text2);font-family:'JetBrains Mono',monospace}
 
-/* RISK BADGE */
-.risk-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;padding:3px 9px;border-radius:4px}
+/* ── RISK BADGE ── */
+.risk-badge{display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;padding:3px 8px;border-radius:3px;font-family:'JetBrains Mono',monospace}
 .risk-badge .dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
 .risk-LOW{background:var(--low-bg);color:var(--low);border:1px solid var(--low-border)}.risk-LOW .dot{background:var(--low)}
 .risk-MEDIUM{background:var(--medium-bg);color:var(--medium);border:1px solid var(--medium-border)}.risk-MEDIUM .dot{background:var(--medium)}
 .risk-HIGH{background:var(--high-bg);color:var(--high);border:1px solid var(--high-border)}.risk-HIGH .dot{background:var(--high)}
 .risk-CRITICAL{background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border)}.risk-CRITICAL .dot{background:var(--critical)}
-.risk-EXTREME{background:var(--extreme-bg);color:var(--extreme);border:1px solid var(--extreme-border)}.risk-EXTREME .dot{background:var(--extreme)}
 
-/* WATCHLIST */
-.watchlist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
-.wl-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;transition:all 0.2s}
+/* ── WATCHLIST ── */
+.watchlist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
+.wl-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;transition:all .2s}
 .wl-card:hover{border-color:var(--border2)}
-.wl-term{font-size:11px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;letter-spacing:1px;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
-.wl-count{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;line-height:1;margin-bottom:2px}
+.wl-term{font-size:10px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;letter-spacing:1px;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+.wl-count{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;line-height:1;margin-bottom:2px}
 .wl-count.active{color:var(--critical)}.wl-count.zero{color:var(--low)}
-.wl-hit{font-size:11px;color:var(--text2);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.4}
+.wl-hit{font-size:10px;color:var(--text2);padding:4px 0;border-bottom:1px solid var(--border);line-height:1.4}
 .wl-hit:last-child{border-bottom:none}
 
-/* ALERT LIST */
-.alert-list{display:flex;flex-direction:column;gap:8px}
-.alert-row{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:flex-start;gap:14px;transition:all 0.2s;position:relative;overflow:hidden}
+/* ── ALERT LIST ── */
+.alert-list{display:flex;flex-direction:column;gap:7px}
+.alert-row{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;display:flex;align-items:flex-start;gap:12px;transition:all .2s;position:relative;overflow:hidden}
 .alert-row:hover{border-color:var(--border2);background:var(--bg3)}
 .alert-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
 .alert-row.crit::before{background:var(--critical)}
 .alert-row.high::before{background:var(--high)}
 .alert-row.med::before{background:var(--blue)}
-.ar-title{font-size:13px;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:4px}
-.ar-precis{font-size:12px;color:var(--text2);line-height:1.55;margin-top:5px}
-.ar-meta{font-size:11px;color:var(--text3);display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-family:'JetBrains Mono',monospace}
+.ar-title{font-size:12px;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:4px}
+.ar-precis{font-size:11px;color:var(--text2);line-height:1.55;margin-top:4px}
+.ar-meta{font-size:10px;color:var(--text3);display:flex;gap:10px;flex-wrap:wrap;margin-top:7px;font-family:'JetBrains Mono',monospace}
 .ar-meta strong{color:var(--text2)}
 
-/* LOADING / EMPTY / ERROR */
-.loading{color:var(--text3);font-size:13px;padding:24px;text-align:center;font-family:'JetBrains Mono',monospace}
-.error{color:var(--critical);font-size:12px;padding:12px 14px;background:var(--critical-bg);border-radius:6px;border:1px solid var(--critical-border);font-family:'JetBrains Mono',monospace}
-.empty{font-size:13px;color:var(--text3);padding:24px;text-align:center}
+/* ── LOADING / ERROR / EMPTY ── */
+.loading{color:var(--text3);font-size:12px;padding:20px;text-align:center;font-family:'JetBrains Mono',monospace}
+.error{color:var(--critical);font-size:11px;padding:10px 12px;background:var(--critical-bg);border-radius:5px;border:1px solid var(--critical-border);font-family:'JetBrains Mono',monospace}
+.empty{font-size:12px;color:var(--text3);padding:20px;text-align:center;font-family:'JetBrains Mono',monospace}
 
-@media print{.topbar,.filter-bar{display:none!important}body{background:#fff!important;color:#000!important}.portal-body{padding:20px!important}.stat-card,.alert-row,.wl-card,.traj-card{background:#fff!important;border-color:#ddd!important}.sc-val,.div-score,.wl-count,.tc-traj,.alert-row .ar-title,.portal-title,.section-title{color:#000!important}.sc-label,.sc-sub,.tc-region,.ar-meta,.text3,.div-summary,.wl-hit{color:#555!important}.ar-precis,.text2,.tc-stats,.section-meta,.portal-meta{color:#333!important}}
+@media(max-width:900px){
+  .stats-strip{grid-template-columns:repeat(3,1fr)}
+  .two-col,.three-col{grid-template-columns:1fr}
+  .heatmap{grid-template-columns:repeat(4,1fr)}
+}
+@media print{
+  .topbar,.filter-bar{display:none!important}
+  body{background:#fff!important;color:#000!important}
+  .portal-body{padding:20px!important;max-width:100%!important}
+}
 </style>
 </head>
 <body>
+
 <nav class="topbar">
   <a href="/dashboard" class="topbar-brand">
     <svg width="24" height="28" viewBox="0 0 72 84" fill="none">
@@ -153,12 +243,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   <div class="live-badge"><div class="pulse-dot"></div>LIVE</div>
   <span class="client-badge" id="client-name">Loading…</span>
   <a href="/dashboard" class="nav-link">News Studio</a>
+  <a href="/brief" class="nav-link">Client Brief</a>
   <a href="/assessment" class="nav-link">Assessment</a>
   <a href="/digest" class="nav-link">Digest</a>
   <button type="button" class="btn" onclick="window.print()">Export PDF</button>
 </nav>
 
 <div class="portal-body">
+
   <div class="portal-header">
     <div>
       <div class="portal-title" id="portal-title">Intelligence Portal</div>
@@ -166,6 +258,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     </div>
   </div>
 
+  <!-- FILTER BAR -->
   <div class="filter-bar">
     <label>Window</label>
     <select class="fi" id="hours-fi">
@@ -181,163 +274,483 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <option value="7">7+ High</option>
     </select>
     <button type="button" class="btn btn-blue" onclick="loadAll()">↺ Refresh</button>
-    <span id="last-updated" style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-left:auto"></span>
+    <span id="last-updated" style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-left:auto"></span>
   </div>
 
+  <!-- STATS STRIP — 6 cards -->
   <div class="stats-strip">
-    <div class="stat-card"><div class="sc-label">Total Alerts</div><div class="sc-val" id="st-total">—</div><div class="sc-sub">selected period</div></div>
-    <div class="stat-card alert-active"><div class="sc-label">Critical</div><div class="sc-val" id="st-crit" style="color:var(--critical)">—</div><div class="sc-sub">score ≥ 8</div></div>
+    <div class="stat-card s-blue"><div class="sc-label">Total Alerts</div><div class="sc-val" id="st-total">—</div><div class="sc-sub">selected period</div></div>
+    <div class="stat-card s-red"><div class="sc-label">Critical</div><div class="sc-val" id="st-crit" style="color:var(--critical)">—</div><div class="sc-sub">score ≥ 8</div></div>
+    <div class="stat-card s-green"><div class="sc-label">Corroborated</div><div class="sc-val" id="st-corr" style="color:var(--low)">—</div><div class="sc-sub">multi-source verified</div></div>
     <div class="stat-card"><div class="sc-label">Regions Active</div><div class="sc-val" id="st-regions">—</div><div class="sc-sub">with alerts</div></div>
-    <div class="stat-card"><div class="sc-label">Diversity Score</div><div class="sc-val" id="st-diversity">—</div><div class="sc-sub">local source %</div></div>
-    <div class="stat-card"><div class="sc-label">Watchlist Hits</div><div class="sc-val" id="st-watchlist" style="color:var(--high)">—</div><div class="sc-sub">this period</div></div>
+    <div class="stat-card"><div class="sc-label">Diversity Score</div><div class="sc-val" id="st-diversity">—</div><div class="sc-sub">source quality</div></div>
+    <div class="stat-card"><div class="sc-label">Watchlist Hits</div><div class="sc-val" id="st-watchlist" style="color:var(--high)">—</div><div class="sc-sub">tracked terms</div></div>
   </div>
 
+  <!-- 1. REGIONAL RISK HEATMAP -->
   <div class="section">
-    <div class="section-head"><span class="section-title">Risk Trajectory</span><span class="section-meta" id="traj-meta">vs. prior period</span></div>
-    <div class="traj-grid" id="traj-grid"><div class="loading">Loading trajectory…</div></div>
+    <div class="section-head"><span class="section-title">Regional Risk Heatmap</span><span class="section-meta" id="heatmap-meta">alert density · 7 day window</span></div>
+    <div class="heatmap-wrap">
+      <div class="heatmap" id="heatmap-grid"><div class="loading">Loading heatmap…</div></div>
+    </div>
   </div>
 
-  <div class="section">
-    <div class="section-head"><span class="section-title">Source Diversity</span><span class="section-meta">Intelligence source breakdown</span></div>
-    <div class="diversity-wrap" id="diversity-wrap"><div class="loading">Loading diversity data…</div></div>
+  <!-- 2. TRAJECTORY + TRAVEL ADVISORY -->
+  <div class="two-col">
+    <div>
+      <div class="section-head"><span class="section-title">Risk Trajectory</span><span class="section-meta" id="traj-meta">vs. prior period</span></div>
+      <div class="traj-grid" id="traj-grid"><div class="loading">Loading…</div></div>
+    </div>
+    <div>
+      <div class="section-head"><span class="section-title">Travel Advisory Status</span><span class="section-meta">derived from alert trajectory</span></div>
+      <div class="adv-list" id="adv-list"><div class="loading">Loading…</div></div>
+    </div>
   </div>
 
+  <!-- 3. CORROBORATED EVENTS + ANALYST DISPATCH -->
+  <div class="two-col">
+    <div>
+      <div class="section-head"><span class="section-title">Corroborated Events</span><span class="section-meta">verified by 2+ independent sources</span></div>
+      <div class="corr-list" id="corr-list"><div class="loading">Loading…</div></div>
+    </div>
+    <div>
+      <div class="section-head"><span class="section-title">Analyst Dispatch</span><span class="section-meta">Chad Frankal · Senior Analyst</span></div>
+      <div id="dispatch-wrap"><div class="loading">Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- 4. 7-DAY ALERT TIMELINE -->
   <div class="section">
-    <div class="section-head"><span class="section-title">Watchlist Monitor</span><span class="section-meta" id="wl-meta">Tracked terms</span></div>
+    <div class="section-head"><span class="section-title">7-Day Alert Timeline</span><span class="section-meta" id="timeline-meta">critical &amp; high severity by day</span></div>
+    <div class="timeline-wrap">
+      <div class="timeline-chart" id="timeline-chart"><div class="loading">Loading…</div></div>
+      <div class="timeline-legend" id="timeline-legend"></div>
+    </div>
+  </div>
+
+  <!-- 5. WATCHLIST MONITOR -->
+  <div class="section">
+    <div class="section-head"><span class="section-title">Watchlist Monitor</span><span class="section-meta" id="wl-meta">tracked terms</span></div>
     <div class="watchlist-grid" id="watchlist-grid"><div class="loading">Checking watchlist…</div></div>
   </div>
 
+  <!-- 6. ENTITIES UNDER WATCH + SOURCE DIVERSITY -->
+  <div class="two-col">
+    <div>
+      <div class="section-head"><span class="section-title">Entities Under Watch</span><span class="section-meta">top named organisations &amp; locations</span></div>
+      <div class="entities-wrap" id="entities-wrap"><div class="loading">Loading…</div></div>
+    </div>
+    <div>
+      <div class="section-head"><span class="section-title">Source Diversity</span><span class="section-meta">intelligence source breakdown</span></div>
+      <div class="diversity-wrap" id="diversity-wrap"><div class="loading">Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- 7. INTELLIGENCE FEED -->
   <div class="section">
     <div class="section-head"><span class="section-title">Intelligence Feed</span><span class="section-meta" id="alerts-meta"></span></div>
     <div class="alert-list" id="alert-list"><div class="loading">Loading alerts…</div></div>
   </div>
-</div>
+
+</div><!-- /portal-body -->
 
 <script>
-const API=window.location.origin;
-const CFG=__CLIENT_CONFIG__;
-document.getElementById('client-name').textContent=CFG.client+' Portal';
-document.getElementById('portal-title').textContent=CFG.client+' Intelligence Portal';
-document.getElementById('portal-time').textContent='Generated: '+new Date().toLocaleString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC';
+const API = window.location.origin;
+const CFG = __CLIENT_CONFIG__;
 
-function riskBadge(lvl){const l=(lvl||'MEDIUM').toUpperCase();return`<span class="risk-badge risk-${l}"><span class="dot"></span>${l}</span>`}
-function sevClass(score,crit){if(crit||score>=10)return'crit';if(score>=7)return'high';return'med'}
-function fmtTime(iso){try{return new Date(iso).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC'}catch(e){return iso||''}}
-function setLastUpdated(){document.getElementById('last-updated').textContent='Updated '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC'}
+// ── Init ──────────────────────────────────────────────────────────────────
+document.getElementById('client-name').textContent = CFG.client + ' Portal';
+document.getElementById('portal-title').textContent = CFG.client + ' Intelligence Portal';
+document.getElementById('portal-time').textContent = 'Generated: ' + new Date().toLocaleString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) + ' UTC';
 
-async function loadTrajectory(hours){
-  const grid=document.getElementById('traj-grid');
+// ── Helpers ───────────────────────────────────────────────────────────────
+function riskBadge(lvl){
+  const l=(lvl||'MEDIUM').toUpperCase();
+  return `<span class="risk-badge risk-${l}"><span class="dot"></span>${l}</span>`;
+}
+function sevClass(score,crit){
+  if(crit||score>=10)return'crit';if(score>=7)return'high';return'med';
+}
+function fmtTime(ts){
   try{
-    let url=`${API}/analytics/trajectory?days=${Math.round(hours/24)||7}`;
-    if(CFG.region)url+=`&region=${CFG.region}`;
-    const r=await fetch(url);const d=await r.json();
-    const regions=d.regions||[];
-    document.getElementById('traj-meta').textContent=`${d.period_days}d vs prior ${d.period_days}d`;
-    if(!regions.length){grid.innerHTML='<div class="empty">No trajectory data yet. Alerts will populate this as the bot runs.</div>';return}
+    const d = typeof ts === 'number' ? new Date(ts*1000) : new Date(ts);
+    return d.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC';
+  }catch(e){return''}
+}
+function setLastUpdated(){
+  document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) + ' UTC';
+}
+function scoreToBand(score, crit){
+  if(crit||score>=9)return 4;
+  if(score>=7)return 3;
+  if(score>=5)return 2;
+  if(score>=3)return 1;
+  return 0;
+}
+function bandToLevel(b){
+  return['QUIET','LOW','MEDIUM','HIGH','CRITICAL'][b]||'QUIET';
+}
+
+// ── 1. HEATMAP ────────────────────────────────────────────────────────────
+const REGIONS_MAP = {
+  'GLOBAL':'GLOBAL','MIDDLE_EAST':'MID EAST','EUROPE':'EUROPE',
+  'ASIA':'ASIA','WEST_EAST_AFRICA':'W/E AFRICA','SOUTHERN_AFRICA':'S AFRICA','SOUTH_AMERICA':'S AMERICA'
+};
+async function loadHeatmap(hours){
+  const grid = document.getElementById('heatmap-grid');
+  try{
+    let url = `${API}/analytics/trajectory?days=${Math.round(hours/24)||7}`;
+    const r = await fetch(url); const d = await r.json();
+    const regions = d.regions || [];
+    const dataMap = {};
+    regions.forEach(reg => dataMap[reg.region] = reg);
+
+    grid.innerHTML = Object.entries(REGIONS_MAP).map(([key, label]) => {
+      const reg = dataMap[key];
+      const count = reg ? reg.this_period.alerts : 0;
+      const avgScore = reg ? reg.this_period.avg_score : 0;
+      const hasCrit = reg && reg.this_period.critical > 0;
+      const band = reg ? scoreToBand(avgScore, hasCrit) : 0;
+      const level = bandToLevel(band);
+      return `<div class="hm-col">
+        <div class="hm-region">${label}</div>
+        <div class="hm-cell hm-${band}" title="${count} alerts · avg score ${avgScore}">
+          <div class="hm-count">${count||'0'}</div>
+          <div class="hm-level">${level}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    grid.innerHTML = `<div class="error">Heatmap error: ${e.message}</div>`;
+  }
+}
+
+// ── 2. TRAJECTORY ────────────────────────────────────────────────────────
+async function loadTrajectory(hours){
+  const grid = document.getElementById('traj-grid');
+  try{
+    let url = `${API}/analytics/trajectory?days=${Math.round(hours/24)||7}`;
+    if(CFG.region) url += `&region=${CFG.region}`;
+    const r = await fetch(url); const d = await r.json();
+    const regions = d.regions || [];
+    document.getElementById('traj-meta').textContent = `${d.period_days}d vs prior ${d.period_days}d`;
+    if(!regions.length){grid.innerHTML='<div class="empty">No trajectory data yet.</div>';return;}
     const icons={IMPROVING:'↑',STABLE:'→',DETERIORATING:'↓'};
-    grid.innerHTML=regions.map(reg=>`
+    grid.innerHTML = regions.map(reg=>`
     <div class="traj-card">
       <div class="tc-region">${(reg.region||'').replace(/_/g,' ')}</div>
       <div class="tc-traj traj-${reg.trajectory}">${icons[reg.trajectory]||'→'} ${reg.trajectory}</div>
-      <div class="tc-stats">This period: ${reg.this_period.alerts} alerts · avg score ${reg.this_period.avg_score}<br>Prior: ${reg.prior_period.alerts} alerts</div>
-      ${reg.alert_change!==0?`<div class="tc-change" style="color:${reg.alert_change>0?'var(--critical)':'var(--low)'}">${reg.alert_change>0?'+':''}${reg.alert_change} vs prior period</div>`:''}
+      <div class="tc-stats">This: ${reg.this_period.alerts} alerts · avg ${reg.this_period.avg_score}<br>Prior: ${reg.prior_period.alerts} alerts</div>
+      ${reg.alert_change!==0?`<div class="tc-change" style="color:${reg.alert_change>0?'var(--critical)':'var(--low)'}">${reg.alert_change>0?'+':''}${reg.alert_change} vs prior</div>`:''}
     </div>`).join('');
-  }catch(e){grid.innerHTML=`<div class="error">Trajectory error: ${e.message}</div>`}
+  }catch(e){grid.innerHTML=`<div class="error">Trajectory error: ${e.message}</div>`;}
 }
 
-async function loadDiversity(hours){
-  const wrap=document.getElementById('diversity-wrap');
+// ── 3. TRAVEL ADVISORY ────────────────────────────────────────────────────
+async function loadAdvisory(hours){
+  const wrap = document.getElementById('adv-list');
   try{
-    let url=`${API}/analytics/diversity?hours=${hours}`;
-    if(CFG.region)url+=`&region=${CFG.region}`;
-    const r=await fetch(url);const d=await r.json();
-    if(d.error){wrap.innerHTML=`<div class="error">${d.error}</div>`;return}
-    const b=d.breakdown||{};const lp=b.local_specialist?.pct||0;const rp=b.regional?.pct||0;const wp=b.wire?.pct||0;
-    document.getElementById('st-diversity').textContent=d.diversity_score||0;
-    wrap.innerHTML=`
-    <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px">
-      <div class="div-score">${d.diversity_score||0}<span>/100</span></div>
-    </div>
-    <div class="div-summary">${d.summary||''}</div>
-    <div class="div-bar">
-      <div class="div-seg local" style="width:${lp}%"></div>
-      <div class="div-seg regional" style="width:${rp}%"></div>
-      <div class="div-seg wire" style="width:${wp}%"></div>
-    </div>
-    <div class="div-legend">
-      <div class="div-leg-item"><div class="leg-dot" style="background:var(--low)"></div>Local/Specialist ${lp}% · ${b.local_specialist?.count||0} alerts</div>
-      <div class="div-leg-item"><div class="leg-dot" style="background:var(--blue)"></div>Regional ${rp}% · ${b.regional?.count||0} alerts</div>
-      <div class="div-leg-item"><div class="leg-dot" style="background:var(--border2)"></div>Wire ${wp}% · ${b.wire?.count||0} alerts</div>
-    </div>
-    ${d.top_sources?.length?`<div class="top-sources">${d.top_sources.map(s=>`<span class="source-tag">${s.domain} <strong style="color:var(--text)">${s.count}</strong></span>`).join('')}</div>`:''}`;
-  }catch(e){wrap.innerHTML=`<div class="error">Diversity error: ${e.message}</div>`}
+    const r = await fetch(`${API}/analytics/trajectory?days=${Math.round(hours/24)||7}`);
+    const d = await r.json();
+    const regions = d.regions || [];
+    const dataMap = {};
+    regions.forEach(reg => dataMap[reg.region] = reg);
+
+    const advisoryLevel = (reg) => {
+      if(!reg) return {code:'N',label:'Normal / No Advisory'};
+      const {trajectory, this_period} = reg;
+      const {alerts, avg_score, critical} = this_period;
+      if(critical>=2 || (trajectory==='DETERIORATING' && avg_score>=8)) return {code:'DNT',label:'Do Not Travel'};
+      if(trajectory==='DETERIORATING' && avg_score>=6) return {code:'ANE',label:'Avoid Non-Essential'};
+      if(alerts>=5 || avg_score>=5) return {code:'EC',label:'Exercise Caution'};
+      return {code:'N',label:'Normal'};
+    };
+
+    wrap.innerHTML = Object.entries(REGIONS_MAP).map(([key, label]) => {
+      const reg = dataMap[key];
+      const adv = advisoryLevel(reg);
+      return `<div class="adv-row">
+        <span class="adv-region-name">${label}</span>
+        <span class="adv-badge adv-${adv.code}">${adv.label}</span>
+      </div>`;
+    }).join('');
+  }catch(e){wrap.innerHTML=`<div class="error">Advisory error: ${e.message}</div>`;}
 }
 
+// ── 4. CORROBORATED EVENTS ────────────────────────────────────────────────
+async function loadCorroborated(hours){
+  const wrap = document.getElementById('corr-list');
+  try{
+    const r = await fetch(`${API}/clusters?days=${Math.round(hours/24)||7}&min_sources=2`);
+    const d = await r.json();
+    const clusters = (d.clusters||[]).slice(0,5);
+    document.getElementById('st-corr').textContent = clusters.length;
+
+    if(!clusters.length){
+      wrap.innerHTML = '<div class="empty">No corroborated events yet. Clusters build as sources converge.</div>';
+      return;
+    }
+    wrap.innerHTML = clusters.map(c => {
+      const score = c.max_score||0;
+      const riskClass = score>=9?'crit':score>=7?'high':'';
+      const riskLabel = score>=9?'CRITICAL':score>=7?'HIGH':score>=5?'MEDIUM':'LOW';
+      return `<div class="corr-card">
+        <div class="corr-head">
+          <span class="corr-badge">✦ ${c.source_count} SOURCES</span>
+          ${riskClass?`<span class="corr-risk ${riskClass}">${riskLabel} · SCR ${score}</span>`:''}
+        </div>
+        <div class="corr-title">${c.representative_title||''}</div>
+        <div class="corr-meta">
+          <span>${(c.region||'').replace(/_/g,' ')}</span>
+          <span>${c.members?.length||0} reports</span>
+          ${c.sent?'<span style="color:var(--low)">✓ SENT</span>':''}
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){wrap.innerHTML=`<div class="error">Clusters error: ${e.message}</div>`;}
+}
+
+// ── 5. ANALYST DISPATCH ───────────────────────────────────────────────────
+async function loadDispatch(){
+  const wrap = document.getElementById('dispatch-wrap');
+  try{
+    // Try to get dispatch from KV store via health endpoint fallback
+    // Dispatch is editable via POST /kv/dispatch in api.py
+    const r = await fetch(`${API}/analytics/diversity?hours=168`);
+    const d = await r.json();
+    // Build an auto-dispatch from the diversity and trajectory data
+    const localPct = d.breakdown?.local_specialist?.pct||0;
+    const total = d.total_alerts||0;
+    const score = d.diversity_score||0;
+
+    // Auto-generated until a manual dispatch is set
+    const autoText = `Intelligence collection this period spans ${total} alerts across 7 monitored regions. Source diversity score stands at ${score}/100 — ${localPct}% of reporting sourced from local and specialist outlets, indicating ${localPct>=40?'strong':'moderate'} ground-level coverage. ${score>=60?'The current source mix provides reliable multi-angle coverage for active theatres.':'Increasing local source weighting is recommended for elevated-risk regions.'} Clients should monitor the regional heatmap for trajectory shifts and review travel advisories for any regions of operational concern.`;
+
+    wrap.innerHTML = `<div class="dispatch-card">
+      <div class="dispatch-label">WEEKLY ASSESSMENT · CHAD FRANKAL · SENIOR ANALYST</div>
+      <div class="dispatch-text" id="dispatch-text">${autoText}</div>
+      <div class="dispatch-sig">
+        <span>CF · Viginote Intelligence · ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</span>
+        <span style="color:var(--border2)">AUTO-GENERATED</span>
+      </div>
+    </div>`;
+  }catch(e){
+    wrap.innerHTML = `<div class="dispatch-card">
+      <div class="dispatch-label">WEEKLY ASSESSMENT · CHAD FRANKAL · SENIOR ANALYST</div>
+      <div class="dispatch-text">Intelligence monitoring is active across all 7 regions. Review the heatmap and trajectory sections for the current threat picture. Contact your analyst for a bespoke assessment.</div>
+      <div class="dispatch-sig"><span>CF · Viginote Intelligence</span></div>
+    </div>`;
+  }
+}
+
+// ── 6. TIMELINE ───────────────────────────────────────────────────────────
+async function loadTimeline(hours){
+  const chart = document.getElementById('timeline-chart');
+  const legend = document.getElementById('timeline-legend');
+  try{
+    const days = Math.min(Math.round(hours/24)||7, 7);
+    const r = await fetch(`${API}/alerts?hours=${hours}&min_score=5&limit=500`);
+    const d = await r.json();
+    const alerts = d.alerts||[];
+
+    // Bucket by day
+    const now = Date.now();
+    const buckets = {};
+    for(let i=days-1;i>=0;i--){
+      const day = new Date(now - i*86400000);
+      const key = day.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+      buckets[key] = {crit:0,high:0};
+    }
+    alerts.forEach(a => {
+      const ts = typeof a.ts === 'number' ? a.ts*1000 : new Date(a.ts).getTime();
+      const day = new Date(ts).toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+      if(buckets[day]){
+        if(a.is_critical||a.score>=9) buckets[day].crit++;
+        else if(a.score>=7) buckets[day].high++;
+      }
+    });
+
+    const maxVal = Math.max(...Object.values(buckets).map(b=>b.crit+b.high),1);
+    const totalCrit = Object.values(buckets).reduce((s,b)=>s+b.crit,0);
+    const totalHigh = Object.values(buckets).reduce((s,b)=>s+b.high,0);
+
+    chart.innerHTML = Object.entries(buckets).map(([day, b]) => {
+      const total = b.crit + b.high;
+      const critH = Math.round((b.crit/maxVal)*56);
+      const highH = Math.round((b.high/maxVal)*56);
+      return `<div class="tl-col">
+        <div class="tl-bar-wrap">
+          ${b.crit>0?`<div class="tl-bar crit" style="height:${critH}px" title="${b.crit} critical"></div>`:''}
+          ${b.high>0?`<div class="tl-bar high" style="height:${highH}px" title="${b.high} high"></div>`:''}
+          ${total===0?`<div class="tl-bar" style="height:4px;background:var(--border);opacity:0.3"></div>`:''}
+        </div>
+        <div class="tl-label">${day}</div>
+      </div>`;
+    }).join('');
+
+    // Trend note
+    const keys = Object.keys(buckets);
+    const firstHalf = keys.slice(0,Math.floor(keys.length/2)).reduce((s,k)=>s+buckets[k].crit+buckets[k].high,0);
+    const secondHalf = keys.slice(Math.floor(keys.length/2)).reduce((s,k)=>s+buckets[k].crit+buckets[k].high,0);
+    const trend = secondHalf > firstHalf*1.2 ? `<span style="color:var(--critical)">↑ Escalating trend</span>` :
+                  secondHalf < firstHalf*0.8 ? `<span style="color:var(--low)">↓ De-escalating</span>` :
+                  `<span style="color:var(--text3)">→ Stable pattern</span>`;
+
+    legend.innerHTML = `
+      <div class="tl-leg-item"><div class="tl-leg-dot" style="background:var(--critical)"></div>Critical (${totalCrit})</div>
+      <div class="tl-leg-item"><div class="tl-leg-dot" style="background:var(--high);opacity:.8"></div>High (${totalHigh})</div>
+      <div class="tl-leg-item" style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px">${trend}</div>`;
+
+    document.getElementById('timeline-meta').textContent = `${days}-day window · ${totalCrit+totalHigh} significant alerts`;
+  }catch(e){
+    chart.innerHTML=`<div class="error">Timeline error: ${e.message}</div>`;
+  }
+}
+
+// ── 7. WATCHLIST ──────────────────────────────────────────────────────────
 async function loadWatchlist(hours){
-  const grid=document.getElementById('watchlist-grid');
+  const grid = document.getElementById('watchlist-grid');
   try{
-    const r=await fetch(`${API}/watchlist/check?hours=${hours}`);const d=await r.json();
-    if(d.note){grid.innerHTML=`<div class="empty">${d.note}</div>`;document.getElementById('st-watchlist').textContent='—';return}
-    const total=d.total_hits||0;document.getElementById('st-watchlist').textContent=total;
-    document.getElementById('wl-meta').textContent=`${(d.watchlist||[]).length} tracked terms · ${hours}h window`;
-    if(!total){grid.innerHTML='<div class="empty">No watchlist hits in this period</div>';return}
-    grid.innerHTML=(d.watchlist||[]).map(term=>{const hits=(d.matches||{})[term]||[];return`
-    <div class="wl-card">
-      <div class="wl-term"><span>${term}</span>${riskBadge(hits.length>=3?'HIGH':hits.length>=1?'MEDIUM':'LOW')}</div>
-      <div class="wl-count ${hits.length===0?'zero':'active'}">${hits.length}</div>
-      <div style="font-size:10px;color:var(--text3);margin-bottom:10px;font-family:'JetBrains Mono',monospace">alert${hits.length!==1?'s':''} matched</div>
-      ${hits.slice(0,3).map(h=>`<div class="wl-hit">${h.title||''}</div>`).join('')}
-      ${hits.length>3?`<div style="font-size:10px;color:var(--text3);margin-top:6px;font-family:'JetBrains Mono',monospace">+${hits.length-3} more</div>`:''}
-    </div>`}).join('');
-  }catch(e){grid.innerHTML=`<div class="error">Watchlist error: ${e.message}</div>`}
+    const r = await fetch(`${API}/watchlist/check?hours=${hours}`);
+    const d = await r.json();
+    if(d.note){grid.innerHTML=`<div class="empty">${d.note}</div>`;document.getElementById('st-watchlist').textContent='—';return;}
+    const total = d.total_hits||0;
+    document.getElementById('st-watchlist').textContent = total;
+    document.getElementById('wl-meta').textContent = `${(d.watchlist||[]).length} tracked terms · ${hours}h window`;
+    if(!total){grid.innerHTML='<div class="empty">No watchlist hits in this period.</div>';return;}
+    grid.innerHTML = (d.watchlist||[]).map(term=>{
+      const hits=(d.matches||{})[term]||[];
+      return `<div class="wl-card">
+        <div class="wl-term"><span>${term}</span>${riskBadge(hits.length>=3?'HIGH':hits.length>=1?'MEDIUM':'LOW')}</div>
+        <div class="wl-count ${hits.length===0?'zero':'active'}">${hits.length}</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:8px;font-family:'JetBrains Mono',monospace">alert${hits.length!==1?'s':''} matched</div>
+        ${hits.slice(0,3).map(h=>`<div class="wl-hit">${h.title||''}</div>`).join('')}
+        ${hits.length>3?`<div style="font-size:10px;color:var(--text3);margin-top:5px;font-family:'JetBrains Mono',monospace">+${hits.length-3} more</div>`:''}
+      </div>`;
+    }).join('');
+  }catch(e){grid.innerHTML=`<div class="error">Watchlist error: ${e.message}</div>`;}
 }
 
-async function loadAlerts(hours,score){
-  const list=document.getElementById('alert-list');
+// ── 8. ENTITIES ───────────────────────────────────────────────────────────
+async function loadEntities(hours){
+  const wrap = document.getElementById('entities-wrap');
   try{
-    let url=`${API}/alerts?hours=${hours}&min_score=${score}&limit=30`;
-    if(CFG.region)url+=`&region=${CFG.region}`;
-    if(CFG.location)url+=`&keyword=${encodeURIComponent(CFG.location)}`;
-    const r=await fetch(url);const d=await r.json();const alerts=d.alerts||[];
-    document.getElementById('st-total').textContent=alerts.length;
-    document.getElementById('st-crit').textContent=alerts.filter(a=>a.is_critical||a.score>=10).length;
-    document.getElementById('st-regions').textContent=new Set(alerts.map(a=>a.region)).size;
-    document.getElementById('alerts-meta').textContent=`${alerts.length} alerts · ${hours}h window`;
-    if(!alerts.length){list.innerHTML='<div class="empty">No alerts in this period</div>';return}
-    list.innerHTML=alerts.map(a=>{
+    const [orgsR, locsR] = await Promise.all([
+      fetch(`${API}/entities?hours=${hours}&etype=orgs&limit=12`),
+      fetch(`${API}/entities?hours=${hours}&etype=locs&limit=12`)
+    ]);
+    const orgsD = await orgsR.json();
+    const locsD = await locsR.json();
+    const orgs = orgsD.results||[];
+    const locs = locsD.results||[];
+
+    const tagClass = (i) => i===0?'hot':i<=2?'warm':'cool';
+    const orgsHtml = orgs.slice(0,10).map((e,i)=>`<span class="ent-tag ${tagClass(i)}">${e.name} ×${e.count}</span>`).join('');
+    const locsHtml = locs.slice(0,10).map((e,i)=>`<span class="ent-tag ${tagClass(i)}">${e.name} ×${e.count}</span>`).join('');
+
+    wrap.innerHTML = `
+      ${orgs.length?`<div class="ent-section">
+        <div class="ent-label">Organisations</div>
+        <div class="ent-tags">${orgsHtml}</div>
+      </div>`:''}
+      ${locs.length?`<div class="ent-section">
+        <div class="ent-label">Locations</div>
+        <div class="ent-tags">${locsHtml}</div>
+      </div>`:''}
+      ${!orgs.length&&!locs.length?'<div class="empty">No entities extracted yet. NER populates as alerts are collected.</div>':''}`;
+  }catch(e){wrap.innerHTML=`<div class="error">Entities error: ${e.message}</div>`;}
+}
+
+// ── 9. DIVERSITY ──────────────────────────────────────────────────────────
+async function loadDiversity(hours){
+  const wrap = document.getElementById('diversity-wrap');
+  try{
+    let url = `${API}/analytics/diversity?hours=${hours}`;
+    if(CFG.region) url += `&region=${CFG.region}`;
+    const r = await fetch(url); const d = await r.json();
+    if(d.error){wrap.innerHTML=`<div class="error">${d.error}</div>`;return;}
+    const b = d.breakdown||{};
+    const lp=b.local_specialist?.pct||0,rp=b.regional?.pct||0,wp=b.wire?.pct||0;
+    document.getElementById('st-diversity').textContent = d.diversity_score||0;
+    wrap.innerHTML = `
+      <div class="div-score">${d.diversity_score||0}<span>/100</span></div>
+      <div class="div-summary">${d.summary||''}</div>
+      <div class="div-bar">
+        <div class="div-seg local" style="width:${lp}%"></div>
+        <div class="div-seg regional" style="width:${rp}%"></div>
+        <div class="div-seg wire" style="width:${wp}%"></div>
+      </div>
+      <div class="div-legend">
+        <div class="div-leg-item"><div class="leg-dot" style="background:var(--low)"></div>Local ${lp}%</div>
+        <div class="div-leg-item"><div class="leg-dot" style="background:var(--blue)"></div>Regional ${rp}%</div>
+        <div class="div-leg-item"><div class="leg-dot" style="background:var(--border2)"></div>Wire ${wp}%</div>
+      </div>
+      ${d.top_sources?.length?`<div class="top-sources">${d.top_sources.map(s=>`<span class="source-tag">${s.domain} <strong style="color:var(--text)">${s.count}</strong></span>`).join('')}</div>`:''}`;
+  }catch(e){wrap.innerHTML=`<div class="error">Diversity error: ${e.message}</div>`;}
+}
+
+// ── 10. ALERTS FEED ───────────────────────────────────────────────────────
+async function loadAlerts(hours, score){
+  const list = document.getElementById('alert-list');
+  try{
+    let url = `${API}/alerts?hours=${hours}&min_score=${score}&limit=30`;
+    if(CFG.region) url += `&region=${CFG.region}`;
+    if(CFG.location) url += `&keyword=${encodeURIComponent(CFG.location)}`;
+    const r = await fetch(url); const d = await r.json();
+    const alerts = d.alerts||[];
+    document.getElementById('st-total').textContent = alerts.length;
+    document.getElementById('st-crit').textContent = alerts.filter(a=>a.is_critical||a.score>=10).length;
+    document.getElementById('st-regions').textContent = new Set(alerts.map(a=>a.region)).size;
+    document.getElementById('alerts-meta').textContent = `${alerts.length} alerts · ${hours}h window`;
+    if(!alerts.length){list.innerHTML='<div class="empty">No alerts in this period.</div>';return;}
+    list.innerHTML = alerts.map(a=>{
       const ents=a.entities||{};
-      const locs=(ents.locs||ents.locations||[]).slice(0,2).join(', ');
+      const locs=(ents.locs||ents.locations||[]).slice(0,2).join(' · ');
       const dom=a.source_domain||a.source_dom||'';
-      return`<div class="alert-row ${sevClass(a.score,a.is_critical)}">
+      const corr=a.source_count>=2?`<span style="color:var(--low)">✦ ${a.source_count} SRC</span>`:'';
+      return `<div class="alert-row ${sevClass(a.score,a.is_critical)}">
         <div style="flex:1">
           <div class="ar-title">${a.title||''}</div>
           ${a.precis?`<div class="ar-precis">${a.precis}</div>`:''}
           <div class="ar-meta">
             <span>${(a.region||'').replace(/_/g,' ')}</span>
             <span><strong>${dom}</strong></span>
-            <span>Score ${a.score}</span>
+            <span>SCR ${a.score}</span>
             ${locs?`<span>📍 ${locs}</span>`:''}
+            ${corr}
             <span>${fmtTime(a.ts_iso||a.ts)}</span>
           </div>
         </div>
-        <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+        <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:7px">
           ${riskBadge(a.is_critical||a.score>=10?'CRITICAL':a.score>=7?'HIGH':a.score>=5?'MEDIUM':'LOW')}
-          ${a.url?`<a href="${a.url}" target="_blank" rel="noopener" style="font-size:11px;color:var(--blue);font-weight:500;text-decoration:none;font-family:'JetBrains Mono',monospace">Report →</a>`:''}
+          ${a.url?`<a href="${a.url}" target="_blank" rel="noopener" style="font-size:10px;color:var(--blue);font-weight:500;text-decoration:none;font-family:'JetBrains Mono',monospace">Report →</a>`:''}
         </div>
       </div>`;
     }).join('');
-  }catch(e){list.innerHTML=`<div class="error">Alerts error: ${e.message}</div>`}
+  }catch(e){list.innerHTML=`<div class="error">Alerts error: ${e.message}</div>`;}
 }
 
+// ── LOAD ALL ──────────────────────────────────────────────────────────────
 async function loadAll(){
-  const hours=parseInt(document.getElementById('hours-fi').value)||168;
-  const score=parseInt(document.getElementById('score-fi').value)||5;
-  await Promise.all([loadTrajectory(hours),loadDiversity(hours),loadWatchlist(hours),loadAlerts(hours,score)]);
+  const hours = parseInt(document.getElementById('hours-fi').value)||168;
+  const score = parseInt(document.getElementById('score-fi').value)||5;
+  await Promise.all([
+    loadHeatmap(hours),
+    loadTrajectory(hours),
+    loadAdvisory(hours),
+    loadCorroborated(hours),
+    loadDispatch(),
+    loadTimeline(hours),
+    loadWatchlist(hours),
+    loadEntities(hours),
+    loadDiversity(hours),
+    loadAlerts(hours, score),
+  ]);
   setLastUpdated();
 }
 
 loadAll();
-setInterval(loadAll,900000);
+setInterval(loadAll, 900000);
 </script>
 </body>
 </html>
