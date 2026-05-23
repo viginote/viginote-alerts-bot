@@ -248,6 +248,16 @@ def _serve(filename: str) -> HTMLResponse:
 def _admin_redirect():
     return RedirectResponse(url="/admin/login", status_code=302)
 
+@app.get("/", response_class=HTMLResponse)
+async def page_root(request: Request):
+    if not _verify_admin(request): return _admin_redirect()
+    return RedirectResponse(url="/hub", status_code=302)
+
+@app.get("/hub", response_class=HTMLResponse)
+async def page_hub(request: Request):
+    if not _verify_admin(request): return _admin_redirect()
+    return _serve("hub.html")
+
 @app.get("/dashboard", response_class=HTMLResponse)
 async def page_dashboard(request: Request):
     if not _verify_admin(request): return _admin_redirect()
@@ -505,7 +515,7 @@ async def admin_auth(req: AdminLoginRequest, response: Response):
         secure=False,   # works on both HTTP and HTTPS
     )
     print(f"[ADMIN] Login ts={int(time.time())} sessions={len(_admin_sessions)}")
-    return {"redirect": "/dashboard"}
+    return {"redirect": "/hub"}
 
 @app.post("/admin/logout")
 async def admin_logout(response: Response):
