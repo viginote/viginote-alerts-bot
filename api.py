@@ -41,9 +41,9 @@ from datetime import datetime, timezone, timedelta
 from typing import List, Optional
 
 import httpx
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse, Response
 from pydantic import BaseModel
 
 from viginote.db import (
@@ -71,6 +71,28 @@ def _load_feed_users():
 
 # Active sessions: token -> {username, created}
 _feed_sessions: dict = {}
+
+# Admin sessions: token -> created
+_admin_sessions: dict = {}
+
+def _admin_password() -> str:
+    return os.getenv("ADMIN_PASSWORD", "")
+
+def _make_admin_token() -> str:
+    return hashlib.sha256(f"admin{secrets.token_hex(20)}".encode()).hexdigest()
+
+def _verify_admin(request: Request) -> bool:
+    """Return True if request carries a valid admin session token."""
+    token = request.cookies.get("vgn_admin")
+    if not token:
+        return False
+    created = _admin_sessions.get(token)
+    if not created:
+        return False
+    if time.time() - created > 43200:  # 12 hours
+        del _admin_sessions[token]
+        return False
+    return True
 
 def _make_token(username: str) -> str:
     return hashlib.sha256(f"{username}{secrets.token_hex(16)}".encode()).hexdigest()
@@ -135,17 +157,28 @@ def _serve(filename: str) -> HTMLResponse:
         raise HTTPException(status_code=404, detail=f"{filename} not found in project root")
     return HTMLResponse(content=p.read_text())
 
+def _admin_redirect():
+    return RedirectResponse(url="/admin/login", status_code=302)
+
 @app.get("/dashboard", response_class=HTMLResponse)
-async def page_dashboard(): return _serve("dashboard.html")
+async def page_dashboard(request: Request):
+    if not _verify_admin(request): return _admin_redirect()
+    return _serve("dashboard.html")
 
 @app.get("/assessment", response_class=HTMLResponse)
-async def page_assessment(): return _serve("assessment.html")
+async def page_assessment(request: Request):
+    if not _verify_admin(request): return _admin_redirect()
+    return _serve("assessment.html")
 
 @app.get("/digest", response_class=HTMLResponse)
-async def page_digest(): return _serve("digest.html")
+async def page_digest(request: Request):
+    if not _verify_admin(request): return _admin_redirect()
+    return _serve("digest.html")
 
 @app.get("/brief", response_class=HTMLResponse)
-async def page_brief(): return _serve("brief.html")
+async def page_brief(request: Request):
+    if not _verify_admin(request): return _admin_redirect()
+    return _serve("brief.html")
 
 @app.get("/intelligence", response_class=HTMLResponse)
 async def page_intelligence(): return _serve("feed.html")
@@ -188,6 +221,78 @@ async def auth_sessions():
             for v in _feed_sessions.values()
         ]
     }
+
+@app.get("/admin/login", response_class=HTMLResponse)
+async def admin_login_page():
+    html = """<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VigiNote Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#080c14;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'JetBrains Mono',monospace}
+.card{background:#0e1420;border:1px solid #1e2d4a;border-radius:12px;padding:44px 48px;width:100%;max-width:400px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#1d4ed8,#3b82f6,#1d4ed8)}
+.logo{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:32px}
+.brand{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:3px;color:#e2e8f0}
+.sub{font-size:9px;letter-spacing:2px;color:#64748b;display:block;margin-top:2px;text-align:center}
+label{font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#64748b;display:block;margin-bottom:6px}
+input{width:100%;padding:12px 14px;background:#111827;border:1px solid #243558;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#e2e8f0;outline:none;margin-bottom:16px;transition:border-color .15s}
+input:focus{border-color:#3b82f6}
+input::placeholder{color:#334155}
+button{width:100%;padding:13px;background:#1d4ed8;color:#fff;border:none;border-radius:6px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;cursor:pointer;transition:background .15s}
+button:hover{background:#3b82f6}
+.err{color:#ef4444;font-size:10px;text-align:center;margin-top:12px;padding:8px;background:rgba(239,68,68,.1);border-radius:4px;border:1px solid rgba(239,68,68,.2);display:none}
+.foot{font-size:9px;color:#334155;text-align:center;margin-top:20px;line-height:1.8}
+</style></head>
+<body><div class="card">
+<div class="logo">
+<svg width="26" height="30" viewBox="0 0 72 84" fill="none">
+<path d="M36 3 L66 14 L66 40 C66 58 36 72 36 72 C36 72 6 58 6 40 L6 14 Z" fill="#151d2e" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="36" cy="32" r="7" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+<circle cx="36" cy="32" r="3" fill="#3b82f6"/>
+</svg>
+<div><div class="brand">VIGINOTE</div><div class="sub">Admin Access · Authorised Only</div></div>
+</div>
+<label>Password</label>
+<input type="password" id="pw" placeholder="••••••••" autocomplete="current-password">
+<button onclick="doLogin()">Enter Platform</button>
+<div class="err" id="err">Incorrect password.</div>
+<div class="foot">All access is logged · info@viginote.com<br>Unauthorised access is prohibited</div>
+</div>
+<script>
+async function doLogin(){
+  const pw=document.getElementById('pw').value;
+  if(!pw)return;
+  const r=await fetch('/admin/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
+  if(r.ok){const d=await r.json();if(d.redirect)window.location.href=d.redirect;}
+  else{document.getElementById('err').style.display='block';}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+</script></body></html>"""
+    return HTMLResponse(content=html)
+
+class AdminLoginRequest(BaseModel):
+    password: str
+
+@app.post("/admin/auth")
+async def admin_auth(req: AdminLoginRequest, response: Response):
+    pw = _admin_password()
+    if not pw:
+        raise HTTPException(status_code=503, detail="ADMIN_PASSWORD not configured.")
+    if req.password != pw:
+        print(f"[ADMIN] Failed login attempt ts={int(time.time())}")
+        raise HTTPException(status_code=401, detail="Incorrect password.")
+    token = _make_admin_token()
+    _admin_sessions[token] = time.time()
+    response.set_cookie("vgn_admin", token, max_age=43200, httponly=True, samesite="lax")
+    print(f"[ADMIN] Login ts={int(time.time())} sessions={len(_admin_sessions)}")
+    return {"redirect": "/dashboard"}
+
+@app.post("/admin/logout")
+async def admin_logout(response: Response):
+    response.delete_cookie("vgn_admin")
+    return RedirectResponse(url="/admin/login", status_code=302)
 
 @app.get("/portal", response_class=HTMLResponse)
 async def page_portal():
@@ -318,7 +423,9 @@ def get_alert(alert_id: int):
     conn = get_conn()
     row  = conn.execute("SELECT * FROM sent_log WHERE id=?", (alert_id,)).fetchone()
     if not row: raise HTTPException(status_code=404, detail="Alert not found")
-    return row_to_dict(dict(row))
+    d = row_to_dict(dict(row))
+    # Return full article text for the article preview panel (no truncation)
+    return d
 
 @app.get("/clusters")
 def get_clusters(
