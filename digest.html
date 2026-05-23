@@ -283,5 +283,22 @@ function buildDigest(d,alertCount){
 }
 function copyLinkedIn(){const txt=document.getElementById('li-text')?.textContent||'';navigator.clipboard.writeText(txt).then(()=>{const btn=event.target;btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent='📋 Copy post',2000)})}
 </script>
+<!-- Watermark -->
+<div id="vgn-watermark" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;align-items:center;justify-content:center">
+  <div style="transform:rotate(-35deg);text-align:center;opacity:0.06;user-select:none">
+    <span style="font-size:52px;font-weight:700;color:#000;letter-spacing:6px;text-transform:uppercase;white-space:nowrap;display:block;line-height:1.2">VIGINOTE · CONFIDENTIAL</span>
+    <span id="vgn-wm-sub" style="font-size:13px;color:#000;letter-spacing:3px;display:block;margin-top:6px"></span>
+  </div>
+</div>
+<script>
+window.addEventListener('beforeprint',function(){
+  document.getElementById('vgn-watermark').style.display='flex';
+  document.getElementById('vgn-wm-sub').textContent=
+    new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}).toUpperCase()+' · VIGINOTE INTELLIGENCE · NOT FOR REDISTRIBUTION';
+});
+window.addEventListener('afterprint',function(){
+  document.getElementById('vgn-watermark').style.display='none';
+});
+</script>
 </body>
 </html>
