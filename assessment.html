@@ -192,6 +192,32 @@ select.ip-input{cursor:pointer}
   .tr-left .tr-assess,.exec-box p,.adv-text,.adv-list li,.m-list li,.rc-summary{color:#222!important}
   .threat-row,.hotspot-card,.adv-card,.measure-card{page-break-inside:avoid!important;break-inside:avoid!important}
   @page{size:A4;margin:0.5in 0.6in}
+  /* Watermark */
+  #vgn-watermark{display:flex!important}
+}
+/* Watermark */
+#vgn-watermark{
+  display:none;
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:9999;
+  align-items:center;justify-content:center;
+}
+#vgn-watermark-inner{
+  transform:rotate(-35deg);
+  text-align:center;
+  opacity:0.06;
+  user-select:none;
+}
+#vgn-watermark-text{
+  font-size:52px;font-weight:700;
+  color:#000;letter-spacing:6px;
+  text-transform:uppercase;white-space:nowrap;
+  display:block;line-height:1.2;
+}
+#vgn-watermark-sub{
+  font-size:13px;color:#000;
+  letter-spacing:3px;display:block;
+  margin-top:6px;
 }
 </style>
 </head>
@@ -379,5 +405,29 @@ async function generateAssessment(){
 function copyTeaser(){const txt=document.getElementById('teaser-text')?.textContent||'';navigator.clipboard.writeText(txt).then(()=>{const btn=event.target;btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent='📋 Copy post',2000)})}
 document.getElementById('loc-input').addEventListener('keydown',e=>{if(e.key==='Enter')generateAssessment()});
 </script>
+<!-- Watermark -->
+<div id="vgn-watermark" style="display:none">
+  <div id="vgn-watermark-inner">
+    <span id="vgn-watermark-text">VIGINOTE</span>
+    <span id="vgn-watermark-sub"></span>
+  </div>
+</div>
+
+<script>
+(function(){
+  function updateWatermark(){
+    // Grab location from input field if present
+    const loc   = document.getElementById('location-input')?.value?.trim()
+               || document.querySelector('.report-title')?.textContent?.trim()
+               || 'LOCATION ASSESSMENT';
+    const date  = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}).toUpperCase();
+    const ref   = 'VGN-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random()*9000)+1000);
+    document.getElementById('vgn-watermark-text').textContent = 'VIGINOTE · CONFIDENTIAL';
+    document.getElementById('vgn-watermark-sub').textContent  = loc.toUpperCase() + ' · ' + date + ' · ' + ref;
+  }
+  window.addEventListener('beforeprint', updateWatermark);
+})();
+</script>
 </body>
 </html>
+
