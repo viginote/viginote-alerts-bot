@@ -70,10 +70,29 @@ _TIER_LIMITS  = {
 }
 
 def _load_clients() -> dict:
-    """Load client profiles from /data/clients.json. Falls back to FEED_USERS env var."""
+    """Load client profiles from /data/clients.json. Falls back to src dir then FEED_USERS."""
+    # Try /data disk first
     if _CLIENTS_PATH.exists():
         try:
-            return json.loads(_CLIENTS_PATH.read_text())
+            data = json.loads(_CLIENTS_PATH.read_text())
+            if data:
+                return data
+        except Exception:
+            pass
+    # Try project source directory (same folder as api.py)
+    src_path = BASE_DIR / "clients.json"
+    if src_path.exists():
+        try:
+            data = json.loads(src_path.read_text())
+            if data:
+                # Copy to /data for next time
+                try:
+                    _CLIENTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+                    _CLIENTS_PATH.write_text(json.dumps(data, indent=2))
+                    print(f"[CLIENTS] Bootstrapped clients.json to {_CLIENTS_PATH}")
+                except Exception:
+                    pass
+                return data
         except Exception:
             pass
     # Fallback: parse legacy FEED_USERS env var
@@ -320,6 +339,22 @@ async def auth_logout(token: str):
     if token in _feed_sessions:
         del _feed_sessions[token]
     return {"status": "ok"}
+
+@app.get("/auth/debug")
+async def auth_debug():
+    """Debug endpoint — check clients config status without exposing passwords."""
+    clients_on_disk = _CLIENTS_PATH.exists()
+    clients = _load_clients()
+    feed_users_env = os.getenv("FEED_USERS", "")
+    return {
+        "clients_json_path": str(_CLIENTS_PATH),
+        "clients_json_exists": clients_on_disk,
+        "client_count": len(clients),
+        "usernames": list(clients.keys()),
+        "feed_users_env_set": bool(feed_users_env),
+        "feed_users_count": len([p for p in feed_users_env.split(",") if ":" in p]),
+        "admin_password_set": bool(os.getenv("ADMIN_PASSWORD","")),
+    }
 
 @app.get("/auth/sessions")
 async def auth_sessions():
