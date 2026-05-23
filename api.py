@@ -58,16 +58,61 @@ ANTHROPIC_KEY   = os.getenv("ANTHROPIC_API_KEY", "")
 ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
 OPENAI_KEY      = os.getenv("OPENAI_API_KEY", "")
 
-# Feed access credentials — set FEED_USERS=user1:pass1,user2:pass2 on Render
-def _load_feed_users():
+# ── CLIENT PROFILE SYSTEM ────────────────────────────────────────────────────
+_CLIENTS_PATH = pathlib.Path(os.getenv("DB_PATH", "/data/viginote_v6.db")).parent / "clients.json"
+_ALL_REGIONS  = ["GLOBAL","MIDDLE_EAST","EUROPE","ASIA","WEST_EAST_AFRICA","SOUTHERN_AFRICA","SOUTH_AMERICA"]
+_TIER_LIMITS  = {
+    "monitor":    {"regions": 1, "watchlist": 3,  "briefs": 0},
+    "analyst":    {"regions": 2, "watchlist": 5,  "briefs": 2},
+    "operator":   {"regions": 4, "watchlist": 10, "briefs": 5},
+    "enterprise": {"regions": 7, "watchlist": -1, "briefs": -1},
+    "admin":      {"regions": 7, "watchlist": -1, "briefs": -1},
+}
+
+def _load_clients() -> dict:
+    """Load client profiles from /data/clients.json. Falls back to FEED_USERS env var."""
+    if _CLIENTS_PATH.exists():
+        try:
+            return json.loads(_CLIENTS_PATH.read_text())
+        except Exception:
+            pass
+    # Fallback: parse legacy FEED_USERS env var
     raw = os.getenv("FEED_USERS", "")
-    users = {}
+    clients = {}
     for pair in raw.split(","):
         pair = pair.strip()
-        if ":" in pair:
-            u, p = pair.split(":", 1)
-            users[u.strip().lower()] = p.strip()
-    return users
+        if ":" not in pair:
+            continue
+        parts = pair.split(":")
+        u = parts[0].strip().lower()
+        p = parts[1].strip() if len(parts) > 1 else ""
+        tier = parts[2].strip() if len(parts) > 2 else "analyst"
+        regions = parts[3].strip().split("|") if len(parts) > 3 else _ALL_REGIONS
+        watchlist = parts[4].strip().split("|") if len(parts) > 4 else []
+        clients[u] = {
+            "password": p, "tier": tier, "regions": regions,
+            "watchlist": watchlist, "brief_allowance": _TIER_LIMITS.get(tier,{}).get("briefs",2),
+            "briefs_used": 0, "label": u.replace("_"," ").title()
+        }
+    return clients
+
+def _save_clients(clients: dict):
+    _CLIENTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    _CLIENTS_PATH.write_text(json.dumps(clients, indent=2))
+
+def _get_client(username: str) -> dict | None:
+    return _load_clients().get(username.lower())
+
+def _client_regions(username: str) -> list[str]:
+    c = _get_client(username)
+    if not c: return _ALL_REGIONS
+    if c.get("tier") in ("admin","enterprise"): return _ALL_REGIONS
+    return c.get("regions", _ALL_REGIONS)
+
+def _client_watchlist(username: str) -> list[str]:
+    c = _get_client(username)
+    if not c: return []
+    return c.get("watchlist", [])
 
 # Active sessions: token -> {username, created}
 _feed_sessions: dict = {}
@@ -102,11 +147,30 @@ def _verify_token(token: str) -> str | None:
     sess = _feed_sessions.get(token)
     if not sess:
         return None
-    # Sessions expire after 12 hours
     if time.time() - sess["created"] > 43200:
         del _feed_sessions[token]
         return None
     return sess["username"]
+
+def _token_from_request(request: Request) -> str | None:
+    return (request.headers.get("X-Feed-Token") or
+            request.query_params.get("token") or
+            request.cookies.get("vgn_feed"))
+
+def _regions_for_request(request: Request) -> list[str]:
+    """Return the allowed regions for the requesting client."""
+    tok = _token_from_request(request)
+    if not tok: return _ALL_REGIONS
+    uname = _verify_token(tok)
+    if not uname: return _ALL_REGIONS
+    return _client_regions(uname)
+
+def _watchlist_for_request(request: Request) -> list[str]:
+    tok = _token_from_request(request)
+    if not tok: return []
+    uname = _verify_token(tok)
+    if not uname: return []
+    return _client_watchlist(uname)
 
 # Client portal watchlist — comma-separated terms to monitor
 WATCHLIST = [w.strip() for w in os.getenv("WATCHLIST", "").split(",") if w.strip()]
@@ -191,18 +255,31 @@ class LoginRequest(BaseModel):
 
 @app.post("/auth/login")
 async def auth_login(req: LoginRequest):
-    users = _load_feed_users()
-    uname = req.username.strip().lower()
-    if not users:
-        raise HTTPException(status_code=503, detail="Feed access not configured. Set FEED_USERS env var.")
-    if uname not in users or users[uname] != req.password:
-        # Log failed attempt
+    clients = _load_clients()
+    uname   = req.username.strip().lower()
+    if not clients:
+        raise HTTPException(status_code=503, detail="No clients configured. Create /data/clients.json.")
+    client  = clients.get(uname)
+    if not client or client.get("password") != req.password:
         print(f"[AUTH] Failed login: user={req.username} ts={int(time.time())}")
         raise HTTPException(status_code=401, detail="Invalid credentials.")
-    token = _make_token(uname)
+    token   = _make_token(uname)
     _feed_sessions[token] = {"username": uname, "created": time.time()}
-    print(f"[AUTH] Login: user={uname} ts={int(time.time())} sessions={len(_feed_sessions)}")
-    return {"token": token, "username": uname}
+    regions = client.get("regions", _ALL_REGIONS)
+    if client.get("tier") in ("admin", "enterprise"):
+        regions = _ALL_REGIONS
+    print(f"[AUTH] Login: user={uname} tier={client.get('tier')} ts={int(time.time())}")
+    return {
+        "token":           token,
+        "username":        uname,
+        "tier":            client.get("tier", "analyst"),
+        "label":           client.get("label", uname),
+        "regions":         regions,
+        "all_regions":     _ALL_REGIONS,
+        "watchlist":       client.get("watchlist", []),
+        "brief_allowance": client.get("brief_allowance", 0),
+        "briefs_used":     client.get("briefs_used", 0),
+    }
 
 @app.post("/auth/logout")
 async def auth_logout(token: str):
@@ -220,6 +297,98 @@ async def auth_sessions():
              "age_minutes": round((time.time()-v["created"])/60)}
             for v in _feed_sessions.values()
         ]
+    }
+
+@app.get("/admin/clients")
+async def list_clients(request: Request):
+    """Admin — list all client profiles (passwords redacted)."""
+    tok = _token_from_request(request)
+    uname = _verify_token(tok) if tok else None
+    c = _get_client(uname) if uname else None
+    if not c or c.get("tier") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only.")
+    clients = _load_clients()
+    return {
+        "clients": [
+            {k: ({**v, "password": "***"} if k != "password" else "***")
+             for k, v in {u: prof}.items()}[u]
+            | {"username": u}
+            for u, prof in clients.items()
+        ]
+    }
+
+class ClientProfile(BaseModel):
+    username:        str
+    password:        str
+    tier:            str = "analyst"
+    regions:         list[str] = []
+    watchlist:       list[str] = []
+    brief_allowance: int = 2
+    label:           str = ""
+
+@app.post("/admin/clients")
+async def upsert_client(req: ClientProfile, request: Request):
+    """Admin — create or update a client profile."""
+    tok = _token_from_request(request)
+    uname = _verify_token(tok) if tok else None
+    c = _get_client(uname) if uname else None
+    if not c or c.get("tier") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only.")
+    clients = _load_clients()
+    ukey = req.username.lower()
+    # Enforce tier region limits
+    limits = _TIER_LIMITS.get(req.tier, _TIER_LIMITS["analyst"])
+    regions = req.regions if req.tier in ("admin","enterprise") else req.regions[:limits["regions"]]
+    watchlist = req.watchlist if limits["watchlist"] == -1 else req.watchlist[:limits["watchlist"]]
+    clients[ukey] = {
+        "password":        req.password,
+        "tier":            req.tier,
+        "regions":         regions,
+        "watchlist":       watchlist,
+        "brief_allowance": req.brief_allowance if limits["briefs"] == -1 else min(req.brief_allowance, limits["briefs"]),
+        "briefs_used":     clients.get(ukey, {}).get("briefs_used", 0),
+        "label":           req.label or req.username.replace("_"," ").title(),
+    }
+    _save_clients(clients)
+    return {"status": "ok", "username": ukey, "profile": clients[ukey]}
+
+@app.delete("/admin/clients/{username}")
+async def delete_client(username: str, request: Request):
+    """Admin — remove a client."""
+    tok = _token_from_request(request)
+    uname = _verify_token(tok) if tok else None
+    c = _get_client(uname) if uname else None
+    if not c or c.get("tier") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only.")
+    clients = _load_clients()
+    if username not in clients:
+        raise HTTPException(status_code=404, detail="Client not found.")
+    del clients[username]
+    _save_clients(clients)
+    return {"status": "deleted", "username": username}
+
+@app.get("/auth/profile")
+async def get_profile(request: Request):
+    """Return the calling client\'s own profile."""
+    tok = _token_from_request(request)
+    uname = _verify_token(tok) if tok else None
+    if not uname:
+        raise HTTPException(status_code=401, detail="Not authenticated.")
+    c = _get_client(uname)
+    if not c:
+        raise HTTPException(status_code=404, detail="Profile not found.")
+    regions = c.get("regions", _ALL_REGIONS)
+    if c.get("tier") in ("admin","enterprise"):
+        regions = _ALL_REGIONS
+    return {
+        "username":        uname,
+        "tier":            c.get("tier","analyst"),
+        "label":           c.get("label", uname),
+        "regions":         regions,
+        "all_regions":     _ALL_REGIONS,
+        "watchlist":       c.get("watchlist",[]),
+        "brief_allowance": c.get("brief_allowance",0),
+        "briefs_used":     c.get("briefs_used",0),
     }
 
 @app.get("/admin/login", response_class=HTMLResponse)
@@ -350,6 +519,7 @@ def ingest(alert: dict):
 # =======================
 @app.get("/alerts")
 def list_alerts(
+    request:   Request,
     region:    Optional[str] = Query(None),
     tier:      Optional[str] = Query(None),
     critical:  Optional[str] = Query(None),
@@ -414,7 +584,13 @@ def list_alerts(
 
     try:
         rows = [row_to_dict(dict(zip(cols, r))) for r in cur.execute(sql, params).fetchall()]
-        return {"count": len(rows), "alerts": rows}
+        # Server-side region enforcement
+        allowed = _regions_for_request(request)
+        if not region_s:
+            rows = [r for r in rows if r.get("region") in allowed]
+        elif region_s not in allowed:
+            return {"count": 0, "alerts": [], "allowed_regions": allowed, "access_denied": True}
+        return {"count": len(rows), "alerts": rows, "allowed_regions": allowed}
     except Exception as e:
         return {"count": 0, "alerts": [], "error": str(e)}
 
@@ -510,6 +686,7 @@ def get_briefing_md(
 # =======================
 @app.get("/analytics/trajectory")
 def analytics_trajectory(
+    request: Request,
     days:   int            = Query(7),
     region: Optional[str]  = Query(None),
 ):
@@ -562,7 +739,9 @@ def analytics_trajectory(
             "prior_period": {"alerts": pa},
         })
 
-    return {"period_days": days, "regions": results}
+    allowed = _regions_for_request(request)
+    results = [r for r in results if r.get("region") in allowed]
+    return {"period_days": days, "regions": results, "allowed_regions": allowed}
 
 @app.get("/analytics/diversity")
 def analytics_diversity(
@@ -610,17 +789,21 @@ def analytics_diversity(
     }
 
 @app.get("/watchlist/check")
-def watchlist_check(hours: int = Query(168)):
-    """Check all watchlist terms against recent alerts — for portal watchlist card."""
-    if not WATCHLIST:
-        return {"note": "No watchlist configured. Set WATCHLIST env var (comma-separated terms).",
+def watchlist_check(request: Request, hours: int = Query(168)):
+    """Check client watchlist terms against recent alerts — filtered by client profile."""
+    client_wl = _watchlist_for_request(request)
+    effective_watchlist = client_wl if client_wl else WATCHLIST
+    if not effective_watchlist:
+        return {"note": "No watchlist configured.",
                 "total_hits": 0}
     days = max(1, hours // 24)
     conn = get_conn()
+    allowed = _regions_for_request(request)
     rows = query_alerts(conn, days=days, limit=500)
+    rows = [r for r in rows if r.get("region") in allowed]
     matches: dict = {}
     total_hits = 0
-    for term in WATCHLIST:
+    for term in effective_watchlist:
         hits = []
         for r in rows:
             text = f"{r.get('title','')} {r.get('precis','')} {r.get('entities_json','')}".lower()
