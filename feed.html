@@ -189,6 +189,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   text-align:center;text-decoration:none;text-transform:uppercase;transition:all .15s}
 .dp-link:hover{background:var(--blue-dim);color:#fff;border-color:var(--blue-dim)}
 
+/* Article preview */
+.article-panel{display:none;flex-direction:column;flex:1;overflow:hidden;border-left:1px solid var(--border)}
+.ap-head{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.ap-back{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);cursor:pointer;
+  padding:4px 8px;border:1px solid var(--border2);border-radius:3px;background:transparent;
+  transition:all .15s;letter-spacing:.5px}
+.ap-back:hover{color:var(--blue);border-color:var(--blue)}
+.ap-title{font-size:12px;font-weight:500;color:var(--text);line-height:1.35;flex:1}
+.ap-body{padding:16px 18px;overflow-y:auto;flex:1}
+.ap-meta-strip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;
+  padding-bottom:12px;border-bottom:1px solid var(--border)}
+.ap-source{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3)}
+.ap-text{font-size:13px;color:var(--text2);line-height:1.85;white-space:pre-wrap}
+.ap-text-loading{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);
+  padding:20px 0;text-align:center}
+.ap-foot{padding:10px 14px;border-top:1px solid var(--border);flex-shrink:0}
+
 /* ── ADMIN MODAL ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(8,12,20,.85);z-index:500;
   display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
@@ -350,7 +367,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
           <div class="dp-sec" id="dp-esec" style="display:none"><label>Entities</label><div class="val" id="dp-ents">—</div></div>
           <div class="dp-sec"><label>Status</label><div class="dp-flags" id="dp-flags">—</div></div>
         </div>
-        <div class="dp-foot"><a class="dp-link" id="dp-link" href="#" target="_blank" rel="noopener">FULL REPORT →</a></div>
+        <div class="dp-foot" style="display:flex;gap:8px">
+          <button class="dp-link" id="dp-read-btn" onclick="openArticle()" style="flex:1;border:none;cursor:pointer">READ ARTICLE</button>
+          <a class="dp-link" id="dp-link" href="#" target="_blank" rel="noopener" style="flex:1">SOURCE →</a>
+        </div>
       </div>
     </div>
   </div>
@@ -608,6 +628,72 @@ async function showAdmin(){
     : 'No access events recorded this session.';
 }
 function hideAdmin(){ document.getElementById('admin-modal').classList.remove('show'); }
+
+// ── ARTICLE PREVIEW ──────────────────────────────────────────────────────
+let currentArticleId = null;
+
+async function openArticle(){
+  const a = alerts.find(x => x.id === selId);
+  if(!a) return;
+  currentArticleId = selId;
+
+  // Show article panel, hide detail idle
+  const ap = document.getElementById('article-panel');
+  ap.style.display = 'flex';
+  ap.style.flexDirection = 'column';
+  ap.style.flex = '1';
+  ap.style.overflow = 'hidden';
+
+  // Set header
+  document.getElementById('ap-title').textContent = a.title || '';
+  document.getElementById('ap-ext-link').href = a.url || '#';
+
+  // Meta strip
+  const s = sev(a.score, a.is_critical);
+  const dom = a.source_domain || a.source_dom || '';
+  const isCorr = (a.source_count||1) >= 2;
+  document.getElementById('ap-meta').innerHTML =
+    `<span class="fsev ${s.c}" style="border-radius:3px;height:auto;padding:3px 8px;font-size:8px">${s.l}</span>` +
+    `<span class="ap-source">${dom}</span>` +
+    tierTag(a.source_tier||0) +
+    (isCorr ? `<span class="corr">✦ ${a.source_count} SRC</span>` : '') +
+    `<span class="ap-source" style="margin-left:auto">${fmtTs(a.ts_iso||a.ts)}</span>`;
+
+  // Load article text
+  const textEl = document.getElementById('ap-text');
+  textEl.className = 'ap-text-loading';
+  textEl.textContent = 'Loading article…';
+
+  try {
+    // Try fetching full article from API
+    const r = await fetch(`${API}/alerts/${a.id}`, {
+      headers: tok ? {'X-Feed-Token': tok} : {}
+    });
+    if(r.ok){
+      const d = await r.json();
+      const text = d.article_text || d.precis || '';
+      if(text && text.length > 100){
+        textEl.className = 'ap-text';
+        textEl.textContent = text;
+        return;
+      }
+    }
+  } catch(e){}
+
+  // Fallback — show precis + note
+  textEl.className = 'ap-text';
+  const fallback = a.precis || '';
+  textEl.textContent = fallback
+    ? fallback + '
+
+— Full article text not extracted. Open original source for complete content.'
+    : 'Article text not available. Open the original source link below.';
+}
+
+function closeArticle(){
+  const ap = document.getElementById('article-panel');
+  ap.style.display = 'none';
+}
 
 // ── BOOT ─────────────────────────────────────────────────────────────────
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&document.getElementById('login-screen').style.display!=='none') doLogin(); });
