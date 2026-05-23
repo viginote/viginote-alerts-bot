@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VigiNote — Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080c14;--bg2:#0e1420;--bg3:#111827;--bg4:#151d2e;
+  --border:#1e2d4a;--border2:#243558;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--text4:#334155;
+  --blue:#3b82f6;--blue-dim:#1d4ed8;--blue-pale:rgba(59,130,246,0.1);
+  --low:#22c55e;--low-bg:rgba(34,197,94,0.1);--low-border:rgba(34,197,94,0.2);
+}
+html{-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--bg2);height:56px;display:flex;align-items:center;padding:0 28px;gap:16px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.tb-brand{display:flex;align-items:center;gap:12px;margin-right:auto;text-decoration:none}
+.tb-wordmark{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;letter-spacing:2px;color:var(--text)}
+.tb-sub{font-size:9px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--text3);display:block;margin-top:-3px;font-family:'JetBrains Mono',monospace}
+.pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--low);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{box-shadow:0 0 0 4px rgba(34,197,94,0)}}
+.live-badge{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:600;color:var(--low);background:var(--low-bg);border:1px solid var(--low-border);padding:3px 10px;border-radius:3px;font-family:'JetBrains Mono',monospace;letter-spacing:1px}
+.tb-time{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3)}
+.tb-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--text3);font-family:'JetBrains Mono',monospace;transition:all .15s;letter-spacing:.5px;text-decoration:none}
+.tb-btn:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ── MAIN ── */
+.main{flex:1;max-width:1200px;margin:0 auto;width:100%;padding:48px 28px 80px}
+
+/* ── HEADER ── */
+.hub-header{margin-bottom:48px}
+.hub-greeting{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.hub-title{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--text);letter-spacing:0.5px;line-height:1.1;margin-bottom:8px}
+.hub-title span{color:var(--blue)}
+.hub-desc{font-size:14px;color:var(--text2);max-width:520px;line-height:1.7}
+
+/* ── STATS STRIP ── */
+.stats-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:48px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px 18px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card.s-blue::before{background:var(--blue-dim)}
+.stat-card.s-red::before{background:#ef4444}
+.stat-card.s-green::before{background:var(--low)}
+.sc-l{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.sc-v{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--text);line-height:1}
+.sc-v.crit{color:#ef4444}.sc-v.grn{color:var(--low)}
+.sc-sub{font-size:10px;color:var(--text3);margin-top:4px;font-family:'JetBrains Mono',monospace}
+
+/* ── SECTION LABELS ── */
+.section-label{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── TOOL GRID ── */
+.tool-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:48px}
+.tool-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:24px 22px;text-decoration:none;display:flex;flex-direction:column;gap:14px;transition:all .2s;position:relative;overflow:hidden;cursor:pointer}
+.tool-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;transition:opacity .2s;opacity:0}
+.tool-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.3)}
+.tool-card:hover::before{opacity:1}
+.tool-card.c-blue::before{background:linear-gradient(90deg,var(--blue-dim),var(--blue))}
+.tool-card.c-purple::before{background:linear-gradient(90deg,#7c3aed,#a855f7)}
+.tool-card.c-green::before{background:linear-gradient(90deg,#15803d,var(--low))}
+.tool-card.c-amber::before{background:linear-gradient(90deg,#b45309,#f59e0b)}
+.tool-card.c-red::before{background:linear-gradient(90deg,#991b1b,#ef4444)}
+.tool-card.c-teal::before{background:linear-gradient(90deg,#0f766e,#14b8a6)}
+.tool-icon{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.tool-icon.i-blue{background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.2)}
+.tool-icon.i-purple{background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.2)}
+.tool-icon.i-green{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.18)}
+.tool-icon.i-amber{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.18)}
+.tool-icon.i-red{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.18)}
+.tool-icon.i-teal{background:rgba(20,184,166,0.1);border:1px solid rgba(20,184,166,0.18)}
+.tool-head{display:flex;align-items:flex-start;gap:14px}
+.tool-label{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
+.tool-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);letter-spacing:0.3px}
+.tool-desc{font-size:12px;color:var(--text2);line-height:1.65;flex:1}
+.tool-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border)}
+.tool-url{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text4);letter-spacing:1px}
+.tool-arrow{font-size:16px;color:var(--text4);transition:all .2s}
+.tool-card:hover .tool-arrow{color:var(--text2);transform:translateX(3px)}
+.tool-badge{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:2px}
+.badge-admin{background:rgba(245,158,11,0.12);color:#f59e0b;border:1px solid rgba(245,158,11,0.2)}
+.badge-client{background:rgba(59,130,246,0.1);color:var(--blue);border:1px solid rgba(59,130,246,0.2)}
+.badge-live{background:rgba(34,197,94,0.1);color:var(--low);border:1px solid rgba(34,197,94,0.2)}
+
+/* ── QUICK ACTIONS ── */
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:48px}
+.quick-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;text-decoration:none;display:flex;align-items:center;gap:12px;transition:all .15s}
+.quick-card:hover{border-color:var(--border2);background:var(--bg3)}
+.quick-icon{font-size:18px;flex-shrink:0}
+.quick-text{flex:1}
+.quick-label{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px}
+.quick-name{font-size:12px;font-weight:500;color:var(--text)}
+
+/* ── RECENT ALERTS ── */
+.recent-list{display:flex;flex-direction:column;gap:6px}
+.recent-row{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:12px;text-decoration:none;transition:all .15s}
+.recent-row:hover{border-color:var(--border2);background:var(--bg3)}
+.rr-sev{font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:700;letter-spacing:1.5px;padding:3px 8px;border-radius:2px;flex-shrink:0}
+.sev-crit{background:#7f1d1d;color:#fca5a5}
+.sev-high{background:#7c2d12;color:#fdba74}
+.sev-med{background:#1e3a8a;color:#93c5fd}
+.rr-title{font-size:12px;font-weight:500;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rr-meta{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);flex-shrink:0}
+
+@media(max-width:900px){
+  .tool-grid{grid-template-columns:1fr 1fr}
+  .stats-strip{grid-template-columns:repeat(3,1fr)}
+  .quick-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  .tool-grid{grid-template-columns:1fr}
+  .stats-strip{grid-template-columns:1fr 1fr}
+  .quick-grid{grid-template-columns:1fr}
+  .main{padding:24px 16px 60px}
+}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="/hub" class="tb-brand">
+    <svg width="24" height="28" viewBox="0 0 72 84" fill="none">
+      <path d="M36 3 L66 14 L66 40 C66 58 36 72 36 72 C36 72 6 58 6 40 L6 14 Z" fill="#151d2e" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M12 32 C18 20 54 20 60 32 C54 44 18 44 12 32 Z" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+      <circle cx="36" cy="32" r="7" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+      <circle cx="36" cy="32" r="3" fill="#3b82f6"/>
+    </svg>
+    <div><span class="tb-wordmark">VIGINOTE</span><span class="tb-sub">Intelligence Platform</span></div>
+  </a>
+  <div class="live-badge"><div class="pulse-dot"></div>LIVE</div>
+  <div class="tb-time" id="tb-time"></div>
+  <form action="/admin/logout" method="post" style="margin:0">
+    <button type="submit" class="tb-btn">Sign Out</button>
+  </form>
+</nav>
+
+<div class="main">
+
+  <!-- Header -->
+  <div class="hub-header">
+    <div class="hub-greeting">VigiNote Intelligence Platform</div>
+    <h1 class="hub-title">Good <span id="greeting-time">morning</span>,<br>what are we building today?</h1>
+    <p class="hub-desc">All intelligence tools in one place. Generate briefs, assess locations, monitor live feeds, and publish to LinkedIn.</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-strip">
+    <div class="stat-card s-blue"><div class="sc-l">Alerts Today</div><div class="sc-v" id="st-total">—</div><div class="sc-sub">across all regions</div></div>
+    <div class="stat-card s-red"><div class="sc-l">Critical</div><div class="sc-v crit" id="st-crit">—</div><div class="sc-sub">score ≥ 9</div></div>
+    <div class="stat-card s-green"><div class="sc-l">Corroborated</div><div class="sc-v grn" id="st-corr">—</div><div class="sc-sub">multi-source</div></div>
+    <div class="stat-card"><div class="sc-l">Regions Active</div><div class="sc-v" id="st-regions">—</div><div class="sc-sub">with alerts</div></div>
+    <div class="stat-card"><div class="sc-l">Sources</div><div class="sc-v" id="st-sources">99</div><div class="sc-sub">monitored feeds</div></div>
+  </div>
+
+  <!-- Studio tools -->
+  <div class="section-label">Intelligence Studios</div>
+  <div class="tool-grid">
+
+    <a href="/dashboard" class="tool-card c-blue">
+      <div class="tool-head">
+        <div class="tool-icon i-blue">📰</div>
+        <div>
+          <div class="tool-label">Content Studio</div>
+          <div class="tool-name">LinkedIn Briefing Studio</div>
+        </div>
+      </div>
+      <div class="tool-desc">Select alerts and generate a formatted LinkedIn intelligence post with thumbnail, headline, and caption. Build your audience and drive inbound leads.</div>
+      <div class="tool-footer">
+        <span class="tool-url">/dashboard</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="tool-badge badge-admin">ADMIN</span>
+          <span class="tool-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="/brief" class="tool-card c-purple">
+      <div class="tool-head">
+        <div class="tool-icon i-purple">📋</div>
+        <div>
+          <div class="tool-label">Client Deliverable</div>
+          <div class="tool-name">Client Intelligence Brief</div>
+        </div>
+      </div>
+      <div class="tool-desc">Generate a formal intelligence brief from selected alerts. Includes key judgement, risk matrix, alert breakdown, analyst assessment, and recommendations. Print to PDF.</div>
+      <div class="tool-footer">
+        <span class="tool-url">/brief</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="tool-badge badge-admin">ADMIN</span>
+          <span class="tool-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="/assessment" class="tool-card c-teal">
+      <div class="tool-head">
+        <div class="tool-icon i-teal">🗺</div>
+        <div>
+          <div class="tool-label">Location Intelligence</div>
+          <div class="tool-name">Location Assessment</div>
+        </div>
+      </div>
+      <div class="tool-desc">Enter any city, country or region. Claude generates a full intelligence assessment — threat matrix, hotspot map, travel advisory, crime profile and security measures.</div>
+      <div class="tool-footer">
+        <span class="tool-url">/assessment</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="tool-badge badge-admin">ADMIN</span>
+          <span class="tool-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="/digest" class="tool-card c-amber">
+      <div class="tool-head">
+        <div class="tool-icon i-amber">📊</div>
+        <div>
+          <div class="tool-label">Weekly Report</div>
+          <div class="tool-name">Intelligence Digest</div>
+        </div>
+      </div>
+      <div class="tool-desc">Generate a structured weekly intelligence digest across all monitored regions. Summarises key events, trends, and analyst notes for client distribution.</div>
+      <div class="tool-footer">
+        <span class="tool-url">/digest</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="tool-badge badge-admin">ADMIN</span>
+          <span class="tool-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="/intelligence" class="tool-card c-green">
+      <div class="tool-head">
+        <div class="tool-icon i-green">⚡</div>
+        <div>
+          <div class="tool-label">Live Feed</div>
+          <div class="tool-name">Intelligence Feed</div>
+        </div>
+      </div>
+      <div class="tool-desc">Real-time alert feed with full visual design. Filter by region and severity. Click any alert to read the full article. Client-gated with subscription tier access control.</div>
+      <div class="tool-footer">
+        <span class="tool-url">/intelligence</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="tool-badge badge-live">LIVE</span>
+          <span class="tool-badge badge-client">CLIENT</span>
+          <span class="tool-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="/portal" class="tool-card c-red">
+      <div class="tool-head">
+        <div class="tool-icon i-red">🛡</div>
+        <div>
+          <div class="tool-label">Client Dashboard</div>
+          <div class="tool-name">Intelligence Portal</div>
+        </div>
+      </div>
+      <div class="tool-desc">Full client portal with regional heatmap, risk trajectory, travel advisories, corroborated events, analyst dispatch, timeline, entity tracking and source diversity.</div>
+      <div class="tool-footer">
+        <span class="tool-url">/portal</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="tool-badge badge-client">CLIENT</span>
+          <span class="tool-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- Quick actions -->
+  <div class="section-label">Quick Access</div>
+  <div class="quick-grid">
+    <a href="/intelligence" class="quick-card">
+      <div class="quick-icon">🔴</div>
+      <div class="quick-text"><div class="quick-label">Live Now</div><div class="quick-name">Critical Alerts</div></div>
+    </a>
+    <a href="/portal" class="quick-card">
+      <div class="quick-icon">🌍</div>
+      <div class="quick-text"><div class="quick-label">Overview</div><div class="quick-name">Regional Heatmap</div></div>
+    </a>
+    <a href="/brief" class="quick-card">
+      <div class="quick-icon">📄</div>
+      <div class="quick-text"><div class="quick-label">Generate</div><div class="quick-name">New Client Brief</div></div>
+    </a>
+    <a href="/assessment" class="quick-card">
+      <div class="quick-icon">📍</div>
+      <div class="quick-text"><div class="quick-label">Assess</div><div class="quick-name">Location Risk</div></div>
+    </a>
+  </div>
+
+  <!-- Recent alerts -->
+  <div class="section-label">Recent Intelligence</div>
+  <div class="recent-list" id="recent-list">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);padding:20px 0;text-align:center">Loading recent alerts…</div>
+  </div>
+
+</div>
+
+<script>
+const API = window.location.origin;
+
+// Time
+function updateTime(){
+  const now = new Date();
+  const h = now.getUTCHours();
+  document.getElementById('tb-time').textContent =
+    now.toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',
+    hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) + ' UTC';
+  const greet = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+  document.getElementById('greeting-time').textContent = greet;
+}
+updateTime(); setInterval(updateTime, 30000);
+
+// Load stats + recent alerts
+async function loadDashboard(){
+  try{
+    const r = await fetch(`${API}/alerts?hours=24&min_score=4&limit=100`);
+    const d = await r.json();
+    const alerts = d.alerts || [];
+    document.getElementById('st-total').textContent = alerts.length;
+    document.getElementById('st-crit').textContent = alerts.filter(a=>a.is_critical||a.score>=9).length;
+    document.getElementById('st-corr').textContent = alerts.filter(a=>(a.source_count||1)>=2).length;
+    document.getElementById('st-regions').textContent = new Set(alerts.map(a=>a.region)).size;
+
+    // Recent alerts list — top 6
+    const top = alerts.slice(0,6);
+    if(!top.length){
+      document.getElementById('recent-list').innerHTML =
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3);padding:16px 0;text-align:center">No alerts in the last 24 hours.</div>';
+      return;
+    }
+
+    function sevClass(score,crit){
+      if(crit||score>=9)return'crit';if(score>=7)return'high';return'med';
+    }
+    function sevLabel(score,crit){
+      if(crit||score>=9)return'CRITICAL';if(score>=7)return'HIGH';return'MEDIUM';
+    }
+    function fmtTs(ts){
+      try{
+        const d = typeof ts==='number'?new Date(ts*1000):new Date(ts);
+        return d.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC';
+      }catch(e){return'';}
+    }
+
+    document.getElementById('recent-list').innerHTML = top.map(a=>`
+      <a href="/intelligence" class="recent-row">
+        <span class="rr-sev sev-${sevClass(a.score,a.is_critical)}">${sevLabel(a.score,a.is_critical)}</span>
+        <span class="rr-title">${a.title||''}</span>
+        <span class="rr-meta">${(a.region||'').replace(/_/g,' ')} · ${fmtTs(a.ts_iso||a.ts)}</span>
+      </a>`).join('');
+  }catch(e){
+    document.getElementById('recent-list').innerHTML =
+      `<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#ef4444;padding:16px 0">Feed error: ${e.message}</div>`;
+  }
+}
+loadDashboard();
+</script>
+</body>
+</html>
