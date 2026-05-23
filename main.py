@@ -32,7 +32,6 @@ from viginote.db import (
     init_db, kv_get, kv_set, daily_count, recent_titles,
     insert_sent, find_or_create_cluster, mark_cluster_sent,
 )
-from viginote.feed_monitor import maybe_send_health_digest
 from viginote.feeds import FEEDS, domain_of
 from viginote.ner import extract_entities
 from viginote.scoring import build_selection_reason, source_tier
@@ -291,8 +290,7 @@ def run_once():
         else:
             print("- send failed:", c["raw_title"][:90])
 
-    # ── Phase 4: feed health digest ───────────────────────────────────────────
-    maybe_send_health_digest(conn, send_tg)
+    # Feed health digest disabled — monitoring via /feed-health API endpoint
 
     print(
         f"Run done. Sent {sent_run} this run; {total_today}/{MAX_ALERTS_PER_DAY} today "
