@@ -412,7 +412,7 @@ function buildReport(g,mode){
   <div class="report-section map-section">
     <div class="section-head"><span class="section-num">04</span><span class="section-title">Geospatial Risk Map</span></div>
     <div class="map-print-placeholder">📍 Interactive map available in digital version · ${(g.hotspots||[]).length} risk locations plotted</div>
-    <div id="assessment-map"></div>
+    <div id="assessment-map" style="height:420px;width:100%;border-radius:8px;border:1px solid #1e2d4a;background:#0a0d14;z-index:1;position:relative"></div>
     <div class="map-legend">
       <div class="ml-item"><div class="ml-dot" style="background:#ef4444"></div>Critical</div>
       <div class="ml-item"><div class="ml-dot" style="background:#f97316"></div>High</div>
@@ -545,6 +545,9 @@ async function initMap(hotspots, locationName){
   if(valid.length>1){
     try{_map.fitBounds(L.latLngBounds(valid.map(h=>[h.lat,h.lng])).pad(0.25));}catch(e){}
   }
+
+  // Force size recalculation
+  setTimeout(()=>{ if(_map) _map.invalidateSize(true); }, 100);
 }
 
 async function generateAssessment(){
@@ -571,7 +574,11 @@ async function generateAssessment(){
     document.getElementById('report-panel').scrollTo({top:0,behavior:'smooth'});
     // Init Leaflet map after DOM is painted
     if(data.generated.hotspots && data.generated.hotspots.length){
-      setTimeout(()=>initMap(data.generated.hotspots, data.generated.location), 200);
+      setTimeout(async ()=>{
+        await initMap(data.generated.hotspots, data.generated.location);
+        // Force Leaflet to recalculate size after panel scroll
+        setTimeout(()=>{ if(_map) _map.invalidateSize(); }, 300);
+      }, 400);
     }
   }catch(e){clearInterval(si);alert('Generation failed: '+e.message);}
   finally{document.getElementById('overlay').classList.remove('show');btn.disabled=false;btn.classList.remove('loading');steps.forEach(s=>{document.getElementById(s).classList.remove('active','done')});document.getElementById('ps1').classList.add('active')}
