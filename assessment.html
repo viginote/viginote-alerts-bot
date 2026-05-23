@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VigiNote — Location Assessment Studio</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
@@ -219,7 +220,44 @@ select.ip-input{cursor:pointer}
   letter-spacing:3px;display:block;
   margin-top:6px;
 }
+
+/* ── LEAFLET MAP ─────────────────────────────────────────────────────────── */
+.map-section{margin-bottom:28px}
+#assessment-map{
+  height:420px;width:100%;border-radius:8px;
+  border:1px solid var(--border);
+  background:var(--bg2);z-index:1;
+}
+.map-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;padding:10px 14px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:6px}
+.ml-item{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;
+  font-size:10px;color:var(--text3)}
+.ml-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;border:2px solid rgba(255,255,255,0.2)}
+.map-note{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);
+  margin-top:6px;text-align:right}
+/* Override Leaflet dark tiles */
+.leaflet-tile-pane{filter:brightness(0.85) contrast(1.1) saturate(0.7) hue-rotate(180deg) invert(1) hue-rotate(180deg)}
+.leaflet-container{background:#0a0d14!important}
+.leaflet-popup-content-wrapper{background:var(--bg2)!important;border:1px solid var(--border)!important;
+  border-radius:6px!important;color:var(--text)!important;box-shadow:0 4px 20px rgba(0,0,0,0.5)!important}
+.leaflet-popup-tip{background:var(--bg2)!important}
+.leaflet-popup-content{font-family:'Inter',sans-serif!important;font-size:12px!important;
+  color:var(--text)!important;margin:10px 14px!important}
+.popup-name{font-weight:600;margin-bottom:4px;font-size:13px}
+.popup-risk{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;
+  letter-spacing:1px;padding:2px 7px;border-radius:2px;display:inline-block;margin-bottom:6px}
+.popup-desc{font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:5px}
+.popup-rec{font-size:10px;color:var(--text3);font-style:italic}
+@media print{
+  #assessment-map{display:none!important}
+  .map-section .map-note,.map-legend{display:none!important}
+  .map-print-placeholder{display:block!important;padding:12px;background:#f5f5f5;
+    border:1px solid #ddd;border-radius:4px;font-size:11px;color:#555;
+    font-family:monospace;text-align:center;margin-bottom:12px}
+}
+.map-print-placeholder{display:none}
 </style>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WLcE=" crossorigin=""></script>
 </head>
 <body>
 <div class="overlay" id="overlay">
@@ -369,12 +407,107 @@ function buildReport(g,mode){
   <div class="report-section"><div class="section-head"><span class="section-num">01</span><span class="section-title">Executive Summary</span></div><div class="exec-box">${execParas}</div>${g.intelligence_note?`<p style="font-size:11px;color:var(--text3);margin-top:8px;font-family:'JetBrains Mono',monospace">${g.intelligence_note}</p>`:''}</div>
   <div class="report-section"><div class="section-head"><span class="section-num">02</span><span class="section-title">Location Profile</span></div><div class="profile-grid"><div class="profile-card"><div class="pc-label">Country</div><div class="pc-val">${lp.country||g.location||''}</div></div><div class="profile-card"><div class="pc-label">Region</div><div class="pc-val">${lp.region||''}</div></div><div class="profile-card"><div class="pc-label">Population</div><div class="pc-val">${lp.population||''}</div></div><div class="profile-card" style="grid-column:1/-1"><div class="pc-label">Strategic Significance</div><div class="pc-val">${lp.strategic_significance||''}</div></div></div></div>
   <div class="report-section"><div class="section-head"><span class="section-num">03</span><span class="section-title">Threat Matrix</span></div><div class="threat-grid">${threatHTML}</div></div>
-  ${g.hotspots&&g.hotspots.length?`<div class="report-section"><div class="section-head"><span class="section-num">04</span><span class="section-title">Area Hotspot Assessment</span></div><div class="hotspot-grid">${hotspotsHTML}</div></div>`:''}
+  ${g.hotspots&&g.hotspots.length?`
+  <div class="report-section map-section">
+    <div class="section-head"><span class="section-num">04</span><span class="section-title">Geospatial Risk Map</span></div>
+    <div class="map-print-placeholder">📍 Interactive map available in digital version · ${(g.hotspots||[]).length} risk locations plotted</div>
+    <div id="assessment-map"></div>
+    <div class="map-legend">
+      <div class="ml-item"><div class="ml-dot" style="background:#ef4444"></div>Critical</div>
+      <div class="ml-item"><div class="ml-dot" style="background:#f97316"></div>High</div>
+      <div class="ml-item"><div class="ml-dot" style="background:#f59e0b"></div>Medium</div>
+      <div class="ml-item"><div class="ml-dot" style="background:#22c55e"></div>Low</div>
+      <div class="ml-item" style="margin-left:auto"><div class="ml-dot" style="background:#3b82f6"></div>Safe Zone</div>
+    </div>
+    <div class="map-note">Click pins for details · Scroll to zoom · Drag to pan</div>
+  </div>
+  <div class="report-section"><div class="section-head"><span class="section-num">05</span><span class="section-title">Area Hotspot Assessment</span></div><div class="hotspot-grid">${hotspotsHTML}</div></div>
+  `:''}
   <div class="report-section"><div class="section-head"><span class="section-num">05</span><span class="section-title">Visitor & Traveller Advisory</span></div>${advisoryHTML}</div>
-  <div class="report-section"><div class="section-head"><span class="section-num">06</span><span class="section-title">Organised Crime Profile</span></div>${crimeHTML}</div>
-  <div class="report-section"><div class="section-head"><span class="section-num">07</span><span class="section-title">Recommended Security Measures</span></div>${measuresHTML}</div>
-  ${g.linkedin_teaser?`<div class="report-section no-print"><div class="section-head"><span class="section-num">08</span><span class="section-title">LinkedIn Teaser Post</span></div><div class="teaser-box"><div class="t-label">Ready to post — edit as needed</div><div class="t-text" id="teaser-text">${g.linkedin_teaser}</div><div class="t-actions"><button type="button" class="btn-tl" onclick="copyTeaser()">📋 Copy post</button><a href="https://www.linkedin.com" target="_blank" rel="noopener" class="btn-tl" style="text-decoration:none">Open LinkedIn →</a></div></div></div>`:''}
+  <div class="report-section"><div class="section-head"><span class="section-num">07</span><span class="section-title">Organised Crime Profile</span></div>${crimeHTML}</div>
+  <div class="report-section"><div class="section-head"><span class="section-num">08</span><span class="section-title">Recommended Security Measures</span></div>${measuresHTML}</div>
+  ${g.linkedin_teaser?`<div class="report-section no-print"><div class="section-head"><span class="section-num">09</span><span class="section-title">LinkedIn Teaser Post</span></div><div class="teaser-box"><div class="t-label">Ready to post — edit as needed</div><div class="t-text" id="teaser-text">${g.linkedin_teaser}</div><div class="t-actions"><button type="button" class="btn-tl" onclick="copyTeaser()">📋 Copy post</button><a href="https://www.linkedin.com" target="_blank" rel="noopener" class="btn-tl" style="text-decoration:none">Open LinkedIn →</a></div></div></div>`:''}
   <div class="report-footer"><div class="rf-brand">VIGINOTE</div><div class="rf-disc">Generated from open-source intelligence and AI analysis. For professional use only. Not for redistribution without authorisation.</div></div>`;
+}
+
+
+// ── LEAFLET MAP ──────────────────────────────────────────────────────────────
+let _map = null;
+let req_location = '';
+
+const RISK_COLOURS = {
+  CRITICAL:'#ef4444',HIGH:'#f97316',
+  MEDIUM:'#f59e0b',LOW:'#22c55e',EXTREME:'#a855f7'
+};
+
+function initMap(hotspots){
+  if(_map){ _map.remove(); _map = null; }
+  const mapEl = document.getElementById('assessment-map');
+  if(!mapEl) return;
+
+  const valid = (hotspots||[]).filter(h=>h.lat&&h.lng&&!(h.lat===0&&h.lng===0));
+
+  let centre=[20,20], zoom=2;
+  if(valid.length){
+    centre=[valid.reduce((s,h)=>s+h.lat,0)/valid.length,
+            valid.reduce((s,h)=>s+h.lng,0)/valid.length];
+    zoom = valid.length===1?11:8;
+  }
+
+  _map = L.map('assessment-map',{center:centre,zoom:zoom,zoomControl:true});
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+    attribution:'© OpenStreetMap © CARTO',
+    subdomains:'abcd',maxZoom:18
+  }).addTo(_map);
+
+  valid.forEach(h=>{
+    const lvl=(h.risk_level||'MEDIUM').toUpperCase();
+    const col=RISK_COLOURS[lvl]||'#3b82f6';
+    const r=lvl==='CRITICAL'||lvl==='EXTREME'?14:lvl==='HIGH'?12:10;
+
+    const m=L.circleMarker([h.lat,h.lng],{
+      radius:r,fillColor:col,color:'#ffffff',
+      weight:1.5,opacity:0.9,fillOpacity:0.75
+    });
+
+    const textCol={CRITICAL:'#fca5a5',HIGH:'#fdba74',MEDIUM:'#fcd34d',
+      LOW:'#86efac',EXTREME:'#d8b4fe'}[lvl]||'#93c5fd';
+    const bgCol={CRITICAL:'rgba(127,29,29,0.9)',HIGH:'rgba(124,45,18,0.9)',
+      MEDIUM:'rgba(120,53,15,0.9)',LOW:'rgba(20,83,45,0.9)',
+      EXTREME:'rgba(88,28,135,0.9)'}[lvl]||'rgba(30,58,138,0.9)';
+
+    m.bindPopup(`
+      <div style="font-family:'Inter',sans-serif">
+        <div style="font-weight:600;font-size:13px;margin-bottom:5px">${h.name||''}</div>
+        <div style="display:inline-block;background:${bgCol};color:${textCol};font-size:8px;
+          font-weight:700;letter-spacing:1.5px;padding:2px 7px;border-radius:2px;
+          margin-bottom:7px;font-family:monospace">${lvl}</div>
+        <div style="font-size:11px;color:#94a3b8;line-height:1.5;margin-bottom:5px">${h.description||''}</div>
+        <div style="font-size:10px;color:#64748b;font-style:italic">⚠ ${h.recommendation||''}</div>
+      </div>`,{maxWidth:260,minWidth:180}
+    );
+    m.addTo(_map);
+
+    if(lvl==='CRITICAL'||lvl==='EXTREME'){
+      L.circleMarker([h.lat,h.lng],{
+        radius:20,fillColor:'transparent',
+        color:col,weight:1,opacity:0.3
+      }).addTo(_map);
+    }
+  });
+
+  if(!valid.length){
+    document.getElementById('assessment-map').innerHTML=
+      '<div style="display:flex;align-items:center;justify-content:center;height:100%;'+
+      'font-family:monospace;font-size:11px;color:#334155">'+
+      'No coordinate data returned. Regenerate assessment for map.</div>';
+    return;
+  }
+
+  if(valid.length>1){
+    try{_map.fitBounds(L.latLngBounds(valid.map(h=>[h.lat,h.lng])).pad(0.25));}catch(e){}
+  }
 }
 
 async function generateAssessment(){
@@ -430,4 +563,3 @@ document.getElementById('loc-input').addEventListener('keydown',e=>{if(e.key==='
 </script>
 </body>
 </html>
-
