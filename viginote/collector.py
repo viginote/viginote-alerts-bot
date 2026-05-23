@@ -21,12 +21,12 @@ from viginote.scoring import severity_score, source_tier
 
 UA          = os.getenv("USER_AGENT", "VigiNoteAlertsBot/1.2 (+https://viginote.com)")
 POLL_LIMIT  = int(os.getenv("POLL_LIMIT", "25"))
-SIM_THRESHOLD      = int(os.getenv("SIM_THRESHOLD", "86"))
+SIM_THRESHOLD      = int(os.getenv("SIM_THRESHOLD", "82"))  # tighter — catch same story from multiple sources
 SEVERITY_THRESHOLD = int(os.getenv("SEVERITY_THRESHOLD", "5"))
 CRITICAL_THRESHOLD = int(os.getenv("CRITICAL_THRESHOLD", "8"))
 MAX_PER_SOURCE_RUN = int(os.getenv("MAX_PER_SOURCE_RUN", "1"))
-MAX_PER_CLUSTER    = int(os.getenv("MAX_PER_CLUSTER", "2"))
-DEDUPE_DAYS        = int(os.getenv("DEDUPE_DAYS", "3"))
+MAX_PER_CLUSTER    = int(os.getenv("MAX_PER_CLUSTER", "1"))  # one alert per story cluster
+DEDUPE_DAYS        = int(os.getenv("DEDUPE_DAYS", "4"))  # extended to 4 days
 
 FEED_TIMEOUT = aiohttp.ClientTimeout(total=25)
 
@@ -156,6 +156,11 @@ def collect_candidates(
         link      = entry["link"]
         region    = entry["region"]
         feed_url  = entry["feed_url"]
+
+        # URL-level dedupe — same link from different feeds
+        link_h = hashlib.sha1((link or "").strip().lower().encode()).hexdigest()
+        if link_h in seen_hash_this_run:
+            continue
 
         h = make_title_hash(raw_title)
         if h in seen_hash_this_run:
