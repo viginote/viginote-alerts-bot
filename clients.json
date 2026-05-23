@@ -1,6 +1,6 @@
 {
   "viginote_admin": {
-    "password": "qjiUDU5DZtLCnEGn",
+    "password": "Papsak613$$$$",
     "tier": "admin",
     "regions": ["GLOBAL","MIDDLE_EAST","EUROPE","ASIA","WEST_EAST_AFRICA","SOUTHERN_AFRICA","SOUTH_AMERICA"],
     "watchlist": [],
@@ -8,13 +8,13 @@
     "briefs_used": 0,
     "label": "VigiNote Admin"
   },
-  "client_demo": {
+  "chad": {
     "password": "demo1234",
     "tier": "analyst",
     "regions": ["MIDDLE_EAST","WEST_EAST_AFRICA"],
-    "watchlist": ["Gaza","Sudan","RSF"],
+    "watchlist": ["china","america","ukraine"],
     "brief_allowance": 2,
     "briefs_used": 0,
-    "label": "Demo Client"
+    "label": "Client Paddybck"
   }
 }
