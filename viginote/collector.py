@@ -74,19 +74,11 @@ async def _poll_all_feeds_async(
     raw_entries: list[dict] = []
     health_results: dict[str, dict] = {}
 
-    async with aiohttp.ClientSession() as session:
-        tasks = {
-            asyncio.create_task(_fetch_feed_bytes(session, url)): (region, url)
-            for region, url in region_url_pairs
-        }
+    urls_list    = [url for _, url in region_url_pairs]
+    regions_list = [r   for r, _ in region_url_pairs]
 
-        for coro, (region, feed_url) in zip(tasks.keys(), tasks.values()):
-            pass  # just building the map
-
-        # Actually gather results properly
-        urls_list = [url for _, url in region_url_pairs]
-        regions_list = [r for r, _ in region_url_pairs]
-
+    connector = aiohttp.TCPConnector(ssl=False, limit=40)
+    async with aiohttp.ClientSession(connector=connector) as session:
         fetch_tasks = [
             _fetch_feed_bytes(session, url) for url in urls_list
         ]
