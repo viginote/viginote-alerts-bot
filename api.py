@@ -126,16 +126,40 @@ def _admin_password() -> str:
 def _make_admin_token() -> str:
     return hashlib.sha256(f"admin{secrets.token_hex(20)}".encode()).hexdigest()
 
+_ADMIN_SESSIONS_PATH = pathlib.Path(os.getenv("DB_PATH", "/data/viginote_v6.db")).parent / "admin_sessions.json"
+
+def _load_admin_sessions() -> dict:
+    """Load persisted admin sessions from disk."""
+    try:
+        if _ADMIN_SESSIONS_PATH.exists():
+            return json.loads(_ADMIN_SESSIONS_PATH.read_text())
+    except Exception:
+        pass
+    return {}
+
+def _save_admin_sessions(sessions: dict):
+    try:
+        _ADMIN_SESSIONS_PATH.write_text(json.dumps(sessions))
+    except Exception:
+        pass
+
 def _verify_admin(request: Request) -> bool:
     """Return True if request carries a valid admin session token."""
     token = request.cookies.get("vgn_admin")
     if not token:
         return False
+    # Check memory first (fast path)
     created = _admin_sessions.get(token)
+    if not created:
+        # Check disk (survives restarts)
+        disk = _load_admin_sessions()
+        created = disk.get(token)
+        if created:
+            _admin_sessions[token] = created  # restore to memory
     if not created:
         return False
     if time.time() - created > 43200:  # 12 hours
-        del _admin_sessions[token]
+        _admin_sessions.pop(token, None)
         return False
     return True
 
@@ -433,9 +457,21 @@ button:hover{background:#3b82f6}
 async function doLogin(){
   const pw=document.getElementById('pw').value;
   if(!pw)return;
-  const r=await fetch('/admin/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
-  if(r.ok){const d=await r.json();if(d.redirect)window.location.href=d.redirect;}
-  else{document.getElementById('err').style.display='block';}
+  const r=await fetch('/admin/auth',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    credentials:'include',
+    body:JSON.stringify({password:pw})
+  });
+  if(r.ok){
+    const d=await r.json();
+    if(d.redirect) window.location.href=d.redirect;
+  } else {
+    document.getElementById('err').style.display='block';
+    document.getElementById('err').textContent = r.status===503
+      ? 'ADMIN_PASSWORD not set on server.'
+      : 'Incorrect password.';
+  }
 }
 document.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 </script></body></html>"""
@@ -453,8 +489,21 @@ async def admin_auth(req: AdminLoginRequest, response: Response):
         print(f"[ADMIN] Failed login attempt ts={int(time.time())}")
         raise HTTPException(status_code=401, detail="Incorrect password.")
     token = _make_admin_token()
-    _admin_sessions[token] = time.time()
-    response.set_cookie("vgn_admin", token, max_age=43200, httponly=True, samesite="lax")
+    created = time.time()
+    _admin_sessions[token] = created
+    # Persist to disk so sessions survive Render restarts
+    disk = _load_admin_sessions()
+    disk[token] = created
+    # Prune expired entries
+    disk = {t: c for t, c in disk.items() if time.time() - c < 43200}
+    _save_admin_sessions(disk)
+    response.set_cookie(
+        "vgn_admin", token,
+        max_age=43200,
+        httponly=True,
+        samesite="lax",
+        secure=False,   # works on both HTTP and HTTPS
+    )
     print(f"[ADMIN] Login ts={int(time.time())} sessions={len(_admin_sessions)}")
     return {"redirect": "/dashboard"}
 
