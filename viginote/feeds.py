@@ -321,3 +321,26 @@ def fetch_article_text(link: str) -> str:
     except Exception:
         pass
     return ""
+
+
+# ── Legacy helpers expected by collector.py ──────────────────────────────────
+
+from urllib.parse import urlparse
+
+def domain_of(url: str) -> str:
+    """Extract bare domain from a URL."""
+    try:
+        h = urlparse(url).netloc
+        return h.replace("www.", "")
+    except Exception:
+        return url
+
+def first_sentence(text: str, max_chars: int = 280) -> str:
+    """Return the first sentence of text, capped at max_chars."""
+    if not text:
+        return ""
+    for sep in (". ", "! ", "? ", "\n"):
+        idx = text.find(sep)
+        if 0 < idx < max_chars:
+            return text[:idx + 1].strip()
+    return text[:max_chars].strip()
