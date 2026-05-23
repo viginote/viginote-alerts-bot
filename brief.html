@@ -180,6 +180,34 @@ select.lp-input{cursor:pointer}
   .art-deck{font-size:0.95rem!important}
   .art-text,.ab-body,.rec-item{font-size:0.85rem!important}
   .article-card,.key-j,.recommendations,.art-byline,.risk-row,.ab-card{page-break-inside:avoid}
+  /* Watermark */
+  #vgn-watermark{display:block!important}
+}
+/* Watermark — screen hidden, print visible */
+#vgn-watermark{
+  display:none;
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+}
+#vgn-watermark-inner{
+  transform:rotate(-35deg);
+  text-align:center;
+  opacity:0.07;
+  user-select:none;
+}
+#vgn-watermark-text{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:52px;font-weight:700;
+  color:#ffffff;letter-spacing:6px;
+  text-transform:uppercase;white-space:nowrap;
+  display:block;line-height:1.2;
+}
+#vgn-watermark-sub{
+  font-family:'JetBrains Mono',monospace;
+  font-size:14px;color:#ffffff;
+  letter-spacing:3px;display:block;
+  margin-top:6px;
 }
 </style>
 </head>
@@ -777,5 +805,31 @@ document.getElementById('fi-ref').placeholder = genRef();
 loadAlerts();
 </script>
 
+<!-- Watermark — hidden on screen, visible on print -->
+<div id="vgn-watermark" style="display:none">
+  <div id="vgn-watermark-inner">
+    <span id="vgn-watermark-text">VIGINOTE</span>
+    <span id="vgn-watermark-sub" id="vgn-watermark-ref"></span>
+  </div>
+</div>
+
+<script>
+// Inject watermark content at print time
+(function(){
+  function updateWatermark(){
+    const client = document.getElementById('fi-client')?.value?.trim() || 'CONFIDENTIAL';
+    const ref    = document.getElementById('fi-ref')?.value?.trim() || document.getElementById('rp-title')?.textContent || 'VIGINOTE';
+    const date   = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}).toUpperCase();
+    document.getElementById('vgn-watermark-text').textContent = 'VIGINOTE · ' + client.toUpperCase();
+    document.getElementById('vgn-watermark-sub').textContent  = ref + ' · ' + date + ' · CONFIDENTIAL';
+  }
+  window.addEventListener('beforeprint', updateWatermark);
+  // Also update when brief is generated
+  const origRender = window.renderBrief;
+  if(typeof origRender === 'function'){
+    window.renderBrief = function(...args){ origRender(...args); updateWatermark(); };
+  }
+})();
+</script>
 </body>
 </html>
