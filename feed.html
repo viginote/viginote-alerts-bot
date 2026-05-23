@@ -273,7 +273,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <input type="text" id="lu" placeholder="username" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
     <div class="login-field"><label>Password</label>
-      <input type="password" id="lp" placeholder="••••••••" autocomplete="current-password">
+      <div style="position:relative">
+        <input type="password" id="lp" placeholder="••••••••" autocomplete="current-password" style="padding-right:40px">
+        <button type="button" onclick="togglePw()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:4px" id="pw-eye">👁</button>
+      </div>
     </div>
     <button class="login-btn" id="login-btn" onclick="doLogin()">
       <div class="spin"></div><span id="login-label">Access Intelligence Feed</span>
@@ -455,11 +458,17 @@ async function doLogin(){
       showApp();
     }
     else showErr(d.detail||'Invalid credentials. Contact your analyst.');
-  }catch(e){ showErr('Connection error. Please try again.'); }
+  }catch(e){ showErr('Connection error: '+e.message+'. Please try again.'); }
   btn.disabled=false; btn.classList.remove('loading');
   document.getElementById('login-label').textContent='Access Intelligence Feed';
 }
 function showErr(m){ const e=document.getElementById('login-err'); e.textContent=m; e.style.display='block'; }
+function togglePw(){
+  const f=document.getElementById('lp');
+  const eye=document.getElementById('pw-eye');
+  if(f.type==='password'){f.type='text';eye.textContent='🙈';}
+  else{f.type='password';eye.textContent='👁';}
+}
 function doLogout(){ clearSession(); me=null; tok=null; clearInterval(ticker);
   document.getElementById('app-screen').style.display='none';
   document.getElementById('login-screen').style.display='flex';
@@ -739,23 +748,29 @@ function closeArticle(){
 
 // ── BOOT ─────────────────────────────────────────────────────────────────
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&document.getElementById('login-screen').style.display!=='none') doLogin(); });
-(function boot(){
-  const s=loadSession();
-  if(s){
-    me=s.u; tok=s.t;
-    if(s.p && s.p.tier){
-      profile=s.p;
-    } else {
-      // Re-fetch profile from server
-      fetch(`${API}/auth/profile`,{headers:{'X-Feed-Token':s.t}})
-        .then(r=>r.json()).then(d=>{
-          profile={tier:d.tier,label:d.label,regions:d.regions,
-            all_regions:d.all_regions,watchlist:d.watchlist,
-            brief_allowance:d.brief_allowance,briefs_used:d.briefs_used};
-          saveSession(s.u,s.t,profile);
-        }).catch(()=>{});
-    }
+(async function boot(){
+  const s = loadSession();
+  if(!s){ return; } // No session — show login screen, do nothing
+  // Verify token is still valid before auto-logging in
+  try{
+    const r = await fetch(`${API}/auth/profile`, {
+      headers: {'X-Feed-Token': s.t},
+      signal: AbortSignal.timeout(5000)
+    });
+    if(!r.ok){ clearSession(); return; } // Token expired/invalid — show login
+    const d = await r.json();
+    me = s.u; tok = s.t;
+    profile = {
+      tier: d.tier||'analyst', label: d.label||s.u,
+      regions: d.regions||[], all_regions: d.all_regions||ALL_REGIONS,
+      watchlist: d.watchlist||[], brief_allowance: d.brief_allowance||0,
+      briefs_used: d.briefs_used||0
+    };
+    saveSession(s.u, s.t, profile);
     showApp();
+  } catch(e){
+    // Network error or timeout — clear session, show login
+    clearSession();
   }
 })();
 </script>
