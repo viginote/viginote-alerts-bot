@@ -4,158 +4,142 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VigiNote — Intelligence Feed</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#080c14;--bg2:#0e1420;--bg3:#111827;--bg4:#151d2e;
+  --bg:#080c14;--bg2:#0e1420;--bg3:#111827;
   --border:#1e2d4a;--border2:#243558;
   --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--text4:#334155;
-  --blue:#3b82f6;--blue-dim:#1d4ed8;--blue-pale:rgba(59,130,246,0.1);
+  --blue:#3b82f6;--blue-dim:#1d4ed8;
   --low:#22c55e;--low-bg:rgba(34,197,94,0.1);--low-border:rgba(34,197,94,0.2);
-  --medium:#f59e0b;--medium-bg:rgba(245,158,11,0.1);--medium-border:rgba(245,158,11,0.2);
-  --high:#f97316;--high-bg:rgba(249,115,22,0.1);--high-border:rgba(249,115,22,0.2);
   --critical:#ef4444;--critical-bg:rgba(239,68,68,0.1);--critical-border:rgba(239,68,68,0.2);
+  --high:#f97316;--medium:#f59e0b;
 }
-html{-webkit-font-smoothing:antialiased;font-size:14px}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
 
-/* ── LOGIN ── */
-#login-screen{position:fixed;inset:0;background:var(--bg);z-index:1000;
-  display:flex;align-items:center;justify-content:center;flex-direction:column}
-.login-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;
-  padding:44px 48px;width:100%;max-width:420px;position:relative;overflow:hidden}
+/* LOGIN */
+#login-screen{
+  position:fixed;inset:0;background:var(--bg);z-index:1000;
+  display:flex;align-items:center;justify-content:center;
+}
+.login-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+  padding:44px 48px;width:100%;max-width:420px;position:relative;overflow:hidden;
+}
 .login-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
-  background:linear-gradient(90deg,var(--blue-dim),var(--blue),var(--blue-dim))}
-.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;justify-content:center}
-.login-brand{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:3px;color:var(--text)}
-.login-brand-sub{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;
-  text-transform:uppercase;color:var(--text3);margin-top:2px;text-align:center}
-.login-heading{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;
-  color:var(--text);text-align:center;margin-bottom:6px;letter-spacing:0.5px}
-.login-desc{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);
-  text-align:center;margin-bottom:32px;line-height:1.7}
-.login-field{margin-bottom:16px}
-.login-field label{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;
+  background:linear-gradient(90deg,#1d4ed8,#3b82f6)}
+.logo-row{display:flex;align-items:center;gap:12px;margin-bottom:32px;justify-content:center}
+.logo-brand{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:3px;color:var(--text)}
+.logo-sub{font-size:9px;letter-spacing:2px;color:var(--text3);display:block;margin-top:2px;font-family:'JetBrains Mono',monospace}
+.field-label{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;
   letter-spacing:2px;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:6px}
-.login-field input{width:100%;padding:12px 14px;background:var(--bg3);
-  border:1px solid var(--border2);border-radius:6px;font-family:'JetBrains Mono',monospace;
-  font-size:13px;color:var(--text);transition:border-color .15s;outline:none}
-.login-field input:focus{border-color:var(--blue)}
-.login-field input::placeholder{color:var(--text4)}
+.field-wrap{position:relative;margin-bottom:16px}
+.field-input{width:100%;padding:12px 14px;background:var(--bg3);
+  border:1px solid var(--border2);border-radius:6px;
+  font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);
+  outline:none;transition:border-color .15s}
+.field-input:focus{border-color:var(--blue)}
+.field-input::placeholder{color:var(--text4)}
+.pw-wrap{position:relative}
+.pw-wrap .field-input{padding-right:44px}
+.pw-eye{position:absolute;right:0;top:0;height:100%;width:44px;
+  background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;
+  display:flex;align-items:center;justify-content:center;transition:color .15s}
+.pw-eye:hover{color:var(--text2)}
 .login-btn{width:100%;padding:13px;background:var(--blue-dim);color:#fff;border:none;
-  border-radius:6px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
-  letter-spacing:1.5px;cursor:pointer;transition:all .15s;margin-top:6px;
-  display:flex;align-items:center;justify-content:center;gap:8px}
+  border-radius:6px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;
+  letter-spacing:1.5px;cursor:pointer;transition:background .15s;margin-top:6px}
 .login-btn:hover{background:var(--blue)}
-.login-btn:disabled{opacity:.45;cursor:not-allowed}
-.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);
-  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
-.login-btn.loading .spin{display:block}
-@keyframes spin{to{transform:rotate(360deg)}}
-.login-error{background:var(--critical-bg);border:1px solid var(--critical-border);
+.login-btn:disabled{opacity:.5;cursor:not-allowed}
+.login-error{display:none;background:var(--critical-bg);border:1px solid var(--critical-border);
   border-radius:5px;padding:10px 14px;font-family:'JetBrains Mono',monospace;
-  font-size:10px;color:var(--critical);margin-top:12px;display:none;
-  text-align:center;letter-spacing:0.5px;line-height:1.5}
+  font-size:10px;color:var(--critical);margin-top:14px;text-align:center;line-height:1.5}
 .login-footer{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text4);
-  text-align:center;margin-top:24px;line-height:1.8}
+  text-align:center;margin-top:22px;line-height:1.8}
 
-/* ── MAIN APP ── */
-#app-screen{display:none}
+/* APP */
+#app-screen{display:none;flex-direction:column;height:100vh}
 
 /* TOPBAR */
 .topbar{background:var(--bg2);height:52px;display:flex;align-items:center;
-  padding:0 20px;gap:14px;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
-.tb-brand{display:flex;align-items:center;gap:10px;text-decoration:none;margin-right:auto}
+  padding:0 20px;gap:14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.tb-brand{display:flex;align-items:center;gap:10px;margin-right:auto}
 .tb-wordmark{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;
   letter-spacing:3px;color:var(--text)}
-.tb-sub{font-size:8px;font-weight:500;letter-spacing:3px;text-transform:uppercase;
-  color:var(--text3);display:block;margin-top:-2px;font-family:'JetBrains Mono',monospace}
-.pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--low);animation:pulse 2s infinite}
+.tb-sub{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);
+  display:block;margin-top:-2px;font-family:'JetBrains Mono',monospace}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(--low);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{box-shadow:0 0 0 4px rgba(34,197,94,0)}}
-.live-pill{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:600;
-  color:var(--low);background:var(--low-bg);border:1px solid var(--low-border);
-  padding:3px 9px;border-radius:3px;font-family:'JetBrains Mono',monospace;letter-spacing:1px}
-.user-pill{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);
-  background:var(--bg3);border:1px solid var(--border);padding:3px 10px;
-  border-radius:3px;letter-spacing:1px}
-.admin-pill{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--medium);
-  background:var(--medium-bg);border:1px solid var(--medium-border);
-  padding:3px 9px;border-radius:3px;letter-spacing:1px;cursor:pointer}
-.admin-pill:hover{background:rgba(245,158,11,.18)}
-.tb-meta{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text4)}
-.tb-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:4px;
-  font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--border2);
-  background:transparent;color:var(--text3);font-family:'JetBrains Mono',monospace;
-  transition:all .15s;letter-spacing:0.5px}
+.pill{font-family:'JetBrains Mono',monospace;font-size:9px;padding:3px 9px;border-radius:3px;letter-spacing:1px}
+.pill-live{color:var(--low);background:var(--low-bg);border:1px solid var(--low-border);display:flex;align-items:center;gap:5px}
+.pill-user{color:var(--text2);background:var(--bg3);border:1px solid var(--border)}
+.pill-tier{color:var(--text3);background:var(--bg3);border:1px solid var(--border);font-size:8px}
+.pill-admin{color:var(--medium);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);cursor:pointer}
+.tb-countdown{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text4)}
+.tb-btn{padding:5px 11px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;
+  border:1px solid var(--border2);background:transparent;color:var(--text3);
+  font-family:'JetBrains Mono',monospace;transition:all .15s;letter-spacing:.5px}
 .tb-btn:hover{border-color:var(--blue);color:var(--blue)}
 
-/* ── LAYOUT ── */
-.app-layout{display:flex;height:calc(100vh - 52px)}
+/* LAYOUT */
+.app-body{display:flex;flex:1;overflow:hidden}
 
 /* SIDEBAR */
-.sidebar{width:210px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);
+.sidebar{width:200px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);
   display:flex;flex-direction:column;overflow-y:auto}
-.sb-block{padding:12px 14px;border-bottom:1px solid var(--border)}
-.sb-label{font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:700;
-  letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:9px}
+.sb-block{padding:12px 12px;border-bottom:1px solid var(--border)}
+.sb-lbl{font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
 .stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:4px;
-  padding:9px 11px;margin-bottom:5px}
+  padding:8px 10px;margin-bottom:5px}
 .stat-card:last-child{margin-bottom:0}
 .sc-l{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--text3);
-  letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+  letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
 .sc-v{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--text);line-height:1}
-.sc-v.crit{color:var(--critical)}.sc-v.high{color:var(--high)}.sc-v.grn{color:var(--low)}
+.sc-v.c{color:var(--critical)}.sc-v.h{color:var(--high)}.sc-v.g{color:var(--low)}
 .f-opt{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);
   padding:5px 7px;border-radius:3px;cursor:pointer;transition:all .1s;
-  border:1px solid transparent;margin-bottom:2px;letter-spacing:0.3px}
+  border:1px solid transparent;margin-bottom:2px;letter-spacing:.3px}
 .f-opt:hover{color:var(--text2);background:var(--bg3)}
-.f-opt.on{background:var(--blue-pale);color:var(--blue);border-color:rgba(59,130,246,.2)}
-.f-div{height:1px;background:var(--border);margin:8px 0}
+.f-opt.on{background:rgba(59,130,246,.1);color:var(--blue);border-color:rgba(59,130,246,.2)}
 .f-locked{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text4);
-  padding:5px 7px;border-radius:3px;border:1px solid rgba(255,255,255,.03);
-  margin-bottom:2px;letter-spacing:.3px;cursor:not-allowed;opacity:.45}
-.f-locked:hover{background:rgba(239,68,68,.05);color:var(--critical);border-color:rgba(239,68,68,.1)}
-.refresh-block{padding:10px 14px;margin-top:auto;border-top:1px solid var(--border)}
+  padding:5px 7px;border-radius:3px;margin-bottom:2px;cursor:not-allowed;opacity:.4}
+.f-div{height:1px;background:var(--border);margin:8px 0}
+.refresh-block{padding:10px 12px;margin-top:auto;border-top:1px solid var(--border)}
 .rb-l{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--text4);letter-spacing:1px;margin-bottom:4px}
-.rb-val{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)}
+.rb-v{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)}
 .rb-track{height:2px;background:var(--border);border-radius:1px;margin-top:5px;overflow:hidden}
 .rb-fill{height:100%;background:var(--blue-dim);border-radius:1px;transition:width 1s linear}
 
 /* FEED */
-.feed-col{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:5px;background:var(--bg)}
+.feed-col{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:5px}
+.feed-txt{color:var(--text3);font-family:'JetBrains Mono',monospace;font-size:11px;
+  padding:20px;text-align:center}
 .feed-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;
-  height:100%;gap:12px;color:var(--text3);text-align:center;padding:40px}
+  height:100%;gap:10px;color:var(--text3);text-align:center;padding:40px}
 .feed-empty h3{font-family:'Syne',sans-serif;font-size:15px;color:var(--text2);letter-spacing:1px}
-.feed-empty p{font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7}
-.loading-txt{color:var(--text3);font-family:'JetBrains Mono',monospace;font-size:11px;padding:20px;text-align:center}
-.err-txt{color:var(--critical);font-family:'JetBrains Mono',monospace;font-size:10px;padding:10px 12px;background:var(--critical-bg);border-radius:4px;border:1px solid var(--critical-border)}
 
 /* ALERT CARD */
 .a-card{background:var(--bg2);border:1px solid var(--border);border-radius:5px;
   overflow:hidden;cursor:pointer;transition:border-color .12s}
 .a-card:hover{border-color:var(--border2)}
 .a-card.sel{border-color:var(--blue);background:var(--bg3)}
-
-/* Flag bar */
-.fbar{display:flex;align-items:stretch;height:22px}
+.fbar{display:flex;height:22px}
 .fsev{display:flex;align-items:center;padding:0 8px;font-family:'JetBrains Mono',monospace;
-  font-size:7px;font-weight:700;letter-spacing:1.5px;flex-shrink:0;min-width:68px}
+  font-size:7px;font-weight:700;letter-spacing:1.5px;min-width:68px}
 .fsev.crit{background:#7f1d1d;color:#fca5a5}
 .fsev.high{background:#7c2d12;color:#fdba74}
 .fsev.med{background:#1e3a8a;color:#93c5fd}
 .fsev.low{background:#14532d;color:#86efac}
-.freg{display:flex;align-items:center;padding:0 8px;font-family:'JetBrains Mono',monospace;
-  font-size:7px;color:var(--text4);letter-spacing:.8px;border-left:1px solid rgba(255,255,255,.04);flex:1}
-.fscr{display:flex;align-items:center;padding:0 8px;font-family:'JetBrains Mono',monospace;
-  font-size:7px;color:var(--text4);border-left:1px solid rgba(255,255,255,.04);letter-spacing:.8px}
-.fscr span{color:var(--text3);font-weight:700;margin-left:2px}
-.ftime{display:flex;align-items:center;padding:0 8px;font-family:'JetBrains Mono',monospace;
-  font-size:7px;color:var(--text4);border-left:1px solid rgba(255,255,255,.04)}
-.a-inner{padding:9px 10px}
+.freg,.fscr,.ftime{display:flex;align-items:center;padding:0 8px;
+  font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--text4);
+  border-left:1px solid rgba(255,255,255,.04)}
+.freg{flex:1}.fscr span{color:var(--text3);font-weight:700;margin-left:2px}
+.a-inner{padding:8px 10px}
 .a-title{font-size:12px;font-weight:500;color:var(--text);line-height:1.4;margin-bottom:4px}
-.a-precis{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text4);line-height:1.5;margin-bottom:5px}
+.a-precis{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text4);
+  line-height:1.5;margin-bottom:5px}
 .a-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .a-src{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text4)}
 .tier{font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:700;
@@ -164,90 +148,52 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .tier-reg{background:rgba(59,130,246,.1);color:var(--blue);border:1px solid rgba(59,130,246,.2)}
 .tier-wire{background:rgba(100,116,139,.1);color:var(--text3);border:1px solid rgba(100,116,139,.2)}
 .corr{font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:700;
-  letter-spacing:.5px;padding:1px 5px;border-radius:2px;
-  background:rgba(34,197,94,.08);color:var(--low);border:1px solid rgba(34,197,94,.18)}
+  padding:1px 5px;border-radius:2px;background:rgba(34,197,94,.08);
+  color:var(--low);border:1px solid rgba(34,197,94,.18)}
 .locs{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--critical);
   display:flex;align-items:center;gap:3px;margin-left:auto}
 
 /* DETAIL PANEL */
-.detail{width:290px;flex-shrink:0;background:var(--bg);border-left:1px solid var(--border);display:flex;flex-direction:column}
-.dp-idle{display:flex;flex-direction:column;align-items:center;justify-content:center;
-  height:100%;gap:10px;color:var(--text4);text-align:center;padding:24px}
-.dp-idle p{font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.7}
+.detail{width:280px;flex-shrink:0;background:var(--bg);border-left:1px solid var(--border);
+  display:flex;flex-direction:column}
+.dp-idle{display:flex;align-items:center;justify-content:center;height:100%;
+  font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text4);text-align:center;padding:20px}
 .dp-head{padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
 .dp-ref{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--text4);
   letter-spacing:2px;text-transform:uppercase;margin-bottom:5px}
 .dp-title{font-size:11px;font-weight:500;color:var(--text);line-height:1.4}
-.dp-body{padding:12px 14px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:11px}
+.dp-body{padding:12px 14px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:10px}
 .dp-sec label{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--text4);
   letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:4px}
 .dp-sec .val{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);line-height:1.6}
 .dp-sec .val strong{color:var(--text2)}
-.dp-precis-box{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);
+.dp-precis{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);
   line-height:1.65;padding:9px 11px;background:var(--bg2);border:1px solid var(--border);border-radius:4px}
 .dp-flags{display:flex;gap:5px;flex-wrap:wrap}
 .dp-foot{padding:10px 14px;border-top:1px solid var(--border);flex-shrink:0}
-.dp-link{display:block;width:100%;padding:8px;background:var(--blue-pale);
-  border:1px solid rgba(59,130,246,.25);border-radius:4px;font-family:'JetBrains Mono',monospace;
-  font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--blue);
-  text-align:center;text-decoration:none;text-transform:uppercase;transition:all .15s}
+.dp-link{display:block;padding:8px;background:rgba(59,130,246,.1);
+  border:1px solid rgba(59,130,246,.25);border-radius:4px;
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;
+  letter-spacing:1.5px;color:var(--blue);text-align:center;
+  text-decoration:none;text-transform:uppercase;transition:all .15s}
 .dp-link:hover{background:var(--blue-dim);color:#fff;border-color:var(--blue-dim)}
 
-/* Article preview */
-.article-panel{display:none;flex-direction:column;flex:1;overflow:hidden;border-left:1px solid var(--border)}
-.ap-head{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
-.ap-back{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);cursor:pointer;
-  padding:4px 8px;border:1px solid var(--border2);border-radius:3px;background:transparent;
-  transition:all .15s;letter-spacing:.5px}
+/* ARTICLE PANEL */
+.article-panel{display:none;width:280px;flex-shrink:0;background:var(--bg);
+  border-left:1px solid var(--border);flex-direction:column}
+.ap-head{padding:10px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;flex-shrink:0}
+.ap-back{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);
+  cursor:pointer;padding:4px 8px;border:1px solid var(--border2);border-radius:3px;
+  background:transparent;transition:all .15s;flex-shrink:0}
 .ap-back:hover{color:var(--blue);border-color:var(--blue)}
-.ap-title{font-size:12px;font-weight:500;color:var(--text);line-height:1.35;flex:1}
-.ap-body{padding:16px 18px;overflow-y:auto;flex:1}
-.ap-meta-strip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;
-  padding-bottom:12px;border-bottom:1px solid var(--border)}
-.ap-source{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3)}
-.ap-text{font-size:13px;color:var(--text2);line-height:1.85;white-space:pre-wrap}
-.ap-text-loading{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);
-  padding:20px 0;text-align:center}
+.ap-title{font-size:11px;font-weight:500;color:var(--text);line-height:1.3;flex:1;overflow:hidden;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ap-body{padding:14px;overflow-y:auto;flex:1}
+.ap-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.ap-text{font-size:12px;color:var(--text2);line-height:1.85}
 .ap-foot{padding:10px 14px;border-top:1px solid var(--border);flex-shrink:0}
-
-/* ── ADMIN MODAL ── */
-.modal-overlay{position:fixed;inset:0;background:rgba(8,12,20,.85);z-index:500;
-  display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
-.modal-overlay.show{display:flex}
-.modal{background:var(--bg2);border:1px solid var(--border);border-radius:10px;
-  width:100%;max-width:680px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
-.modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.modal-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;
-  letter-spacing:1px;color:var(--text)}
-.modal-close{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);
-  cursor:pointer;padding:4px 8px;border:1px solid var(--border);border-radius:3px;
-  background:transparent;transition:all .15s}
-.modal-close:hover{color:var(--critical);border-color:var(--critical-border)}
-.modal-body{padding:20px;overflow-y:auto;flex:1}
-.admin-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
-.adm-stat{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:12px 14px}
-.adm-stat-l{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text3);
-  letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px}
-.adm-stat-v{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text);line-height:1}
-.session-table{width:100%;border-collapse:collapse}
-.session-table th{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;
-  letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);
-  padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg3)}
-.session-table td{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2);
-  padding:9px 10px;border-bottom:1px solid var(--border)}
-.session-table tr:last-child td{border-bottom:none}
-.session-table tr:hover td{background:rgba(255,255,255,.02)}
-.sess-you{color:var(--blue);font-size:8px;margin-left:6px}
-.adm-note{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);
-  line-height:1.7;margin-bottom:16px;padding:10px 12px;background:var(--bg3);
-  border-radius:4px;border:1px solid var(--border)}
-.adm-note strong{color:var(--text2)}
-.access-log{background:var(--bg3);border:1px solid var(--border);border-radius:4px;
-  padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:9px;
-  color:var(--text3);line-height:1.8;max-height:160px;overflow-y:auto}
-.log-ok{color:var(--low)}.log-fail{color:var(--critical)}.log-time{color:var(--text4)}
-
-@media(max-width:768px){.sidebar{display:none}.detail{display:none}}
 </style>
 </head>
 <body>
@@ -255,35 +201,39 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="login-card">
-    <div class="login-logo">
-      <svg width="28" height="32" viewBox="0 0 72 84" fill="none">
-        <path d="M36 3 L66 14 L66 40 C66 58 36 72 36 72 C36 72 6 58 6 40 L6 14 Z" fill="#151d2e" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round"/>
-        <path d="M12 32 C18 20 54 20 60 32 C54 44 18 44 12 32 Z" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+    <div class="logo-row">
+      <svg width="26" height="30" viewBox="0 0 72 84" fill="none">
+        <path d="M36 3L66 14L66 40C66 58 36 72 36 72S6 58 6 40L6 14Z" fill="#151d2e" stroke="#3b82f6" stroke-width="2"/>
         <circle cx="36" cy="32" r="7" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
         <circle cx="36" cy="32" r="3" fill="#3b82f6"/>
       </svg>
       <div>
-        <div class="login-brand">VIGINOTE</div>
-        <div class="login-brand-sub">Intelligence Feed · Secure Access</div>
+        <div class="logo-brand">VIGINOTE</div>
+        <div class="logo-sub">Intelligence Feed · Secure Access</div>
       </div>
     </div>
-    <div class="login-heading">Client Access</div>
-    <div class="login-desc">Authorised personnel only.<br>All access is logged and monitored.</div>
-    <div class="login-field"><label>Username</label>
-      <input type="text" id="lu" placeholder="username" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false">
+
+    <div class="field-wrap">
+      <label class="field-label">Username</label>
+      <input class="field-input" type="text" id="inp-user" placeholder="username"
+        autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
-    <div class="login-field"><label>Password</label>
-      <div style="position:relative">
-        <input type="password" id="lp" placeholder="••••••••" autocomplete="current-password" style="padding-right:40px">
-        <button type="button" onclick="togglePw()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:4px" id="pw-eye">👁</button>
+
+    <div class="field-wrap">
+      <label class="field-label">Password</label>
+      <div class="pw-wrap">
+        <input class="field-input" type="password" id="inp-pass" placeholder="••••••••"
+          autocomplete="current-password">
+        <button class="pw-eye" type="button" id="pw-eye-btn" onclick="togglePw()">👁</button>
       </div>
     </div>
-    <button class="login-btn" id="login-btn" onclick="doLogin()">
-      <div class="spin"></div><span id="login-label">Access Intelligence Feed</span>
+
+    <button class="login-btn" id="login-btn" type="button" onclick="submitLogin()">
+      Sign In
     </button>
-    <div class="login-error" id="login-err">Invalid credentials. Contact your analyst.</div>
+    <div class="login-error" id="login-error"></div>
     <div class="login-footer">
-      All sessions are logged · info@viginote.com<br>
+      All access is logged · info@viginote.com<br>
       Unauthorised access is prohibited
     </div>
   </div>
@@ -293,484 +243,499 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <div id="app-screen">
   <nav class="topbar">
     <div class="tb-brand">
-      <svg width="20" height="23" viewBox="0 0 72 84" fill="none">
-        <path d="M36 3 L66 14 L66 40 C66 58 36 72 36 72 C36 72 6 58 6 40 L6 14 Z" fill="#151d2e" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round"/>
-        <path d="M12 32 C18 20 54 20 60 32 C54 44 18 44 12 32 Z" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+      <svg width="18" height="22" viewBox="0 0 72 84" fill="none">
+        <path d="M36 3L66 14L66 40C66 58 36 72 36 72S6 58 6 40L6 14Z" fill="#151d2e" stroke="#3b82f6" stroke-width="2"/>
         <circle cx="36" cy="32" r="7" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
         <circle cx="36" cy="32" r="3" fill="#3b82f6"/>
       </svg>
-      <div><span class="tb-wordmark">VIGINOTE</span><span class="tb-sub">Live Intelligence Feed</span></div>
+      <div>
+        <span class="tb-wordmark">VIGINOTE</span>
+        <span class="tb-sub">Live Intelligence Feed</span>
+      </div>
     </div>
-    <div class="live-pill"><div class="pulse-dot"></div>LIVE</div>
-    <div class="user-pill" id="user-pill">—</div>
-    <div class="user-pill" id="tier-pill" style="display:none;font-size:9px;letter-spacing:1px"></div>
-    <div class="admin-pill" id="admin-pill" style="display:none" onclick="showAdmin()">⚙ ADMIN</div>
-    <div class="tb-meta" id="tb-meta"></div>
-    <button type="button" class="tb-btn" onclick="refreshFeed()">↺ Refresh</button>
-    <button type="button" class="tb-btn" onclick="doLogout()">Sign Out</button>
+    <div class="pill pill-live"><div class="pulse"></div>LIVE</div>
+    <div class="pill pill-user" id="pill-user">—</div>
+    <div class="pill pill-tier" id="pill-tier" style="display:none"></div>
+    <div class="pill pill-admin" id="pill-admin" style="display:none" onclick="openAdmin()">⚙ ADMIN</div>
+    <div class="tb-countdown" id="tb-countdown"></div>
+    <button class="tb-btn" type="button" onclick="doRefresh()">↺ Refresh</button>
+    <button class="tb-btn" type="button" onclick="doLogout()">Sign Out</button>
   </nav>
 
-  <div class="app-layout">
+  <div class="app-body">
     <!-- SIDEBAR -->
     <div class="sidebar">
       <div class="sb-block">
-        <div class="sb-label">Overview</div>
-        <div class="stat-card"><div class="sc-l">Total Alerts</div><div class="sc-v" id="sb-tot">—</div></div>
-        <div class="stat-card"><div class="sc-l">Critical</div><div class="sc-v crit" id="sb-crit">—</div></div>
-        <div class="stat-card"><div class="sc-l">High</div><div class="sc-v high" id="sb-high">—</div></div>
-        <div class="stat-card"><div class="sc-l">Corroborated</div><div class="sc-v grn" id="sb-corr">—</div></div>
+        <div class="sb-lbl">Overview</div>
+        <div class="stat-card"><div class="sc-l">Total</div><div class="sc-v" id="sb-tot">—</div></div>
+        <div class="stat-card"><div class="sc-l">Critical</div><div class="sc-v c" id="sb-crit">—</div></div>
+        <div class="stat-card"><div class="sc-l">High</div><div class="sc-v h" id="sb-high">—</div></div>
+        <div class="stat-card"><div class="sc-l">Corroborated</div><div class="sc-v g" id="sb-corr">—</div></div>
       </div>
       <div class="sb-block">
-        <div class="sb-label">Severity</div>
-        <div class="f-opt on" onclick="setF('sev','all',this)">All Severities</div>
-        <div class="f-opt" onclick="setF('sev','critical',this)">Critical only</div>
-        <div class="f-opt" onclick="setF('sev','high',this)">High &amp; Critical</div>
-        <div class="f-opt" onclick="setF('sev','medium',this)">Medium &amp; above</div>
+        <div class="sb-lbl">Severity</div>
+        <div class="f-opt on" onclick="setFilter('sev','all',this)">All Severities</div>
+        <div class="f-opt" onclick="setFilter('sev','critical',this)">Critical only</div>
+        <div class="f-opt" onclick="setFilter('sev','high',this)">High &amp; Critical</div>
         <div class="f-div"></div>
-        <div class="sb-label">Region <span style="font-size:8px;color:var(--text4);letter-spacing:0">(subscription)</span></div>
-        <div id="region-filter-wrap">
-          <div class="f-opt on" onclick="setF('reg','all',this)">All My Regions</div>
+        <div class="sb-lbl">Region</div>
+        <div id="region-filters">
+          <div class="f-opt on" onclick="setFilter('reg','all',this)">All Regions</div>
         </div>
         <div class="f-div"></div>
-        <div class="sb-label">Window</div>
-        <div class="f-opt" onclick="setF('hrs','24',this)">Last 24 hours</div>
-        <div class="f-opt on" onclick="setF('hrs','168',this)">Last 7 days</div>
-        <div class="f-opt" onclick="setF('hrs','336',this)">Last 14 days</div>
+        <div class="sb-lbl">Window</div>
+        <div class="f-opt" onclick="setFilter('hrs','24',this)">24 hours</div>
+        <div class="f-opt on" onclick="setFilter('hrs','168',this)">7 days</div>
+        <div class="f-opt" onclick="setFilter('hrs','336',this)">14 days</div>
       </div>
       <div class="refresh-block">
-        <div class="rb-l">Auto-refresh every 15 min</div>
-        <div class="rb-val" id="rb-val">15:00</div>
+        <div class="rb-l">Auto-refresh</div>
+        <div class="rb-v" id="rb-v">15:00</div>
         <div class="rb-track"><div class="rb-fill" id="rb-fill" style="width:100%"></div></div>
       </div>
     </div>
 
     <!-- FEED -->
     <div class="feed-col" id="feed-col">
-      <div class="loading-txt">Loading intelligence feed…</div>
+      <div class="feed-txt">Loading…</div>
     </div>
 
     <!-- DETAIL -->
     <div class="detail" id="detail-panel">
-      <div class="dp-idle" id="dp-idle">
-        <svg width="28" height="32" viewBox="0 0 72 84" fill="none" opacity="0.12">
-          <path d="M36 3 L66 14 L66 40 C66 58 36 72 36 72 C36 72 6 58 6 40 L6 14 Z" fill="none" stroke="#3b82f6" stroke-width="3"/>
-          <circle cx="36" cy="32" r="7" fill="none" stroke="#3b82f6" stroke-width="2"/>
-        </svg>
-        <p>Select an alert<br>to view full detail</p>
-      </div>
+      <div class="dp-idle" id="dp-idle">Select an alert<br>to view detail</div>
       <div id="dp-content" style="display:none;flex-direction:column;flex:1;overflow:hidden">
         <div class="dp-head">
-          <div class="dp-ref" id="dp-ref">—</div>
-          <div class="dp-title" id="dp-title">—</div>
+          <div class="dp-ref" id="dp-ref"></div>
+          <div class="dp-title" id="dp-title"></div>
         </div>
         <div class="dp-body">
-          <div class="dp-sec"><label>Assessment</label><div class="dp-precis-box" id="dp-precis">—</div></div>
-          <div class="dp-sec"><label>Intelligence</label><div class="val" id="dp-intel">—</div></div>
-          <div class="dp-sec" id="dp-lsec" style="display:none"><label>Locations</label><div class="val" id="dp-locs" style="color:var(--critical)">—</div></div>
-          <div class="dp-sec" id="dp-esec" style="display:none"><label>Entities</label><div class="val" id="dp-ents">—</div></div>
-          <div class="dp-sec"><label>Status</label><div class="dp-flags" id="dp-flags">—</div></div>
+          <div class="dp-sec"><label>Assessment</label><div class="dp-precis" id="dp-precis"></div></div>
+          <div class="dp-sec"><label>Intelligence</label><div class="val" id="dp-intel"></div></div>
+          <div class="dp-sec" id="dp-lsec" style="display:none"><label>Locations</label><div class="val" id="dp-locs" style="color:var(--critical)"></div></div>
+          <div class="dp-sec" id="dp-esec" style="display:none"><label>Entities</label><div class="val" id="dp-ents"></div></div>
+          <div class="dp-sec"><label>Status</label><div class="dp-flags" id="dp-flags"></div></div>
         </div>
-        <div class="dp-foot" style="display:flex;gap:8px">
-          <button class="dp-link" id="dp-read-btn" onclick="openArticle()" style="flex:1;border:none;cursor:pointer">READ ARTICLE</button>
-          <a class="dp-link" id="dp-link" href="#" target="_blank" rel="noopener" style="flex:1">SOURCE →</a>
+        <div class="dp-foot">
+          <div style="display:flex;gap:8px">
+            <button class="dp-link" id="dp-read-btn" onclick="openArticle()" style="flex:1;border:none;cursor:pointer">READ ARTICLE</button>
+            <a class="dp-link" id="dp-ext-link" href="#" target="_blank" rel="noopener" style="flex:1">SOURCE →</a>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
 
-<!-- ADMIN MODAL -->
-<div class="modal-overlay" id="admin-modal">
-  <div class="modal">
-    <div class="modal-head">
-      <div class="modal-title">⚙ Admin — Access Control</div>
-      <button class="modal-close" onclick="hideAdmin()">✕ Close</button>
-    </div>
-    <div class="modal-body">
-      <div class="adm-note">
-        <strong>Managing client access:</strong> Go to Render → your service → Environment Variables.<br>
-        Set <strong>FEED_USERS</strong> = <strong>username:password,username2:password2</strong><br>
-        Add a client by adding to the list. Remove access by deleting their entry. Save to redeploy.
+    <!-- ARTICLE PANEL -->
+    <div class="article-panel" id="article-panel">
+      <div class="ap-head">
+        <button class="ap-back" type="button" onclick="closeArticle()">← Back</button>
+        <div class="ap-title" id="ap-title"></div>
       </div>
-      <div class="admin-stats">
-        <div class="adm-stat"><div class="adm-stat-l">Active Sessions</div><div class="adm-stat-v" id="adm-sessions">—</div></div>
-        <div class="adm-stat"><div class="adm-stat-l">Total Alerts</div><div class="adm-stat-v" id="adm-alerts">—</div></div>
-        <div class="adm-stat"><div class="adm-stat-l">Feed Health</div><div class="adm-stat-v" style="color:var(--low)" id="adm-health">—</div></div>
+      <div class="ap-body">
+        <div class="ap-meta" id="ap-meta"></div>
+        <div class="ap-text" id="ap-text"></div>
       </div>
-      <div class="sb-label" style="margin-bottom:10px">Active Client Sessions</div>
-      <div id="adm-session-table"><div class="loading-txt">Loading…</div></div>
-      <div class="sb-label" style="margin:16px 0 10px">Recent Access Log</div>
-      <div class="access-log" id="adm-log">Loading…</div>
+      <div class="ap-foot">
+        <a class="dp-link" id="ap-link" href="#" target="_blank" rel="noopener">OPEN ORIGINAL →</a>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-const API = window.location.origin;
-const REFRESH_SEC = 15 * 60;
-const ADMIN_USER = 'viginote_admin';
-
-let me = null, tok = null;
-let profile = {tier:'analyst', regions:[], all_regions:[], watchlist:[], label:''};
-let alerts = [];
-let filters = {sev:'all', reg:'all', hrs:'168'};
-let selId = null;
-let secsLeft = REFRESH_SEC;
-let ticker = null;
-let accessLog = [];
-
-const REGION_LABELS = {
+// ── Constants ──────────────────────────────────────────────────────────────
+var API = window.location.origin;
+var REFRESH_SEC = 900;
+var ALL_REGIONS = ['GLOBAL','MIDDLE_EAST','EUROPE','ASIA','WEST_EAST_AFRICA','SOUTHERN_AFRICA','SOUTH_AMERICA'];
+var REGION_LABELS = {
   'GLOBAL':'Global','MIDDLE_EAST':'Middle East','EUROPE':'Europe',
   'ASIA':'Asia','WEST_EAST_AFRICA':'W/E Africa',
   'SOUTHERN_AFRICA':'S Africa','SOUTH_AMERICA':'S America'
 };
-const ALL_REGIONS = ['GLOBAL','MIDDLE_EAST','EUROPE','ASIA','WEST_EAST_AFRICA','SOUTHERN_AFRICA','SOUTH_AMERICA'];
 
-// ── SESSION ──────────────────────────────────────────────────────────────
-function saveSession(u,t,p){ sessionStorage.setItem('vgn_u',u); sessionStorage.setItem('vgn_t',t); sessionStorage.setItem('vgn_p',JSON.stringify(p||{})); }
-function loadSession(){ const u=sessionStorage.getItem('vgn_u'),t=sessionStorage.getItem('vgn_t'); if(!u||!t)return null; try{const p=JSON.parse(sessionStorage.getItem('vgn_p')||'{}');return{u,t,p};}catch(e){return{u,t,p:{}};} }
-function clearSession(){ sessionStorage.removeItem('vgn_u'); sessionStorage.removeItem('vgn_t'); sessionStorage.removeItem('vgn_p'); }
+// ── State ──────────────────────────────────────────────────────────────────
+var me = null, tok = null;
+var userProfile = {tier:'analyst',regions:[],label:'',watchlist:[]};
+var alerts = [];
+var filters = {sev:'all',reg:'all',hrs:'168'};
+var selId = null;
+var secsLeft = REFRESH_SEC;
+var tickerInt = null;
 
-// ── LOGIN ─────────────────────────────────────────────────────────────────
-async function doLogin(){
-  const u=document.getElementById('lu').value.trim();
-  const p=document.getElementById('lp').value;
-  if(!u||!p){showErr('Please enter username and password.');return;}
-  const btn=document.getElementById('login-btn');
-  btn.disabled=true; btn.classList.add('loading');
-  document.getElementById('login-label').textContent='Authenticating…';
-  document.getElementById('login-err').style.display='none';
-  try{
-    const r=await fetch(`${API}/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
-    const d=await r.json();
-    if(r.ok&&d.token){
-      me=u; tok=d.token;
-      profile={
-        tier: d.tier||'analyst',
-        label: d.label||u,
-        regions: d.regions||[],
-        all_regions: d.all_regions||ALL_REGIONS,
-        watchlist: d.watchlist||[],
-        brief_allowance: d.brief_allowance||0,
-        briefs_used: d.briefs_used||0,
+// ── Password toggle ────────────────────────────────────────────────────────
+function togglePw() {
+  var f = document.getElementById('inp-pass');
+  var btn = document.getElementById('pw-eye-btn');
+  if (f.type === 'password') {
+    f.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    f.type = 'password';
+    btn.textContent = '👁';
+  }
+}
+
+// ── Login ──────────────────────────────────────────────────────────────────
+function showLoginError(msg) {
+  var el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function hideLoginError() {
+  document.getElementById('login-error').style.display = 'none';
+}
+
+function submitLogin() {
+  var u = document.getElementById('inp-user').value.trim();
+  var p = document.getElementById('inp-pass').value;
+  if (!u || !p) { showLoginError('Please enter username and password.'); return; }
+
+  var btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  btn.textContent = 'Authenticating…';
+  hideLoginError();
+
+  fetch(API + '/auth/login', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({username: u, password: p})
+  })
+  .then(function(r) { return r.json().then(function(d) { return {ok: r.ok, data: d}; }); })
+  .then(function(res) {
+    if (res.ok && res.data.token) {
+      me = u;
+      tok = res.data.token;
+      userProfile = {
+        tier: res.data.tier || 'analyst',
+        label: res.data.label || u,
+        regions: res.data.regions || ALL_REGIONS,
+        all_regions: res.data.all_regions || ALL_REGIONS,
+        watchlist: res.data.watchlist || []
       };
-      saveSession(u,d.token,profile);
-      showApp();
+      sessionStorage.setItem('vgn_u', u);
+      sessionStorage.setItem('vgn_t', res.data.token);
+      sessionStorage.setItem('vgn_p', JSON.stringify(userProfile));
+      startApp();
+    } else {
+      showLoginError(res.data.detail || 'Invalid credentials. Contact your analyst.');
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
     }
-    else showErr(d.detail||'Invalid credentials. Contact your analyst.');
-  }catch(e){ showErr('Connection error: '+e.message+'. Please try again.'); }
-  btn.disabled=false; btn.classList.remove('loading');
-  document.getElementById('login-label').textContent='Access Intelligence Feed';
+  })
+  .catch(function(e) {
+    showLoginError('Connection error. Try again.');
+    btn.disabled = false;
+    btn.textContent = 'Sign In';
+  });
 }
-function showErr(m){ const e=document.getElementById('login-err'); e.textContent=m; e.style.display='block'; }
-function togglePw(){
-  const f=document.getElementById('lp');
-  const eye=document.getElementById('pw-eye');
-  if(f.type==='password'){f.type='text';eye.textContent='🙈';}
-  else{f.type='password';eye.textContent='👁';}
-}
-function doLogout(){ clearSession(); me=null; tok=null; clearInterval(ticker);
-  document.getElementById('app-screen').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
-  document.getElementById('lp').value='';
-  document.getElementById('login-err').style.display='none'; }
 
-// ── SHOW APP ──────────────────────────────────────────────────────────────
-function showApp(){
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('app-screen').style.display='block';
-  document.getElementById('user-pill').textContent=(profile.label||me).toUpperCase();
-  // Tier pill
-  const tierColours = {admin:'var(--medium)',enterprise:'var(--low)',operator:'var(--blue)',analyst:'var(--text3)',monitor:'var(--text3)'};
-  const tierPill = document.getElementById('tier-pill');
-  if(tierPill){tierPill.textContent=profile.tier.toUpperCase();tierPill.style.color=tierColours[profile.tier]||'var(--text3)';tierPill.style.display='flex';}
-  if(profile.tier==='admin') document.getElementById('admin-pill').style.display='flex';
+function doLogout() {
+  sessionStorage.clear();
+  me = null; tok = null;
+  clearInterval(tickerInt);
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('inp-pass').value = '';
+  document.getElementById('login-btn').textContent = 'Sign In';
+  document.getElementById('login-btn').disabled = false;
+}
+
+// ── Start app ──────────────────────────────────────────────────────────────
+function startApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'flex';
+  document.getElementById('pill-user').textContent = (userProfile.label || me).toUpperCase();
+
+  var tierEl = document.getElementById('pill-tier');
+  tierEl.textContent = userProfile.tier.toUpperCase();
+  tierEl.style.display = 'block';
+
+  if (userProfile.tier === 'admin') {
+    document.getElementById('pill-admin').style.display = 'block';
+  }
+
   buildRegionFilters();
-  loadFeed();
+  loadAlerts();
   startTicker();
 }
 
-function buildRegionFilters(){
-  const wrap = document.getElementById('region-filter-wrap');
-  if(!wrap) return;
-  const allowed = profile.regions || [];
-  wrap.innerHTML = `<div class="f-opt on" onclick="setF('reg','all',this)">All My Regions</div>` +
-    ALL_REGIONS.map(r => {
-      const label = REGION_LABELS[r] || r;
-      const hasAccess = allowed.includes(r);
-      if(hasAccess){
-        return `<div class="f-opt" onclick="setF('reg','${r}',this)">${label}</div>`;
-      } else {
-        return `<div class="f-opt f-locked" title="Upgrade to access ${label}">🔒 ${label}</div>`;
-      }
-    }).join('');
+// ── Region filters ─────────────────────────────────────────────────────────
+function buildRegionFilters() {
+  var wrap = document.getElementById('region-filters');
+  var allowed = userProfile.regions || [];
+  var html = '<div class="f-opt on" onclick="setFilter(\'reg\',\'all\',this)">All Regions</div>';
+  ALL_REGIONS.forEach(function(r) {
+    var label = REGION_LABELS[r] || r;
+    if (allowed.indexOf(r) >= 0) {
+      html += '<div class="f-opt" onclick="setFilter(\'reg\',\'' + r + '\',this)">' + label + '</div>';
+    } else {
+      html += '<div class="f-locked">🔒 ' + label + '</div>';
+    }
+  });
+  wrap.innerHTML = html;
 }
 
-// ── TICKER ────────────────────────────────────────────────────────────────
-function startTicker(){ clearInterval(ticker); secsLeft=REFRESH_SEC; tickUpdate();
-  ticker=setInterval(()=>{ secsLeft--; if(secsLeft<=0){secsLeft=REFRESH_SEC;loadFeed();} tickUpdate(); },1000); }
-function tickUpdate(){
-  const m=String(Math.floor(secsLeft/60)).padStart(2,'0'), s=String(secsLeft%60).padStart(2,'0');
-  document.getElementById('rb-val').textContent=`${m}:${s}`;
-  document.getElementById('tb-meta').textContent=`Refresh in ${m}:${s}`;
-  document.getElementById('rb-fill').style.width=(secsLeft/REFRESH_SEC*100)+'%';
-}
-function refreshFeed(){ secsLeft=REFRESH_SEC; loadFeed(); }
-
-// ── FILTERS ───────────────────────────────────────────────────────────────
-function setF(type,val,el){
-  filters[type]=val;
-  el.parentElement.querySelectorAll('.f-opt').forEach(o=>o.classList.remove('on'));
+// ── Filters ────────────────────────────────────────────────────────────────
+function setFilter(type, val, el) {
+  filters[type] = val;
+  var parent = el.parentElement;
+  parent.querySelectorAll('.f-opt').forEach(function(o) { o.classList.remove('on'); });
   el.classList.add('on');
-  if(type==='hrs') loadFeed(); else renderAlerts();
+  if (type === 'hrs') { loadAlerts(); } else { renderAlerts(); }
 }
 
-// ── LOAD ─────────────────────────────────────────────────────────────────
-async function loadFeed(){
-  document.getElementById('feed-col').innerHTML='<div class="loading-txt">Loading intelligence feed…</div>';
-  try{
-    const r=await fetch(`${API}/alerts?hours=${filters.hrs}&min_score=4&limit=200`,
-      {headers:tok?{'X-Feed-Token':tok}:{}});
-    if(r.status===401){doLogout();return;}
-    const d=await r.json();
-    alerts=d.alerts||[];
+// ── Ticker ─────────────────────────────────────────────────────────────────
+function startTicker() {
+  clearInterval(tickerInt);
+  secsLeft = REFRESH_SEC;
+  updateTicker();
+  tickerInt = setInterval(function() {
+    secsLeft--;
+    if (secsLeft <= 0) { secsLeft = REFRESH_SEC; loadAlerts(); }
+    updateTicker();
+  }, 1000);
+}
+
+function updateTicker() {
+  var m = String(Math.floor(secsLeft / 60)).padStart(2, '0');
+  var s = String(secsLeft % 60).padStart(2, '0');
+  var txt = m + ':' + s;
+  document.getElementById('rb-v').textContent = txt;
+  document.getElementById('tb-countdown').textContent = 'Refresh in ' + txt;
+  document.getElementById('rb-fill').style.width = ((secsLeft / REFRESH_SEC) * 100) + '%';
+}
+
+function doRefresh() { secsLeft = REFRESH_SEC; loadAlerts(); }
+
+// ── Load alerts ────────────────────────────────────────────────────────────
+function loadAlerts() {
+  document.getElementById('feed-col').innerHTML = '<div class="feed-txt">Loading…</div>';
+  var headers = {};
+  if (tok) { headers['X-Feed-Token'] = tok; }
+
+  fetch(API + '/alerts?hours=' + filters.hrs + '&min_score=4&limit=200', {headers: headers})
+  .then(function(r) {
+    if (r.status === 401) { doLogout(); return null; }
+    return r.json();
+  })
+  .then(function(d) {
+    if (!d) return;
+    alerts = d.alerts || [];
     updateStats();
     renderAlerts();
-  }catch(e){
-    document.getElementById('feed-col').innerHTML=`<div class="err-txt">Feed error: ${e.message}</div>`;
-  }
+  })
+  .catch(function(e) {
+    document.getElementById('feed-col').innerHTML = '<div class="feed-txt" style="color:var(--critical)">Error: ' + e.message + '</div>';
+  });
 }
 
-function updateStats(){
-  const crit=alerts.filter(a=>a.is_critical||a.score>=9).length;
-  const high=alerts.filter(a=>a.score>=7&&a.score<9&&!a.is_critical).length;
-  const corr=alerts.filter(a=>(a.source_count||1)>=2).length;
-  document.getElementById('sb-tot').textContent=alerts.length;
-  document.getElementById('sb-crit').textContent=crit;
-  document.getElementById('sb-high').textContent=high;
-  document.getElementById('sb-corr').textContent=corr;
+function updateStats() {
+  var crit = alerts.filter(function(a) { return a.is_critical || a.score >= 9; }).length;
+  var high = alerts.filter(function(a) { return a.score >= 7 && a.score < 9 && !a.is_critical; }).length;
+  var corr = alerts.filter(function(a) { return (a.source_count || 1) >= 2; }).length;
+  document.getElementById('sb-tot').textContent = alerts.length;
+  document.getElementById('sb-crit').textContent = crit;
+  document.getElementById('sb-high').textContent = high;
+  document.getElementById('sb-corr').textContent = corr;
 }
 
-// ── RENDER ────────────────────────────────────────────────────────────────
-function applyFilters(arr){
-  return arr.filter(a=>{
-    if(filters.sev==='critical'&&!(a.is_critical||a.score>=9))return false;
-    if(filters.sev==='high'&&a.score<7)return false;
-    if(filters.sev==='medium'&&a.score<5)return false;
-    if(filters.reg!=='all'&&a.region!==filters.reg)return false;
+// ── Render ─────────────────────────────────────────────────────────────────
+function sevInfo(score, crit) {
+  if (crit || score >= 9) return {c:'crit', l:'CRITICAL'};
+  if (score >= 7) return {c:'high', l:'HIGH'};
+  if (score >= 5) return {c:'med', l:'MEDIUM'};
+  return {c:'low', l:'LOW'};
+}
+
+function tierTag(t) {
+  if (t === 2) return '<span class="tier tier-loc">LOCAL</span>';
+  if (t === 1) return '<span class="tier tier-reg">REGIONAL</span>';
+  return '<span class="tier tier-wire">WIRE</span>';
+}
+
+function fmtTs(ts) {
+  try {
+    var d = (typeof ts === 'number') ? new Date(ts * 1000) : new Date(ts);
+    return d.toLocaleString('en-GB', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) + ' UTC';
+  } catch(e) { return ''; }
+}
+
+function applyFilters(arr) {
+  return arr.filter(function(a) {
+    if (filters.sev === 'critical' && !(a.is_critical || a.score >= 9)) return false;
+    if (filters.sev === 'high' && a.score < 7) return false;
+    if (filters.reg !== 'all' && a.region !== filters.reg) return false;
     return true;
   });
 }
-function sev(score,crit){
-  if(crit||score>=9)return{c:'crit',l:'CRITICAL'};
-  if(score>=7)return{c:'high',l:'HIGH'};
-  if(score>=5)return{c:'med',l:'MEDIUM'};
-  return{c:'low',l:'LOW'};
-}
-function tierTag(t){ if(t===2)return'<span class="tier tier-loc">LOCAL</span>'; if(t===1)return'<span class="tier tier-reg">REGIONAL</span>'; return'<span class="tier tier-wire">WIRE</span>'; }
-function fmtTs(ts){
-  try{ const d=typeof ts==='number'?new Date(ts*1000):new Date(ts);
-    return d.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC'; }
-  catch(e){return'';}
-}
-function renderAlerts(){
-  const col=document.getElementById('feed-col');
-  const filtered=applyFilters(alerts);
-  if(!filtered.length){
-    col.innerHTML='<div class="feed-empty"><h3>NO ALERTS</h3><p>No alerts match the current filters.<br>Adjust region or severity filter.</p></div>';
+
+function renderAlerts() {
+  var col = document.getElementById('feed-col');
+  var filtered = applyFilters(alerts);
+  if (!filtered.length) {
+    col.innerHTML = '<div class="feed-empty"><h3>NO ALERTS</h3><p style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3);margin-top:8px">No alerts match current filters.</p></div>';
     return;
   }
-  col.innerHTML=filtered.map(a=>{
-    const s=sev(a.score,a.is_critical);
-    const ents=a.entities||{};
-    const locs=(ents.locs||ents.locations||[]).slice(0,2).join(' · ');
-    const dom=a.source_domain||a.source_dom||'';
-    const isCorr=(a.source_count||1)>=2;
-    return `<div class="a-card${selId===a.id?' sel':''}" id="card-${a.id}" onclick="selAlert(${a.id})">
-      <div class="fbar">
-        <div class="fsev ${s.c}">${s.l}</div>
-        <div class="freg">${(a.region||'').replace(/_/g,' ')}</div>
-        <div class="fscr">SCR<span>${a.score}</span></div>
-        <div class="ftime">${fmtTs(a.ts_iso||a.ts)}</div>
-      </div>
-      <div class="a-inner">
-        <div class="a-title">${a.title||''}</div>
-        ${a.precis?`<div class="a-precis">${a.precis}</div>`:''}
-        <div class="a-meta">
-          <span class="a-src">${dom}</span>
-          ${tierTag(a.source_tier||0)}
-          ${isCorr?`<span class="corr">✦ ${a.source_count} SRC</span>`:''}
-          ${locs?`<span class="locs">📍 ${locs}</span>`:''}
-        </div>
-      </div>
-    </div>`;
-  }).join('');
+  var html = '';
+  filtered.forEach(function(a) {
+    var s = sevInfo(a.score, a.is_critical);
+    var ents = a.entities || {};
+    var locs = (ents.locs || ents.locations || []).slice(0, 2).join(' · ');
+    var dom = a.source_domain || a.source_dom || '';
+    var isCorr = (a.source_count || 1) >= 2;
+    var sel = selId === a.id ? ' sel' : '';
+    html += '<div class="a-card' + sel + '" id="card-' + a.id + '" onclick="selAlert(' + a.id + ')">';
+    html += '<div class="fbar">';
+    html += '<div class="fsev ' + s.c + '">' + s.l + '</div>';
+    html += '<div class="freg">' + (a.region || '').replace(/_/g, ' ') + '</div>';
+    html += '<div class="fscr">SCR<span>' + a.score + '</span></div>';
+    html += '<div class="ftime">' + fmtTs(a.ts_iso || a.ts) + '</div>';
+    html += '</div><div class="a-inner">';
+    html += '<div class="a-title">' + (a.title || '') + '</div>';
+    if (a.precis) html += '<div class="a-precis">' + a.precis + '</div>';
+    html += '<div class="a-meta"><span class="a-src">' + dom + '</span>' + tierTag(a.source_tier || 0);
+    if (isCorr) html += '<span class="corr">✦ ' + a.source_count + ' SRC</span>';
+    if (locs) html += '<span class="locs">📍 ' + locs + '</span>';
+    html += '</div></div></div>';
+  });
+  col.innerHTML = html;
 }
 
-// ── SELECT ALERT ─────────────────────────────────────────────────────────
-function selAlert(id){
-  selId=id;
-  document.querySelectorAll('.a-card').forEach(c=>c.classList.remove('sel'));
-  const card=document.getElementById(`card-${id}`);
-  if(card) card.classList.add('sel');
-  const a=alerts.find(x=>x.id===id);
-  if(!a)return;
-  const s=sev(a.score,a.is_critical);
-  const ents=a.entities||{};
-  const locs=(ents.locs||ents.locations||[]);
-  const orgs=(ents.orgs||ents.organizations||[]);
-  const dom=a.source_domain||a.source_dom||'';
-  const isCorr=(a.source_count||1)>=2;
-  document.getElementById('dp-ref').textContent=`VGN · ${fmtTs(a.ts_iso||a.ts)}`;
-  document.getElementById('dp-title').textContent=a.title||'';
-  document.getElementById('dp-precis').textContent=a.precis||a.title||'';
-  document.getElementById('dp-intel').innerHTML=
-    `<strong>Source</strong> ${dom}<br>`+
-    `<strong>Tier</strong> ${['Wire','Regional','Local Specialist'][a.source_tier||0]}<br>`+
-    `<strong>Score</strong> ${a.score}/12<br>`+
-    (isCorr?`<strong>Corroborated</strong> ${a.source_count} sources<br>`:'')+
-    `<strong>Region</strong> ${(a.region||'').replace(/_/g,' ')}`;
-  if(locs.length){document.getElementById('dp-lsec').style.display='block';document.getElementById('dp-locs').textContent='📍 '+locs.join(' · ');}
-  else document.getElementById('dp-lsec').style.display='none';
-  if(orgs.length){document.getElementById('dp-esec').style.display='block';document.getElementById('dp-ents').textContent=orgs.slice(0,6).join(' · ');}
-  else document.getElementById('dp-esec').style.display='none';
-  const sevColour=s.c==='crit'?'var(--critical)':s.c==='high'?'var(--high)':'var(--blue)';
-  const sevBg=s.c==='crit'?'rgba(239,68,68,.15)':s.c==='high'?'rgba(249,115,22,.12)':'rgba(59,130,246,.1)';
-  const sevBorder=s.c==='crit'?'rgba(239,68,68,.3)':s.c==='high'?'rgba(249,115,22,.25)':'rgba(59,130,246,.2)';
-  document.getElementById('dp-flags').innerHTML=
-    `<span class="tier" style="background:${sevBg};color:${sevColour};border:1px solid ${sevBorder}">${s.l}</span>`+
-    (isCorr?'<span class="corr">✦ CORROBORATED</span>':'');
-  const lnk=document.getElementById('dp-link');
-  if(a.url){lnk.href=a.url;lnk.style.display='block';}else lnk.style.display='none';
-  document.getElementById('dp-idle').style.display='none';
-  const dpc=document.getElementById('dp-content');
-  dpc.style.display='flex'; dpc.style.flexDirection='column'; dpc.style.flex='1'; dpc.style.overflow='hidden';
+// ── Select alert ───────────────────────────────────────────────────────────
+function selAlert(id) {
+  selId = id;
+  document.querySelectorAll('.a-card').forEach(function(c) { c.classList.remove('sel'); });
+  var card = document.getElementById('card-' + id);
+  if (card) card.classList.add('sel');
+
+  var a = alerts.find(function(x) { return x.id === id; });
+  if (!a) return;
+
+  var s = sevInfo(a.score, a.is_critical);
+  var ents = a.entities || {};
+  var locs = ents.locs || ents.locations || [];
+  var orgs = ents.orgs || ents.organizations || [];
+  var dom = a.source_domain || a.source_dom || '';
+  var isCorr = (a.source_count || 1) >= 2;
+
+  document.getElementById('dp-ref').textContent = 'VGN · ' + fmtTs(a.ts_iso || a.ts);
+  document.getElementById('dp-title').textContent = a.title || '';
+  document.getElementById('dp-precis').textContent = a.precis || a.title || '';
+  document.getElementById('dp-intel').innerHTML =
+    '<strong>Source</strong> ' + dom + '<br>' +
+    '<strong>Tier</strong> ' + (['Wire','Regional','Local Specialist'][a.source_tier || 0]) + '<br>' +
+    '<strong>Score</strong> ' + a.score + '/12<br>' +
+    (isCorr ? '<strong>Corroborated</strong> ' + a.source_count + ' sources<br>' : '') +
+    '<strong>Region</strong> ' + (a.region || '').replace(/_/g, ' ');
+
+  if (locs.length) {
+    document.getElementById('dp-lsec').style.display = 'block';
+    document.getElementById('dp-locs').textContent = '📍 ' + locs.join(' · ');
+  } else { document.getElementById('dp-lsec').style.display = 'none'; }
+
+  if (orgs.length) {
+    document.getElementById('dp-esec').style.display = 'block';
+    document.getElementById('dp-ents').textContent = orgs.slice(0, 5).join(' · ');
+  } else { document.getElementById('dp-esec').style.display = 'none'; }
+
+  var sevCol = {crit:'var(--critical)',high:'var(--high)',med:'var(--blue)',low:'var(--low)'}[s.c];
+  var sevBg = {crit:'rgba(239,68,68,.15)',high:'rgba(249,115,22,.12)',med:'rgba(59,130,246,.1)',low:'rgba(34,197,94,.08)'}[s.c];
+  document.getElementById('dp-flags').innerHTML =
+    '<span class="tier" style="background:' + sevBg + ';color:' + sevCol + ';border:1px solid ' + sevCol + '">' + s.l + '</span>' +
+    (isCorr ? '<span class="corr">✦ CORROBORATED</span>' : '');
+
+  var lnk = document.getElementById('dp-ext-link');
+  if (a.url) { lnk.href = a.url; lnk.style.display = 'block'; } else { lnk.style.display = 'none'; }
+
+  document.getElementById('dp-idle').style.display = 'none';
+  var dpc = document.getElementById('dp-content');
+  dpc.style.display = 'flex';
+  dpc.style.flexDirection = 'column';
+  dpc.style.flex = '1';
+  dpc.style.overflow = 'hidden';
+
+  // Close article panel if open
+  closeArticle();
 }
 
-// ── ADMIN PANEL ───────────────────────────────────────────────────────────
-async function showAdmin(){
-  document.getElementById('admin-modal').classList.add('show');
-  // Load sessions
-  try{
-    const r=await fetch(`${API}/auth/sessions`);
-    const d=await r.json();
-    document.getElementById('adm-sessions').textContent=d.active_sessions||0;
-    document.getElementById('adm-alerts').textContent=alerts.length;
-    document.getElementById('adm-health').textContent='OK';
-    if(!d.sessions||!d.sessions.length){
-      document.getElementById('adm-session-table').innerHTML='<div class="loading-txt">No active sessions.</div>';
-      return;
-    }
-    document.getElementById('adm-session-table').innerHTML=`
-      <table class="session-table">
-        <thead><tr><th>Username</th><th>Logged in</th><th>Session age</th></tr></thead>
-        <tbody>${d.sessions.map(s=>`<tr>
-          <td>${s.username}${s.username===me?'<span class="sess-you">YOU</span>':''}</td>
-          <td>${new Date(s.created*1000).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'UTC'})} UTC</td>
-          <td>${s.age_minutes} min</td>
-        </tr>`).join('')}</tbody>
-      </table>`;
-  }catch(e){
-    document.getElementById('adm-session-table').innerHTML=`<div class="err-txt">Error loading sessions: ${e.message}</div>`;
-  }
-  // Access log from memory
-  document.getElementById('adm-log').innerHTML=accessLog.length
-    ? accessLog.slice(-20).reverse().map(l=>`<span class="${l.ok?'log-ok':'log-fail'}">${l.ok?'✓ OK':'✗ FAIL'}</span> <span class="log-time">${l.time}</span> · ${l.user}\n`).join('')
-    : 'No access events recorded this session.';
-}
-function hideAdmin(){ document.getElementById('admin-modal').classList.remove('show'); }
+// ── Article panel ──────────────────────────────────────────────────────────
+function openArticle() {
+  var a = alerts.find(function(x) { return x.id === selId; });
+  if (!a) return;
 
-// ── ARTICLE PREVIEW ──────────────────────────────────────────────────────
-let currentArticleId = null;
-
-async function openArticle(){
-  const a = alerts.find(x => x.id === selId);
-  if(!a) return;
-  currentArticleId = selId;
-
-  // Show article panel, hide detail idle
-  const ap = document.getElementById('article-panel');
-  ap.style.display = 'flex';
-  ap.style.flexDirection = 'column';
-  ap.style.flex = '1';
-  ap.style.overflow = 'hidden';
-
-  // Set header
   document.getElementById('ap-title').textContent = a.title || '';
-  document.getElementById('ap-ext-link').href = a.url || '#';
+  document.getElementById('ap-link').href = a.url || '#';
+  document.getElementById('ap-text').textContent = 'Loading…';
 
-  // Meta strip
-  const s = sev(a.score, a.is_critical);
-  const dom = a.source_domain || a.source_dom || '';
-  const isCorr = (a.source_count||1) >= 2;
-  document.getElementById('ap-meta').innerHTML =
-    `<span class="fsev ${s.c}" style="border-radius:3px;height:auto;padding:3px 8px;font-size:8px">${s.l}</span>` +
-    `<span class="ap-source">${dom}</span>` +
-    tierTag(a.source_tier||0) +
-    (isCorr ? `<span class="corr">✦ ${a.source_count} SRC</span>` : '') +
-    `<span class="ap-source" style="margin-left:auto">${fmtTs(a.ts_iso||a.ts)}</span>`;
+  var ap = document.getElementById('article-panel');
+  ap.style.display = 'flex';
 
-  // Load article text
-  const textEl = document.getElementById('ap-text');
-  textEl.className = 'ap-text-loading';
-  textEl.textContent = 'Loading article…';
-
-  try {
-    // Try fetching full article from API
-    const r = await fetch(`${API}/alerts/${a.id}`, {
-      headers: tok ? {'X-Feed-Token': tok} : {}
-    });
-    if(r.ok){
-      const d = await r.json();
-      const text = d.article_text || d.precis || '';
-      if(text && text.length > 100){
-        textEl.className = 'ap-text';
-        textEl.textContent = text;
-        return;
-      }
-    }
-  } catch(e){}
-
-  // Fallback — show precis + note
-  textEl.className = 'ap-text';
-  const fallback = a.precis || '';
-  textEl.textContent = fallback
-    ? fallback + '
-
-— Full article text not extracted. Open original source for complete content.'
-    : 'Article text not available. Open the original source link below.';
+  fetch(API + '/alerts/' + a.id, {headers: tok ? {'X-Feed-Token': tok} : {}})
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    var text = d.article_text || d.precis || '';
+    document.getElementById('ap-text').textContent = text.length > 100
+      ? text
+      : (a.precis || 'Full article text not available. Open original source.');
+  })
+  .catch(function() {
+    document.getElementById('ap-text').textContent = a.precis || 'Article text not available.';
+  });
 }
 
-function closeArticle(){
-  const ap = document.getElementById('article-panel');
-  ap.style.display = 'none';
+function closeArticle() {
+  document.getElementById('article-panel').style.display = 'none';
 }
 
-// ── BOOT ─────────────────────────────────────────────────────────────────
-document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&document.getElementById('login-screen').style.display!=='none') doLogin(); });
-(async function boot(){
-  const s = loadSession();
-  if(!s){ return; } // No session — show login screen, do nothing
-  // Verify token is still valid before auto-logging in
-  try{
-    const r = await fetch(`${API}/auth/profile`, {
-      headers: {'X-Feed-Token': s.t},
-      signal: AbortSignal.timeout(5000)
+// ── Admin ──────────────────────────────────────────────────────────────────
+function openAdmin() {
+  fetch(API + '/auth/sessions')
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    alert('Active sessions: ' + d.active_sessions + '\n' +
+      (d.sessions || []).map(function(s) {
+        return s.username + ' — ' + s.age_minutes + ' min ago';
+      }).join('\n'));
+  });
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+(function() {
+  // Enter key on login fields
+  document.getElementById('inp-user').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') submitLogin();
+  });
+  document.getElementById('inp-pass').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') submitLogin();
+  });
+
+  // Check for saved session
+  var u = sessionStorage.getItem('vgn_u');
+  var t = sessionStorage.getItem('vgn_t');
+  var pRaw = sessionStorage.getItem('vgn_p');
+
+  if (u && t) {
+    // Validate token with server before showing app
+    fetch(API + '/auth/profile', {headers: {'X-Feed-Token': t}})
+    .then(function(r) {
+      if (!r.ok) throw new Error('Token invalid');
+      return r.json();
+    })
+    .then(function(d) {
+      me = u; tok = t;
+      userProfile = {
+        tier: d.tier || 'analyst', label: d.label || u,
+        regions: d.regions || ALL_REGIONS,
+        all_regions: d.all_regions || ALL_REGIONS,
+        watchlist: d.watchlist || []
+      };
+      sessionStorage.setItem('vgn_p', JSON.stringify(userProfile));
+      startApp();
+    })
+    .catch(function() {
+      // Token invalid — clear and show login
+      sessionStorage.clear();
     });
-    if(!r.ok){ clearSession(); return; } // Token expired/invalid — show login
-    const d = await r.json();
-    me = s.u; tok = s.t;
-    profile = {
-      tier: d.tier||'analyst', label: d.label||s.u,
-      regions: d.regions||[], all_regions: d.all_regions||ALL_REGIONS,
-      watchlist: d.watchlist||[], brief_allowance: d.brief_allowance||0,
-      briefs_used: d.briefs_used||0
-    };
-    saveSession(s.u, s.t, profile);
-    showApp();
-  } catch(e){
-    // Network error or timeout — clear session, show login
-    clearSession();
   }
 })();
 </script>
