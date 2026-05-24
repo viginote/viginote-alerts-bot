@@ -115,7 +115,33 @@ def init_db() -> sqlite3.Connection:
     """)
 
     conn.commit()
+
+    # ── Schema migrations — add new columns to existing DBs ──────────────────
+    _migrate(conn)
+
     return conn
+
+
+def _migrate(conn):
+    """Add new columns to existing databases without losing data."""
+    migrations = [
+        ("sent_log", "country",  "TEXT"),
+        ("sent_log", "stream",   "TEXT DEFAULT 'geographic'"),
+    ]
+    for table, column, col_def in migrations:
+        try:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_def}")
+            conn.commit()
+        except Exception:
+            pass  # Column already exists — fine
+
+    # Add indexes for new columns
+    try:
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_sent_country ON sent_log(country)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_sent_stream  ON sent_log(stream)")
+        conn.commit()
+    except Exception:
+        pass
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -160,20 +186,22 @@ def seen_title_hash(conn, title_hash: str, days=3) -> bool:
 
 def insert_sent(conn, *, url, title, title_hash, is_critical, region,
                 source_domain, source_tier, score, precis,
-                article_text, entities, cluster_id, source_count, selection_reason):
-    """Insert a sent alert with all enriched fields."""
+                article_text, entities, cluster_id, source_count,
+                selection_reason, country=None, stream="geographic"):
+    """Insert a sent alert with all enriched fields including country and stream."""
     conn.execute("""
         INSERT OR IGNORE INTO sent_log
             (url, ts, title, title_hash, is_critical, region, source_domain,
              source_tier, score, precis, article_text, entities_json,
-             cluster_id, source_count, selection_reason)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+             cluster_id, source_count, selection_reason, country, stream)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     """, (
         url, int(time.time()), title, title_hash, 1 if is_critical else 0,
         region, source_domain, source_tier, score, precis,
         (article_text or "")[:2000],
         json.dumps(entities or {}),
         cluster_id, source_count, selection_reason,
+        country, stream or "geographic",
     ))
     conn.commit()
 
