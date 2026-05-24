@@ -296,6 +296,121 @@ def total_feed_count() -> int:
     return sum(len(v) for v in FEEDS.values())
 
 
+
+# ── STREAM-SPECIFIC FEEDS ─────────────────────────────────────────────────────
+# These feeds are tagged by stream type and processed separately from
+# geographic feeds. Each URL is associated with a stream tag.
+
+STREAM_FEEDS: dict[str, list[str]] = {
+
+    "maritime": [
+        # Incident reporting
+        "https://www.maritime-executive.com/rss",
+        "https://gcaptain.com/feed/",
+        "https://www.navyrecognition.com/index.php?option=com_ninjarsssyndicator&feed_id=1&format=raw",
+        "https://navaltoday.com/feed/",
+        "https://www.marinelink.com/rss/all",
+        "https://www.seatrade-maritime.com/rss.xml",
+        "https://www.hellenicshippingnews.com/feed/",
+        "https://offshore-energy.biz/feed/",
+        # Intelligence / advisories
+        "https://www.icc-ccs.org/index.php/rss-feeds/send/3-piracy-news",
+        "https://reliefweb.int/updates/rss.xml?search=maritime",
+        # Trade / chokepoints
+        "https://oilprice.com/rss/main",
+        "https://www.tradewindsnews.com/rss",
+    ],
+
+    "cyber": [
+        # Threat intelligence
+        "https://www.bleepingcomputer.com/feed/",
+        "https://feeds.feedburner.com/TheHackersNews",
+        "https://krebsonsecurity.com/feed/",
+        "https://www.darkreading.com/rss.xml",
+        "https://cyberscoop.com/feed/",
+        "https://www.securityweek.com/feed/",
+        "https://www.infosecurity-magazine.com/rss/news/",
+        # Government advisories
+        "https://www.cisa.gov/uscert/ncas/alerts.xml",
+        "https://www.ncsc.gov.uk/api/1/services/v1/all-rss-feed.xml",
+        "https://www.enisa.europa.eu/news/rss",
+        # Research
+        "https://blog.mandiant.com/feed",
+        "https://www.recordedfuture.com/feed",
+    ],
+
+    "economic": [
+        # Sanctions
+        "https://home.treasury.gov/system/files/126/ofac.rss",
+        "https://eur-lex.europa.eu/oj/daily-view/L-series/rss.xml",
+        # IMF / World Bank
+        "https://www.imf.org/en/News/rss?language=eng",
+        "https://feeds.worldbank.org/worldbank/financialnewsrss",
+        # Trade / economic risk
+        "https://www.globaltradealert.org/feed",
+        "https://tradingeconomics.com/rss",
+        "https://www.ft.com/rss/home/uk",
+        # Commodity / energy
+        "https://oilprice.com/rss/main",
+        "https://www.mining.com/feed/",
+        # Rating agencies (public)
+        "https://www.fitchratings.com/rss",
+    ],
+
+    "political": [
+        # Democracy / elections
+        "https://freedomhouse.org/rss.xml",
+        "https://www.idea.int/news-media/rss.xml",
+        "https://carnegieendowment.org/rss/solr.rss?query=political+risk",
+        "https://www.chathamhouse.org/rss.xml",
+        # Political violence
+        "https://acleddata.com/feed/",
+        "https://www.crisisgroup.org/rss",
+        # Regional political
+        "https://www.al-monitor.com/rss",
+        "https://foreignpolicy.com/feed/",
+        "https://theintercept.com/feed/?rss",
+        "https://www.opendemocracy.net/en/rss.xml",
+        "https://www.lowyinstitute.org/the-interpreter/rss",
+        "https://geopoliticalmonitor.com/feed/",
+    ],
+
+    "executive": [
+        # Government travel advisories
+        "https://travel.state.gov/content/travel/en/traveladvisories/traveladvisories.html.rss",
+        "https://www.gov.uk/foreign-travel-advice.atom",
+        "https://www.smartraveller.gov.au/destinations/rss.xml",
+        # Security / KFR
+        "https://www.osac.gov/Content/RssXml",
+        "https://www.controlrisks.com/rss",
+        # Health / medical intelligence
+        "https://www.who.int/feeds/entity/csr/don/en/rss.xml",
+        "https://www.promedmail.org/feed/",
+        # Crime / personal security
+        "https://insightcrime.org/feed/",
+        "https://globalinitiative.net/feed/",
+        "https://www.issafrica.org/iss-today/rss",
+    ],
+}
+
+
+def get_stream_feeds(stream: str) -> list[str]:
+    """Return feed URLs for a specific stream."""
+    return STREAM_FEEDS.get(stream, [])
+
+
+def all_stream_feed_pairs() -> list[tuple[str, str, str]]:
+    """Return [(stream, region, url), ...] for all stream feeds."""
+    pairs = []
+    for stream, urls in STREAM_FEEDS.items():
+        for url in urls:
+            pairs.append((stream, "GLOBAL", url))
+    return pairs
+
+
+def total_stream_feed_count() -> int:
+    return sum(len(v) for v in STREAM_FEEDS.values())
+
 # ── Article extraction helpers ────────────────────────────────────────────────
 
 import requests
