@@ -9,6 +9,9 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
+  --critical:#ef4444;--critical-bg:rgba(239,68,68,0.1);--critical-border:rgba(239,68,68,0.2);
+  --low:#22c55e;--low-bg:rgba(34,197,94,0.1);--low-border:rgba(34,197,94,0.2);
+  --blue-pale:rgba(59,130,246,0.1);--ui-bg:#0e1420;--ui-text4:#334155;
   --bg:#080c14;--bg2:#0e1420;--bg3:#111827;--bg4:#151d2e;
   --border:#1e2d4a;--border2:#243558;
   --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--text4:#334155;
@@ -119,7 +122,124 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   .quick-grid{grid-template-columns:1fr}
   .main{padding:24px 16px 60px}
 }
-</style>
+
+/* ── CLIENT MANAGER ───────────────────────────────────────────────────── */
+.cm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;
+  display:none;align-items:flex-start;justify-content:center;
+  padding:40px 20px;overflow-y:auto;backdrop-filter:blur(4px)}
+.cm-overlay.show{display:flex}
+.cm-modal{background:var(--ui-surface);border:1px solid var(--ui-border);
+  border-radius:12px;width:100%;max-width:860px;overflow:hidden;
+  margin:auto;flex-shrink:0}
+.cm-modal::before{content:'';display:block;height:3px;
+  background:linear-gradient(90deg,var(--blue-dim),var(--blue))}
+.cm-head{padding:20px 24px;border-bottom:1px solid var(--ui-border);
+  display:flex;align-items:center;justify-content:space-between}
+.cm-head h2{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;
+  letter-spacing:1px;color:var(--ui-text)}
+.cm-close{background:none;border:none;color:var(--ui-text3);font-size:18px;
+  cursor:pointer;padding:4px 8px;border-radius:4px;transition:color .15s}
+.cm-close:hover{color:var(--ui-text)}
+.cm-body{display:grid;grid-template-columns:300px 1fr;min-height:500px}
+/* Client list */
+.cm-list{border-right:1px solid var(--ui-border);display:flex;flex-direction:column}
+.cm-list-head{padding:12px 16px;border-bottom:1px solid var(--ui-border);
+  display:flex;align-items:center;justify-content:space-between}
+.cm-list-label{font-family:'JetBrains Mono',monospace;font-size:9px;
+  font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ui-text3)}
+.cm-add-btn{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;
+  letter-spacing:1px;padding:5px 10px;border-radius:4px;cursor:pointer;
+  background:var(--blue-dim);color:#fff;border:none;transition:background .15s}
+.cm-add-btn:hover{background:var(--blue)}
+.cm-client-rows{flex:1;overflow-y:auto}
+.cm-client-row{padding:12px 16px;border-bottom:1px solid var(--ui-border);
+  cursor:pointer;transition:background .12s;display:flex;align-items:center;gap:10px}
+.cm-client-row:hover{background:rgba(255,255,255,.03)}
+.cm-client-row.active{background:var(--blue-pale);border-left:2px solid var(--blue)}
+.cm-row-name{font-size:12px;font-weight:500;color:var(--ui-text);flex:1}
+.cm-row-tier{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;
+  letter-spacing:1px;padding:2px 6px;border-radius:2px}
+.tier-pill-admin{background:rgba(245,158,11,.15);color:#f59e0b}
+.tier-pill-enterprise{background:rgba(34,197,94,.12);color:#22c55e}
+.tier-pill-operator{background:rgba(59,130,246,.12);color:#3b82f6}
+.tier-pill-analyst{background:rgba(100,116,139,.12);color:#94a3b8}
+.tier-pill-monitor{background:rgba(51,65,85,.2);color:#64748b}
+.cm-row-status{width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0}
+/* Form */
+.cm-form{padding:24px;overflow-y:auto;display:flex;flex-direction:column;gap:0}
+.cm-empty{display:flex;align-items:center;justify-content:center;
+  height:100%;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ui-text3);
+  text-align:center;padding:40px}
+.cm-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cm-field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.cm-field.full{grid-column:1/-1}
+.cm-label{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;color:var(--ui-text3)}
+.cm-input{padding:9px 12px;background:rgba(255,255,255,.04);
+  border:1px solid var(--ui-border2);border-radius:5px;
+  font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ui-text);
+  outline:none;transition:border-color .15s;width:100%}
+.cm-input:focus{border-color:var(--blue)}
+.cm-select{padding:9px 12px;background:var(--ui-bg);
+  border:1px solid var(--ui-border2);border-radius:5px;
+  font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ui-text);
+  outline:none;transition:border-color .15s;width:100%;cursor:pointer}
+.cm-select:focus{border-color:var(--blue)}
+/* Multi-select checkboxes */
+.cm-check-group{display:flex;flex-wrap:wrap;gap:6px;padding:10px;
+  background:rgba(255,255,255,.02);border:1px solid var(--ui-border2);
+  border-radius:5px;min-height:44px}
+.cm-check-item{display:flex;align-items:center;gap:5px;cursor:pointer;
+  padding:4px 8px;border-radius:3px;border:1px solid var(--ui-border);
+  transition:all .12s;user-select:none}
+.cm-check-item:hover{border-color:var(--blue);background:var(--blue-pale)}
+.cm-check-item.checked{border-color:var(--blue);background:var(--blue-pale);color:var(--blue)}
+.cm-check-item input{display:none}
+.cm-check-label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.3px}
+/* Country sub-group */
+.cm-country-group{margin-top:6px;padding:8px 10px;background:rgba(0,0,0,.2);
+  border-radius:4px;display:none}
+.cm-country-group.show{display:block}
+.cm-country-group-label{font-family:'JetBrains Mono',monospace;font-size:8px;
+  color:var(--ui-text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+/* Watchlist input */
+.cm-tag-input-wrap{display:flex;flex-wrap:wrap;gap:5px;padding:8px;
+  background:rgba(255,255,255,.02);border:1px solid var(--ui-border2);
+  border-radius:5px;min-height:44px;cursor:text}
+.cm-tag-input-wrap:focus-within{border-color:var(--blue)}
+.cm-tag{display:flex;align-items:center;gap:4px;padding:3px 8px;
+  background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);
+  border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue)}
+.cm-tag-x{cursor:pointer;color:var(--ui-text3);font-size:12px;line-height:1;
+  transition:color .12s}
+.cm-tag-x:hover{color:var(--critical)}
+.cm-tag-input{border:none;background:transparent;outline:none;
+  font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ui-text);
+  min-width:120px;flex:1;padding:2px 4px}
+.cm-tag-input::placeholder{color:var(--ui-text4)}
+/* Form actions */
+.cm-actions{display:flex;gap:10px;padding:16px 24px;
+  border-top:1px solid var(--ui-border);flex-shrink:0}
+.cm-save-btn{flex:1;padding:10px;background:var(--blue-dim);color:#fff;
+  border:none;border-radius:5px;font-family:'Syne',sans-serif;font-size:13px;
+  font-weight:700;letter-spacing:1px;cursor:pointer;transition:background .15s}
+.cm-save-btn:hover{background:var(--blue)}
+.cm-delete-btn{padding:10px 16px;background:var(--critical-bg);color:var(--critical);
+  border:1px solid var(--critical-border);border-radius:5px;
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
+  cursor:pointer;transition:all .15s;display:none}
+.cm-delete-btn:hover{background:var(--critical);color:#fff}
+.cm-delete-btn.show{display:block}
+.cm-msg{font-family:'JetBrains Mono',monospace;font-size:10px;padding:8px 12px;
+  border-radius:4px;margin-bottom:12px;display:none}
+.cm-msg.ok{background:var(--low-bg);color:var(--low);border:1px solid var(--low-border)}
+.cm-msg.err{background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border)}
+/* Divider label */
+.cm-section-label{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;color:var(--ui-text3);
+  margin:16px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--ui-border);
+  grid-column:1/-1}
+</style></style>
 </head>
 <body>
 
@@ -135,6 +255,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   </a>
   <div class="live-badge"><div class="pulse-dot"></div>LIVE</div>
   <div class="tb-time" id="tb-time"></div>
+  <button type="button" class="tb-btn" style="border-color:var(--blue);color:var(--blue)" onclick="openCM()">⊕ Client Manager</button>
   <form action="/admin/logout" method="post" style="margin:0">
     <button type="submit" class="tb-btn">Sign Out</button>
   </form>
@@ -361,6 +482,482 @@ async function loadDashboard(){
   }
 }
 loadDashboard();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════
+     CLIENT MANAGER MODAL
+═══════════════════════════════════════════════════════ -->
+<div class="cm-overlay" id="cm-overlay">
+  <div class="cm-modal">
+    <div class="cm-head">
+      <h2>⊕ Client Manager</h2>
+      <button class="cm-close" onclick="closeCM()">✕</button>
+    </div>
+    <div class="cm-body">
+      <!-- CLIENT LIST -->
+      <div class="cm-list">
+        <div class="cm-list-head">
+          <span class="cm-list-label">Clients</span>
+          <button class="cm-add-btn" onclick="newClient()">+ New</button>
+        </div>
+        <div class="cm-client-rows" id="cm-client-rows">
+          <div style="padding:20px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ui-text3);text-align:center">Loading…</div>
+        </div>
+      </div>
+      <!-- FORM PANEL -->
+      <div style="display:flex;flex-direction:column;overflow:hidden">
+        <div class="cm-msg" id="cm-msg"></div>
+        <div class="cm-form" id="cm-form">
+          <div class="cm-empty" id="cm-empty">Select a client to edit<br>or click + New to create one</div>
+          <div id="cm-fields" style="display:none">
+            <div class="cm-form-grid">
+
+              <div class="cm-field">
+                <label class="cm-label">Username</label>
+                <input class="cm-input" id="cm-username" type="text" placeholder="client_name" autocorrect="off" autocapitalize="off">
+              </div>
+              <div class="cm-field">
+                <label class="cm-label">Password</label>
+                <input class="cm-input" id="cm-password" type="text" placeholder="secure password">
+              </div>
+              <div class="cm-field">
+                <label class="cm-label">Display Label</label>
+                <input class="cm-input" id="cm-label" type="text" placeholder="Company Name — Team">
+              </div>
+              <div class="cm-field">
+                <label class="cm-label">Tier</label>
+                <select class="cm-select" id="cm-tier" onchange="onTierChange()">
+                  <option value="monitor">Monitor — Free</option>
+                  <option value="analyst">Analyst — $149/mo</option>
+                  <option value="operator" selected>Operator — $399/mo</option>
+                  <option value="enterprise">Enterprise — $899/mo</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div class="cm-field">
+                <label class="cm-label">Brief Allowance / Month</label>
+                <input class="cm-input" id="cm-briefs" type="number" value="5" min="0" max="100">
+              </div>
+
+              <div class="cm-section-label">Intelligence Streams</div>
+              <div class="cm-field full">
+                <label class="cm-label">Select Streams <span id="stream-limit-note" style="color:var(--blue);font-size:8px"></span></label>
+                <div class="cm-check-group" id="stream-checks"></div>
+              </div>
+
+              <div class="cm-section-label">Geographic Access</div>
+              <div class="cm-field full">
+                <label class="cm-label">Regions <span id="region-limit-note" style="color:var(--blue);font-size:8px"></span></label>
+                <div class="cm-check-group" id="region-checks"></div>
+              </div>
+              <div class="cm-field full" id="country-field">
+                <label class="cm-label">Country Filter <span style="color:var(--ui-text3);font-size:8px">(optional — narrows alerts to specific countries within region)</span></label>
+                <div id="country-groups"></div>
+              </div>
+
+              <div class="cm-section-label">Watchlist</div>
+              <div class="cm-field full">
+                <label class="cm-label">Watchlist Terms <span id="wl-limit-note" style="color:var(--blue);font-size:8px"></span> — type term and press Enter or comma</label>
+                <div class="cm-tag-input-wrap" id="wl-tag-wrap" onclick="document.getElementById('wl-input').focus()">
+                  <input class="cm-tag-input" id="wl-input" placeholder="Gaza, Sudan, RSF…" autocorrect="off">
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+        <div class="cm-actions" id="cm-actions" style="display:none">
+          <button class="cm-save-btn" onclick="saveClient()">Save Client</button>
+          <button class="cm-delete-btn" id="cm-delete-btn" onclick="deleteClient()">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────
+var API = window.location.origin;
+
+var ALL_REGIONS = {
+  'GLOBAL':'Global',
+  'MIDDLE_EAST':'Middle East',
+  'EUROPE':'Europe',
+  'ASIA':'Asia',
+  'WEST_EAST_AFRICA':'W/E Africa',
+  'SOUTHERN_AFRICA':'S Africa',
+  'SOUTH_AMERICA':'S America'
+};
+
+var REGION_COUNTRIES = {
+  'MIDDLE_EAST':{
+    'IL':'Israel','PS':'Palestine / Gaza','SY':'Syria','IQ':'Iraq',
+    'IR':'Iran','YE':'Yemen','LB':'Lebanon','JO':'Jordan',
+    'SA':'Saudi Arabia','AE':'UAE','TR':'Turkey','KW':'Kuwait',
+    'QA':'Qatar','BH':'Bahrain','OM':'Oman'
+  },
+  'EUROPE':{
+    'UA':'Ukraine','RU':'Russia','BY':'Belarus','GE':'Georgia',
+    'AM':'Armenia','AZ':'Azerbaijan','RS':'Serbia','XK':'Kosovo',
+    'BA':'Bosnia','PL':'Poland','RO':'Romania','GR':'Greece',
+    'TR':'Turkey','MD':'Moldova','MK':'N Macedonia','AL':'Albania'
+  },
+  'ASIA':{
+    'CN':'China','TW':'Taiwan','HK':'Hong Kong','KP':'N Korea',
+    'KR':'S Korea','JP':'Japan','MM':'Myanmar','TH':'Thailand',
+    'PH':'Philippines','VN':'Vietnam','AF':'Afghanistan',
+    'PK':'Pakistan','IN':'India','BD':'Bangladesh','ID':'Indonesia',
+    'MY':'Malaysia','SG':'Singapore'
+  },
+  'WEST_EAST_AFRICA':{
+    'SD':'Sudan','SS':'S Sudan','ET':'Ethiopia','SO':'Somalia',
+    'NG':'Nigeria','ML':'Mali','BF':'Burkina Faso','NE':'Niger',
+    'TD':'Chad','CF':'C African Rep','CD':'DR Congo',
+    'KE':'Kenya','UG':'Uganda','TZ':'Tanzania','RW':'Rwanda',
+    'GH':'Ghana','SN':'Senegal','CI':'Côte d'Ivoire','CM':'Cameroon'
+  },
+  'SOUTHERN_AFRICA':{
+    'ZA':'South Africa','ZW':'Zimbabwe','MZ':'Mozambique',
+    'ZM':'Zambia','MW':'Malawi','NA':'Namibia','BW':'Botswana',
+    'AO':'Angola','LS':'Lesotho','SZ':'Eswatini','MG':'Madagascar'
+  },
+  'SOUTH_AMERICA':{
+    'VE':'Venezuela','CO':'Colombia','BR':'Brazil','MX':'Mexico',
+    'HT':'Haiti','PE':'Peru','EC':'Ecuador','BO':'Bolivia',
+    'AR':'Argentina','CL':'Chile','CU':'Cuba','GT':'Guatemala',
+    'HN':'Honduras','NI':'Nicaragua'
+  }
+};
+
+var ALL_STREAMS = [
+  {id:'geographic',label:'🌍 Geographic',desc:'Conflict & security'},
+  {id:'maritime',  label:'⚓ Maritime',  desc:'Piracy & shipping'},
+  {id:'cyber',     label:'💻 Cyber',     desc:'Attacks & breaches'},
+  {id:'economic',  label:'📊 Economic',  desc:'Sanctions & trade'},
+  {id:'political', label:'🗳 Political', desc:'Elections & coups'},
+  {id:'executive', label:'🛡 Executive', desc:'Travel & KFR'}
+];
+
+var TIER_LIMITS = {
+  monitor:    {regions:1, streams:1, watchlist:3,  briefs:0},
+  analyst:    {regions:2, streams:2, watchlist:5,  briefs:2},
+  operator:   {regions:4, streams:4, watchlist:15, briefs:5},
+  enterprise: {regions:7, streams:6, watchlist:50, briefs:20},
+  admin:      {regions:7, streams:6, watchlist:999,briefs:-1}
+};
+
+var currentClients = {};
+var currentUsername = null;
+var watchlistTerms = [];
+var editingNew = false;
+
+// ── OPEN / CLOSE ──────────────────────────────────────────────────────────
+function openCM(){
+  document.getElementById('cm-overlay').classList.add('show');
+  loadClients();
+}
+function closeCM(){
+  document.getElementById('cm-overlay').classList.remove('show');
+}
+document.getElementById('cm-overlay').addEventListener('click', function(e){
+  if(e.target === this) closeCM();
+});
+
+// ── LOAD CLIENTS ──────────────────────────────────────────────────────────
+function loadClients(){
+  fetch(API+'/admin/clients',{credentials:'include'})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var rows = document.getElementById('cm-client-rows');
+    currentClients = {};
+    (d.clients||[]).forEach(function(c){currentClients[c.username]=c;});
+    if(!d.clients||!d.clients.length){
+      rows.innerHTML='<div style="padding:20px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ui-text3);text-align:center">No clients yet.<br>Click + New to add one.</div>';
+      return;
+    }
+    rows.innerHTML = d.clients.map(function(c){
+      var tierClass='tier-pill-'+(c.tier||'analyst');
+      var active = currentUsername===c.username?' active':'';
+      return '<div class="cm-client-row'+active+'" onclick="selectClient(''+c.username+'')">'
+        +'<div class="cm-row-status"></div>'
+        +'<div class="cm-row-name">'+(c.label||c.username)+'<br>'
+        +'<span style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--ui-text3)">@'+c.username+'</span></div>'
+        +'<span class="cm-row-tier '+tierClass+'">'+(c.tier||'analyst').toUpperCase()+'</span>'
+        +'</div>';
+    }).join('');
+  })
+  .catch(function(e){
+    document.getElementById('cm-client-rows').innerHTML='<div style="padding:16px;color:var(--critical);font-family:'JetBrains Mono',monospace;font-size:10px">Error: '+e.message+'</div>';
+  });
+}
+
+// ── SELECT CLIENT ─────────────────────────────────────────────────────────
+function selectClient(username){
+  currentUsername = username;
+  editingNew = false;
+  var c = currentClients[username];
+  if(!c) return;
+  // Highlight row
+  document.querySelectorAll('.cm-client-row').forEach(function(r){r.classList.remove('active');});
+  var rows = document.querySelectorAll('.cm-client-row');
+  rows.forEach(function(r){if(r.textContent.indexOf('@'+username)>=0)r.classList.add('active');});
+  showForm(c);
+}
+
+function newClient(){
+  currentUsername = null;
+  editingNew = true;
+  document.querySelectorAll('.cm-client-row').forEach(function(r){r.classList.remove('active');});
+  showForm(null);
+}
+
+// ── SHOW FORM ─────────────────────────────────────────────────────────────
+function showForm(c){
+  document.getElementById('cm-empty').style.display='none';
+  document.getElementById('cm-fields').style.display='block';
+  document.getElementById('cm-actions').style.display='flex';
+  document.getElementById('cm-msg').style.display='none';
+
+  var isNew = !c;
+  document.getElementById('cm-username').value = c?c.username:'';
+  document.getElementById('cm-username').readOnly = !isNew;
+  document.getElementById('cm-username').style.opacity = isNew?'1':'0.6';
+  document.getElementById('cm-password').value = c?c.password:'';
+  document.getElementById('cm-label').value = c?(c.label||''):'';
+  document.getElementById('cm-tier').value = c?(c.tier||'analyst'):'operator';
+  document.getElementById('cm-briefs').value = c?(c.brief_allowance||5):5;
+
+  var delBtn = document.getElementById('cm-delete-btn');
+  if(isNew) delBtn.classList.remove('show');
+  else delBtn.classList.add('show');
+
+  // Set watchlist
+  watchlistTerms = c?(c.watchlist||[]):[];
+  renderWatchlistTags();
+
+  // Build stream checkboxes
+  buildStreamChecks(c?c.streams||['geographic']:['geographic']);
+  // Build region checkboxes
+  buildRegionChecks(c?c.regions||[]:[], c?c.countries||[]:[]);
+  // Update tier limits
+  onTierChange();
+}
+
+// ── TIER CHANGE ───────────────────────────────────────────────────────────
+function onTierChange(){
+  var tier = document.getElementById('cm-tier').value;
+  var limits = TIER_LIMITS[tier]||TIER_LIMITS.analyst;
+  var isAdmin = tier==='admin'||tier==='enterprise';
+
+  document.getElementById('stream-limit-note').textContent = isAdmin?'(all included)':'(max '+limits.streams+')';
+  document.getElementById('region-limit-note').textContent = isAdmin?'(all regions)':'(max '+limits.regions+')';
+  document.getElementById('wl-limit-note').textContent = isAdmin?'(unlimited)':'(max '+limits.watchlist+')';
+  document.getElementById('cm-briefs').value = limits.briefs<0?-1:limits.briefs;
+
+  // Auto-check all for admin/enterprise
+  if(isAdmin){
+    document.querySelectorAll('#stream-checks .cm-check-item').forEach(function(el){
+      el.classList.add('checked');
+      el.querySelector('input').checked=true;
+    });
+    document.querySelectorAll('#region-checks .cm-check-item').forEach(function(el){
+      el.classList.add('checked');
+      el.querySelector('input').checked=true;
+    });
+    updateCountryGroups();
+  }
+}
+
+// ── STREAM CHECKBOXES ─────────────────────────────────────────────────────
+function buildStreamChecks(selected){
+  var wrap = document.getElementById('stream-checks');
+  wrap.innerHTML = ALL_STREAMS.map(function(s){
+    var checked = selected.indexOf(s.id)>=0;
+    return '<label class="cm-check-item'+(checked?' checked':'')+'" onclick="toggleCheck(this,'stream-checks')">'
+      +'<input type="checkbox" value="'+s.id+'"'+(checked?' checked':'')+' style="display:none">'
+      +'<span class="cm-check-label">'+s.label+'</span>'
+      +'</label>';
+  }).join('');
+}
+
+// ── REGION CHECKBOXES ─────────────────────────────────────────────────────
+function buildRegionChecks(selectedRegions, selectedCountries){
+  var wrap = document.getElementById('region-checks');
+  wrap.innerHTML = Object.keys(ALL_REGIONS).map(function(r){
+    var checked = selectedRegions.indexOf(r)>=0;
+    return '<label class="cm-check-item'+(checked?' checked':'')+'" onclick="toggleRegion(this,''+r+'')">'
+      +'<input type="checkbox" value="'+r+'"'+(checked?' checked':'')+' style="display:none">'
+      +'<span class="cm-check-label">'+ALL_REGIONS[r]+'</span>'
+      +'</label>';
+  }).join('');
+
+  // Build country sub-groups for all regions
+  var countryWrap = document.getElementById('country-groups');
+  countryWrap.innerHTML = Object.keys(REGION_COUNTRIES).map(function(r){
+    var countries = REGION_COUNTRIES[r];
+    var isVisible = selectedRegions.indexOf(r)>=0;
+    return '<div class="cm-country-group'+(isVisible?' show':'')+'" id="cg-'+r+'">'
+      +'<div class="cm-country-group-label">'+ALL_REGIONS[r]+' countries</div>'
+      +'<div class="cm-check-group">'
+      +Object.keys(countries).map(function(code){
+        var checked = selectedCountries.indexOf(code)>=0;
+        return '<label class="cm-check-item'+(checked?' checked':'')+'" onclick="toggleCheck(this,'cg-'+r+'-inner')">'
+          +'<input type="checkbox" value="'+code+'"'+(checked?' checked':'')+' style="display:none">'
+          +'<span class="cm-check-label">'+countries[code]+'</span>'
+          +'</label>';
+      }).join('')
+      +'</div></div>';
+  }).join('');
+}
+
+function toggleRegion(el, region){
+  toggleCheck(el, 'region-checks');
+  updateCountryGroups();
+}
+
+function updateCountryGroups(){
+  Object.keys(REGION_COUNTRIES).forEach(function(r){
+    var regionChecked = false;
+    document.querySelectorAll('#region-checks .cm-check-item').forEach(function(item){
+      if(item.querySelector('input').value===r && item.classList.contains('checked')){
+        regionChecked=true;
+      }
+    });
+    var cg = document.getElementById('cg-'+r);
+    if(cg){ regionChecked?cg.classList.add('show'):cg.classList.remove('show'); }
+  });
+}
+
+// ── TOGGLE CHECK ──────────────────────────────────────────────────────────
+function toggleCheck(el, groupId){
+  el.classList.toggle('checked');
+  el.querySelector('input').checked = el.classList.contains('checked');
+}
+
+// ── WATCHLIST TAGS ────────────────────────────────────────────────────────
+function renderWatchlistTags(){
+  var wrap = document.getElementById('wl-tag-wrap');
+  var input = document.getElementById('wl-input');
+  // Remove existing tags
+  wrap.querySelectorAll('.cm-tag').forEach(function(t){t.remove();});
+  watchlistTerms.forEach(function(term, i){
+    var tag = document.createElement('div');
+    tag.className = 'cm-tag';
+    tag.innerHTML = term+'<span class="cm-tag-x" onclick="removeTag('+i+')">×</span>';
+    wrap.insertBefore(tag, input);
+  });
+}
+
+function removeTag(i){
+  watchlistTerms.splice(i,1);
+  renderWatchlistTags();
+}
+
+document.getElementById('wl-input').addEventListener('keydown', function(e){
+  if(e.key==='Enter'||e.key===','||e.key===';'){
+    e.preventDefault();
+    var val=this.value.trim().replace(/,/g,'');
+    if(val&&watchlistTerms.indexOf(val)<0){
+      watchlistTerms.push(val);
+      renderWatchlistTags();
+    }
+    this.value='';
+  }
+  if(e.key==='Backspace'&&!this.value&&watchlistTerms.length>0){
+    watchlistTerms.pop();
+    renderWatchlistTags();
+  }
+});
+
+// ── COLLECT FORM VALUES ───────────────────────────────────────────────────
+function getCheckedValues(selector){
+  var vals=[];
+  document.querySelectorAll(selector+' .cm-check-item.checked').forEach(function(el){
+    vals.push(el.querySelector('input').value);
+  });
+  return vals;
+}
+
+function getCountries(){
+  var countries=[];
+  Object.keys(REGION_COUNTRIES).forEach(function(r){
+    document.querySelectorAll('#cg-'+r+' .cm-check-item.checked').forEach(function(el){
+      var v=el.querySelector('input').value;
+      if(v&&countries.indexOf(v)<0) countries.push(v);
+    });
+  });
+  return countries;
+}
+
+// ── SAVE CLIENT ───────────────────────────────────────────────────────────
+function saveClient(){
+  var username = document.getElementById('cm-username').value.trim().toLowerCase().replace(/\s/g,'_');
+  var password = document.getElementById('cm-password').value.trim();
+  var label    = document.getElementById('cm-label').value.trim();
+  var tier     = document.getElementById('cm-tier').value;
+  var briefs   = parseInt(document.getElementById('cm-briefs').value)||0;
+  var streams  = getCheckedValues('#stream-checks');
+  var regions  = getCheckedValues('#region-checks');
+  var countries= getCountries();
+  var limits   = TIER_LIMITS[tier]||TIER_LIMITS.analyst;
+
+  if(!username){ showMsg('Username is required.','err'); return; }
+  if(!password){ showMsg('Password is required.','err'); return; }
+  if(streams.length===0) streams=['geographic'];
+
+  // Enforce tier limits (not for admin/enterprise)
+  if(tier!=='admin'&&tier!=='enterprise'){
+    if(regions.length>limits.regions){ showMsg('Max '+limits.regions+' regions for '+tier+' tier.','err'); return; }
+    if(streams.length>limits.streams){ showMsg('Max '+limits.streams+' streams for '+tier+' tier.','err'); return; }
+    if(watchlistTerms.length>limits.watchlist){ showMsg('Max '+limits.watchlist+' watchlist terms for '+tier+' tier.','err'); return; }
+  }
+
+  var payload = {
+    username:username, password:password, tier:tier,
+    regions:regions, countries:countries, streams:streams,
+    watchlist:watchlistTerms, brief_allowance:briefs, label:label
+  };
+
+  fetch(API+'/admin/clients',{
+    method:'POST', credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  })
+  .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d};});})
+  .then(function(res){
+    if(res.ok){
+      showMsg('Client saved. Active immediately — no redeploy needed.','ok');
+      loadClients();
+      currentUsername=username;
+    } else {
+      showMsg(res.d.detail||'Save failed.','err');
+    }
+  })
+  .catch(function(e){ showMsg('Error: '+e.message,'err'); });
+}
+
+// ── DELETE CLIENT ─────────────────────────────────────────────────────────
+function deleteClient(){
+  if(!currentUsername) return;
+  if(!confirm('Delete client @'+currentUsername+'? They will lose access immediately.')) return;
+  fetch(API+'/admin/clients/'+currentUsername,{method:'DELETE',credentials:'include'})
+  .then(function(r){return r.json();})
+  .then(function(){
+    showMsg('Client deleted.','ok');
+    currentUsername=null;
+    document.getElementById('cm-empty').style.display='flex';
+    document.getElementById('cm-fields').style.display='none';
+    document.getElementById('cm-actions').style.display='none';
+    loadClients();
+  })
+  .catch(function(e){showMsg('Error: '+e.message,'err');});
+}
+
+function showMsg(msg,type){
+  var el=document.getElementById('cm-msg');
+  el.textContent=msg; el.className='cm-msg '+type; el.style.display='block';
+  if(type==='ok') setTimeout(function(){el.style.display='none';},4000);
+}
 </script>
 </body>
 </html>
