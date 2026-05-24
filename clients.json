@@ -11,8 +11,8 @@
   "chad": {
     "password": "demo1234",
     "tier": "analyst",
-    "regions": ["MIDDLE_EAST","WEST_EAST_AFRICA"],
-    "watchlist": ["china","america","ukraine"],
+    "regions": ["MIDDLE_EAST","WEST_EAST_AFRICA","EUROPE"],
+    "watchlist": ["china","america","ukraine","tel aviv","taiwan"],
     "brief_allowance": 2,
     "briefs_used": 0,
     "label": "Client Paddybck"
