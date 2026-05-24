@@ -412,20 +412,15 @@ async def auth_sessions():
 @app.get("/admin/clients")
 async def list_clients(request: Request):
     """Admin — list all client profiles (passwords redacted)."""
-    tok = _token_from_request(request)
-    uname = _verify_token(tok) if tok else None
-    c = _get_client(uname) if uname else None
-    if not c or c.get("tier") != "admin":
+    if not _verify_admin(request):
         raise HTTPException(status_code=403, detail="Admin only.")
     clients = _load_clients()
-    return {
-        "clients": [
-            {k: ({**v, "password": "***"} if k != "password" else "***")
-             for k, v in {u: prof}.items()}[u]
-            | {"username": u}
-            for u, prof in clients.items()
-        ]
-    }
+    result = []
+    for u, prof in clients.items():
+        entry = {k: v for k, v in prof.items()}
+        entry["username"] = u
+        result.append(entry)
+    return {"clients": result}
 
 class ClientProfile(BaseModel):
     username:        str
@@ -439,10 +434,7 @@ class ClientProfile(BaseModel):
 @app.post("/admin/clients")
 async def upsert_client(req: ClientProfile, request: Request):
     """Admin — create or update a client profile."""
-    tok = _token_from_request(request)
-    uname = _verify_token(tok) if tok else None
-    c = _get_client(uname) if uname else None
-    if not c or c.get("tier") != "admin":
+    if not _verify_admin(request):
         raise HTTPException(status_code=403, detail="Admin only.")
     clients = _load_clients()
     ukey = req.username.lower()
@@ -465,10 +457,7 @@ async def upsert_client(req: ClientProfile, request: Request):
 @app.delete("/admin/clients/{username}")
 async def delete_client(username: str, request: Request):
     """Admin — remove a client."""
-    tok = _token_from_request(request)
-    uname = _verify_token(tok) if tok else None
-    c = _get_client(uname) if uname else None
-    if not c or c.get("tier") != "admin":
+    if not _verify_admin(request):
         raise HTTPException(status_code=403, detail="Admin only.")
     clients = _load_clients()
     if username not in clients:
