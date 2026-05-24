@@ -16,7 +16,9 @@ import aiohttp
 import feedparser
 from rapidfuzz import fuzz
 
-from viginote.feeds import FEEDS, domain_of, fetch_article_text, first_sentence
+from viginote.feeds import FEEDS, STREAM_FEEDS, domain_of, fetch_article_text, first_sentence
+from viginote.country_mapper import detect_country
+from viginote.stream_classifier import classify_stream
 from viginote.scoring import severity_score, source_tier
 
 UA          = os.getenv("USER_AGENT", "VigiNoteAlertsBot/1.2 (+https://viginote.com)")
