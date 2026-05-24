@@ -194,6 +194,30 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:
   margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
 .ap-text{font-size:12px;color:var(--text2);line-height:1.85}
 .ap-foot{padding:10px 14px;border-top:1px solid var(--border);flex-shrink:0}
+
+/* Stream tabs */
+.stream-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);
+  background:var(--bg2);flex-shrink:0;overflow-x:auto}
+.stream-tab{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;
+  padding:9px 14px;cursor:pointer;border-bottom:2px solid transparent;
+  color:var(--text3);letter-spacing:.5px;white-space:nowrap;transition:all .15s;
+  border-right:1px solid var(--border);background:none;border-top:none;border-left:none}
+.stream-tab:hover{color:var(--text2);background:rgba(255,255,255,.03)}
+.stream-tab.on{color:var(--text);border-bottom-color:var(--blue);background:rgba(59,130,246,.05)}
+.stream-tab.locked{color:var(--text4);cursor:not-allowed;opacity:.4}
+.stream-tab.locked:hover{background:rgba(239,68,68,.04);color:var(--critical)}
+/* Country filter */
+.country-filter{padding:8px 12px;border-bottom:1px solid var(--border);
+  background:var(--bg2);display:none}
+.country-chips{display:flex;gap:5px;flex-wrap:wrap}
+.country-chip{font-family:'JetBrains Mono',monospace;font-size:9px;padding:3px 8px;
+  border-radius:3px;border:1px solid var(--border2);color:var(--text3);
+  cursor:pointer;transition:all .12s;background:none}
+.country-chip:hover{border-color:var(--blue);color:var(--blue)}
+.country-chip.on{background:rgba(59,130,246,.1);color:var(--blue);border-color:rgba(59,130,246,.3)}
+/* Stream badge on alert cards */
+.stream-badge{font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:700;
+  letter-spacing:.5px;padding:1px 5px;border-radius:2px;text-transform:uppercase}
 </style>
 </head>
 <body>
@@ -262,6 +286,12 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:
     <button class="tb-btn" type="button" onclick="doLogout()">Sign Out</button>
   </nav>
 
+  <!-- Stream tabs -->
+  <div class="stream-tabs" id="stream-tabs"></div>
+  <!-- Country filter (shown when countries are assigned) -->
+  <div class="country-filter" id="country-filter">
+    <div class="country-chips" id="country-chips"></div>
+  </div>
   <div class="app-body">
     <!-- SIDEBAR -->
     <div class="sidebar">
@@ -354,12 +384,72 @@ var REGION_LABELS = {
 
 // ── State ──────────────────────────────────────────────────────────────────
 var me = null, tok = null;
-var userProfile = {tier:'analyst',regions:[],label:'',watchlist:[]};
+var userProfile = {tier:'analyst',regions:[],label:'',watchlist:[],streams:['geographic'],countries:[]};
 var alerts = [];
-var filters = {sev:'all',reg:'all',hrs:'168'};
+var filters = {sev:'all',reg:'all',hrs:'168',stream:'all',country:'all'};
+
+var STREAM_LABELS = {
+  'geographic':'🌍 Geographic','maritime':'⚓ Maritime',
+  'cyber':'💻 Cyber','economic':'📊 Economic',
+  'political':'🗳 Political','executive':'🛡 Executive'
+};
+var STREAM_COLOURS = {
+  'geographic':'var(--blue)','maritime':'#06b6d4',
+  'cyber':'#a855f7','economic':'#f59e0b',
+  'political':'#f97316','executive':'#22c55e'
+};
 var selId = null;
 var secsLeft = REFRESH_SEC;
 var tickerInt = null;
+
+// ── Stream tabs ────────────────────────────────────────────────────────────
+function buildStreamTabs() {
+  var wrap = document.getElementById('stream-tabs');
+  var allowed = userProfile.streams || ['geographic'];
+  var all = userProfile.all_streams || ['geographic','maritime','cyber','economic','political','executive'];
+  var html = '<button class="stream-tab on" onclick="setStream('all',this)">All Streams</button>';
+  all.forEach(function(s) {
+    var label = STREAM_LABELS[s] || s;
+    var hasAccess = allowed.indexOf(s) >= 0;
+    if (hasAccess) {
+      html += '<button class="stream-tab" onclick="setStream('' + s + '',this)">' + label + '</button>';
+    } else {
+      html += '<button class="stream-tab locked" title="Upgrade to access ' + label + '">🔒 ' + label + '</button>';
+    }
+  });
+  wrap.innerHTML = html;
+}
+
+function setStream(stream, el) {
+  filters.stream = stream;
+  document.querySelectorAll('.stream-tab').forEach(function(t) { t.classList.remove('on'); });
+  if (el) el.classList.add('on');
+  if (filters.stream !== 'all') {
+    loadAlerts();
+  } else {
+    renderAlerts();
+  }
+}
+
+function buildCountryFilter() {
+  var countries = userProfile.countries || [];
+  var wrap = document.getElementById('country-filter');
+  var chips = document.getElementById('country-chips');
+  if (!countries.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  var html = '<span class="country-chip on" onclick="setCountry('all',this)">All Countries</span>';
+  countries.forEach(function(c) {
+    html += '<span class="country-chip" onclick="setCountry('' + c + '',this)">' + c + '</span>';
+  });
+  chips.innerHTML = html;
+}
+
+function setCountry(country, el) {
+  filters.country = country;
+  document.querySelectorAll('.country-chip').forEach(function(c) { c.classList.remove('on'); });
+  if (el) el.classList.add('on');
+  loadAlerts();
+}
 
 // ── Password toggle ────────────────────────────────────────────────────────
 function togglePw() {
@@ -410,6 +500,9 @@ function submitLogin() {
         label: res.data.label || u,
         regions: res.data.regions || ALL_REGIONS,
         all_regions: res.data.all_regions || ALL_REGIONS,
+        countries: res.data.countries || [],
+        streams: res.data.streams || ['geographic'],
+        all_streams: res.data.all_streams || ['geographic'],
         watchlist: res.data.watchlist || []
       };
       sessionStorage.setItem('vgn_u', u);
@@ -455,6 +548,8 @@ function startApp() {
   }
 
   buildRegionFilters();
+  buildStreamTabs();
+  buildCountryFilter();
   loadAlerts();
   startTicker();
 }
@@ -513,7 +608,10 @@ function loadAlerts() {
   var headers = {};
   if (tok) { headers['X-Feed-Token'] = tok; }
 
-  fetch(API + '/alerts?hours=' + filters.hrs + '&min_score=4&limit=200', {headers: headers})
+  var alertUrl = API + '/alerts?hours=' + filters.hrs + '&min_score=4&limit=200';
+  if (filters.stream && filters.stream !== 'all') alertUrl += '&stream=' + filters.stream;
+  if (filters.country && filters.country !== 'all') alertUrl += '&country=' + filters.country;
+  fetch(alertUrl, {headers: headers})
   .then(function(r) {
     if (r.status === 401) { doLogout(); return null; }
     return r.json();
@@ -593,7 +691,11 @@ function renderAlerts() {
     html += '</div><div class="a-inner">';
     html += '<div class="a-title">' + (a.title || '') + '</div>';
     if (a.precis) html += '<div class="a-precis">' + a.precis + '</div>';
-    html += '<div class="a-meta"><span class="a-src">' + dom + '</span>' + tierTag(a.source_tier || 0);
+    var streamCol = STREAM_COLOURS[a.stream] || 'var(--blue)';
+    var streamBadge = a.stream && a.stream !== 'geographic'
+      ? '<span class="stream-badge" style="background:rgba(0,0,0,.3);color:' + streamCol + ';border:1px solid ' + streamCol + '">' + (STREAM_LABELS[a.stream]||a.stream).replace(/^[^ ]+ /,'') + '</span>'
+      : '';
+    html += '<div class="a-meta"><span class="a-src">' + dom + '</span>' + tierTag(a.source_tier || 0) + streamBadge;
     if (isCorr) html += '<span class="corr">✦ ' + a.source_count + ' SRC</span>';
     if (locs) html += '<span class="locs">📍 ' + locs + '</span>';
     html += '</div></div></div>';
@@ -727,6 +829,9 @@ function openAdmin() {
         tier: d.tier || 'analyst', label: d.label || u,
         regions: d.regions || ALL_REGIONS,
         all_regions: d.all_regions || ALL_REGIONS,
+        countries: d.countries || [],
+        streams: d.streams || ['geographic'],
+        all_streams: d.all_streams || ['geographic'],
         watchlist: d.watchlist || []
       };
       sessionStorage.setItem('vgn_p', JSON.stringify(userProfile));
