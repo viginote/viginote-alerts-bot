@@ -34,6 +34,8 @@ from viginote.db import (
 )
 from viginote.feeds import FEEDS, domain_of
 from viginote.ner import extract_entities
+from viginote.country_mapper import detect_country
+from viginote.stream_classifier import classify_stream
 from viginote.scoring import build_selection_reason, source_tier
 from viginote.summary import concise_summary
 
@@ -252,6 +254,15 @@ def run_once():
         ]
         msg = "\n".join(msg_parts)
 
+        # Detect country and stream for every alert
+        locs = entities.get("locs", entities.get("locations", []))
+        country = detect_country(locs, c["raw_title"], c.get("text",""))
+        stream  = classify_stream(
+            title=c["raw_title"],
+            text=c.get("text",""),
+            source_domain=c["dom"],
+        )
+
         if send_tg(msg):
             insert_sent(
                 conn,
@@ -269,6 +280,8 @@ def run_once():
                 cluster_id=cluster_id,
                 source_count=source_count,
                 selection_reason=selection_reason,
+                country=country,
+                stream=stream,
             )
             mark_cluster_sent(conn, cluster_id)
             recent.insert(0, c["raw_title"])
