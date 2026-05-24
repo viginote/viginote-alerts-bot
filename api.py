@@ -59,6 +59,7 @@ ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
 OPENAI_KEY      = os.getenv("OPENAI_API_KEY", "")
 
 # ── CLIENT PROFILE SYSTEM ────────────────────────────────────────────────────
+BASE_DIR      = pathlib.Path(__file__).parent
 _CLIENTS_PATH = pathlib.Path(os.getenv("DB_PATH", "/data/viginote_v6.db")).parent / "clients.json"
 _ALL_REGIONS  = ["GLOBAL","MIDDLE_EAST","EUROPE","ASIA","WEST_EAST_AFRICA","SOUTHERN_AFRICA","SOUTH_AMERICA"]
 _TIER_LIMITS  = {
@@ -132,6 +133,35 @@ def _client_watchlist(username: str) -> list[str]:
     c = _get_client(username)
     if not c: return []
     return c.get("watchlist", [])
+
+def _client_streams(username: str) -> list[str]:
+    c = _get_client(username)
+    if not c: return ["geographic"]
+    if c.get("tier") in ("admin","enterprise"): return ["geographic","maritime","cyber","economic","political","executive"]
+    streams = c.get("streams", ["geographic"])
+    if "geographic" not in streams:
+        streams = ["geographic"] + streams
+    return streams
+
+def _client_countries(username: str) -> list[str]:
+    c = _get_client(username)
+    if not c: return []
+    if c.get("tier") in ("admin","enterprise"): return []  # empty = all
+    return c.get("countries", [])
+
+def _streams_for_request(request: Request) -> list[str]:
+    tok = _token_from_request(request)
+    if not tok: return ["geographic","maritime","cyber","economic","political","executive"]
+    uname = _verify_token(tok)
+    if not uname: return ["geographic","maritime","cyber","economic","political","executive"]
+    return _client_streams(uname)
+
+def _countries_for_request(request: Request) -> list[str]:
+    tok = _token_from_request(request)
+    if not tok: return []
+    uname = _verify_token(tok)
+    if not uname: return []
+    return _client_countries(uname)
 
 # Active sessions: token -> {username, created}
 _feed_sessions: dict = {}
@@ -217,8 +247,6 @@ def _watchlist_for_request(request: Request) -> list[str]:
 
 # Client portal watchlist — comma-separated terms to monitor
 WATCHLIST = [w.strip() for w in os.getenv("WATCHLIST", "").split(",") if w.strip()]
-
-BASE_DIR = pathlib.Path(__file__).parent
 
 # =======================
 # APP
@@ -322,16 +350,26 @@ async def auth_login(req: LoginRequest):
     if client.get("tier") in ("admin", "enterprise"):
         regions = _ALL_REGIONS
     print(f"[AUTH] Login: user={uname} tier={client.get('tier')} ts={int(time.time())}")
+    all_streams = ["geographic","maritime","cyber","economic","political","executive"]
+    client_streams = client.get("streams", ["geographic"])
+    if client.get("tier") in ("admin","enterprise"):
+        client_streams = all_streams
+    if "geographic" not in client_streams:
+        client_streams = ["geographic"] + client_streams
+
     return {
-        "token":           token,
-        "username":        uname,
-        "tier":            client.get("tier", "analyst"),
-        "label":           client.get("label", uname),
-        "regions":         regions,
-        "all_regions":     _ALL_REGIONS,
-        "watchlist":       client.get("watchlist", []),
-        "brief_allowance": client.get("brief_allowance", 0),
-        "briefs_used":     client.get("briefs_used", 0),
+        "token":            token,
+        "username":         uname,
+        "tier":             client.get("tier", "analyst"),
+        "label":            client.get("label", uname),
+        "regions":          regions,
+        "all_regions":      _ALL_REGIONS,
+        "countries":        client.get("countries", []),
+        "streams":          client_streams,
+        "all_streams":      all_streams,
+        "watchlist":        client.get("watchlist", []),
+        "brief_allowance":  client.get("brief_allowance", 0),
+        "briefs_used":      client.get("briefs_used", 0),
     }
 
 @app.post("/auth/logout")
@@ -449,15 +487,25 @@ async def get_profile(request: Request):
     regions = c.get("regions", _ALL_REGIONS)
     if c.get("tier") in ("admin","enterprise"):
         regions = _ALL_REGIONS
+    all_streams = ["geographic","maritime","cyber","economic","political","executive"]
+    client_streams = c.get("streams", ["geographic"])
+    if c.get("tier") in ("admin","enterprise"):
+        client_streams = all_streams
+    if "geographic" not in client_streams:
+        client_streams = ["geographic"] + client_streams
+
     return {
-        "username":        uname,
-        "tier":            c.get("tier","analyst"),
-        "label":           c.get("label", uname),
-        "regions":         regions,
-        "all_regions":     _ALL_REGIONS,
-        "watchlist":       c.get("watchlist",[]),
-        "brief_allowance": c.get("brief_allowance",0),
-        "briefs_used":     c.get("briefs_used",0),
+        "username":         uname,
+        "tier":             c.get("tier","analyst"),
+        "label":            c.get("label", uname),
+        "regions":          regions,
+        "all_regions":      _ALL_REGIONS,
+        "countries":        c.get("countries", []),
+        "streams":          client_streams,
+        "all_streams":      all_streams,
+        "watchlist":        c.get("watchlist",[]),
+        "brief_allowance":  c.get("brief_allowance",0),
+        "briefs_used":      c.get("briefs_used",0),
     }
 
 @app.get("/admin/login", response_class=HTMLResponse)
@@ -615,6 +663,8 @@ def ingest(alert: dict):
 def list_alerts(
     request:   Request,
     region:    Optional[str] = Query(None),
+    country:   Optional[str] = Query(None),
+    stream:    Optional[str] = Query(None),
     tier:      Optional[str] = Query(None),
     critical:  Optional[str] = Query(None),
     min_score: Optional[str] = Query(None),
@@ -684,7 +734,27 @@ def list_alerts(
             rows = [r for r in rows if r.get("region") in allowed]
         elif region_s not in allowed:
             return {"count": 0, "alerts": [], "allowed_regions": allowed, "access_denied": True}
-        return {"count": len(rows), "alerts": rows, "allowed_regions": allowed}
+
+        # Server-side country enforcement
+        allowed_countries = _countries_for_request(request)
+        if allowed_countries and country:
+            rows = [r for r in rows if r.get("country") == country]
+        elif allowed_countries:
+            pass  # Don't filter by country when browsing all — region filter is enough
+
+        # Server-side stream enforcement
+        allowed_streams = _streams_for_request(request)
+        if stream:
+            if stream not in allowed_streams:
+                return {"count": 0, "alerts": [], "access_denied": True}
+            rows = [r for r in rows if (r.get("stream") or "geographic") == stream]
+        else:
+            rows = [r for r in rows if (r.get("stream") or "geographic") in allowed_streams]
+
+        return {"count": len(rows), "alerts": rows,
+                "allowed_regions": allowed,
+                "allowed_streams": allowed_streams,
+                "allowed_countries": allowed_countries}
     except Exception as e:
         return {"count": 0, "alerts": [], "error": str(e)}
 
