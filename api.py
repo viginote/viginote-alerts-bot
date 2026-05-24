@@ -325,8 +325,11 @@ async def page_brief(request: Request):
     if not _verify_admin(request): return _admin_redirect()
     return _serve("brief.html")
 
+@app.get("/client", response_class=HTMLResponse)
+async def page_client(): return _serve("client.html")
+
 @app.get("/intelligence", response_class=HTMLResponse)
-async def page_intelligence(): return _serve("feed.html")
+async def page_intelligence(): return RedirectResponse(url="/client", status_code=302)
 
 # ── AUTH ENDPOINTS ────────────────────────────────────────────────────────────
 
