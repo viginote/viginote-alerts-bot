@@ -596,33 +596,57 @@ Return ONLY the JSON. No markdown, no preamble.`;
 }
 
 function adaptDashboardFormat(gen, selected, briefType, typeLabels){
-  // Adapt the LinkedIn briefing format to brief format
   const regions = [...new Set(selected.map(a => (a.region||'').replace(/_/g,' ')))];
+  const exec = gen.executive_summary || '';
+
+  // Split into distinct sections — key judgement, overview, assessment
+  const paras = exec.split(/\n+/).filter(p => p.trim().length > 20);
+  const sents = exec.replace(/([.!?])\s+/g,'$1|').split('|').filter(Boolean);
+  const third = Math.ceil(sents.length / 3);
+
+  const keyJudgement = sents.slice(0, Math.min(2, sents.length)).join(' ') ||
+    `Intelligence across ${regions.join(' and ')} indicates an elevated risk environment requiring active monitoring.`;
+
+  const overviewText = paras.length > 1
+    ? paras.slice(0, Math.ceil(paras.length/2)).join(' ')
+    : sents.slice(0, Math.ceil(sents.length * 0.6)).join(' ') || exec;
+
+  const assessText = paras.length > 1
+    ? paras.slice(Math.ceil(paras.length/2)).join(' ')
+    : sents.slice(Math.ceil(sents.length * 0.6)).join(' ') ||
+      'Organisations with operational exposure in the affected regions should review current security postures and implement enhanced monitoring protocols appropriate to the prevailing risk level.';
+
+  const secondOrder = `The situation across ${regions.join(' and ')} carries potential for cascading second-order effects on regional stability, trade flows, and operational continuity. Continued deterioration cannot be excluded given current trajectory indicators.`;
+
   return {
     headline: gen.briefing_title || 'VigiNote Intelligence Brief',
-    deck: gen.executive_summary ? gen.executive_summary.substring(0,200)+'…' : 'Intelligence assessment of selected alerts.',
-    type_label: `${typeLabels[briefType]} · ${regions.join(' · ')}`,
-    key_judgement: gen.executive_summary || 'See situational overview for key findings.',
+    deck: exec ? (exec.substring(0, 180).trim() + (exec.length > 180 ? '…' : '')) : 'Intelligence assessment of selected alerts.',
+    type_label: typeLabels[briefType] + ' · ' + regions.join(' · '),
+    key_judgement: keyJudgement,
     risk_matrix: buildRiskMatrix(selected),
-    situational_overview: [gen.executive_summary || ''],
+    situational_overview: overviewText ? [overviewText] : selected.map(a => a.precis || '').filter(Boolean),
     alert_summaries: (gen.alert_summaries||[]).map((s,i) => ({
-      title: selected[i]?.title || `Alert ${i+1}`,
-      enhanced: s.enhanced_summary || '',
-      region: selected[i]?.region || '',
-      source: selected[i]?.source_domain || selected[i]?.source_dom || '',
-      score: selected[i]?.score || 0,
-      risk: scoreToPill(selected[i]?.score, selected[i]?.is_critical)
+      title: (selected[i] && selected[i].title) || ('Alert ' + (i+1)),
+      enhanced: s.enhanced_summary || s.summary || (selected[i] && selected[i].precis) || '',
+      region: ((selected[i] && selected[i].region)||'').replace(/_/g,' '),
+      source: (selected[i] && (selected[i].source_domain || selected[i].source_dom)) || '',
+      score: (selected[i] && selected[i].score) || 0,
+      risk: scoreToPill(selected[i] && selected[i].score, selected[i] && selected[i].is_critical)
     })),
     risk_vectors: {
-      supply_chain: 'Review supply chain dependencies in affected regions.',
-      personnel: 'Review travel advisories for affected regions. Non-essential travel should require enhanced pre-travel assessment.',
-      regulatory: 'Audit third-party relationships in affected areas for secondary exposure.'
+      supply_chain: 'Supply chain and logistics routes through ' + regions.join(' and ') + ' require immediate review for disruption risk and alternative routing options.',
+      personnel: 'Non-essential travel to affected regions should require enhanced pre-travel security assessment. In-country personnel should review emergency protocols and safe haven locations.',
+      regulatory: 'Audit third-party relationships and supplier networks in affected jurisdictions for secondary exposure, sanctions implications, and compliance requirements.'
     },
-    assessment: [gen.executive_summary || ''],
-    recommendations: ['Review current operational posture in affected regions.', 'Maintain enhanced monitoring of this situation.', 'Brief relevant stakeholders on the intelligence.'],
+    assessment: [assessText, secondOrder],
+    recommendations: [
+      'Brief senior leadership and security teams on the current threat picture. Initiate immediate review of operational posture across affected regions.',
+      'Update travel advisories and security protocols for all affected regions within 72 hours. Assess requirement for enhanced physical security measures.',
+      'Establish 30-day enhanced monitoring cadence. Develop contingency response options for further deterioration scenarios.'
+    ],
     sources: selected.map(a => a.source_domain||a.source_dom||'').filter(Boolean).join(' · '),
     source_reliability: 'B-2 to B-3 (open-source, cross-referenced)',
-    byline_role: `Senior Intelligence Analyst · Viginote`
+    byline_role: 'Senior Intelligence Analyst · Viginote'
   };
 }
 
