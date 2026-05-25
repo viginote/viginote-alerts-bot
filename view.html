@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VigiNote Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Barlow+Condensed:wght@300;400;500;600;700&family=Barlow:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0C1018;--ink2:#111620;--charcoal:#1C2333;--surface:#232C3D;
+  --paper:#D8DDE6;--mist:#8A96A8;--steel:#4E5D72;--wire:#2E3A4E;
+  --blue:#3B8BC4;--blue2:#5BA8DA;--blue-dim:#2A6494;
+  --blue-pale:rgba(59,139,196,0.12);
+  --risk-high:#B03030;--risk-med:#B07020;
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'Barlow Condensed',sans-serif;
+  --body:'Barlow',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --critical:#ef4444;--critical-bg:rgba(239,68,68,0.1);--critical-border:rgba(239,68,68,0.2);
+  --high:#f97316;--high-bg:rgba(249,115,22,0.1);--high-border:rgba(249,115,22,0.2);
+  --medium:#f59e0b;--medium-bg:rgba(245,158,11,0.1);--medium-border:rgba(245,158,11,0.2);
+  --low:#22c55e;--low-bg:rgba(34,197,94,0.1);--low-border:rgba(34,197,94,0.2);
+}
+html{-webkit-font-smoothing:antialiased}
+body{background:var(--ink);color:var(--paper);font-family:var(--body);font-weight:300;line-height:1.65;min-height:100vh}
+
+/* VIEW BAR */
+.view-bar{background:rgba(12,16,24,0.95);border-bottom:1px solid rgba(59,139,196,0.15);
+  padding:12px 32px;display:flex;align-items:center;gap:16px;
+  position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
+.vb-logo{display:flex;align-items:center;gap:10px;text-decoration:none;margin-right:auto}
+.vb-wordmark{font-family:var(--sans);font-size:14px;font-weight:600;
+  letter-spacing:4px;text-transform:uppercase;color:var(--paper)}
+.vb-badge{font-family:var(--mono);font-size:9px;color:var(--blue2);
+  background:rgba(59,139,196,0.1);border:1px solid rgba(59,139,196,0.2);
+  padding:3px 9px;letter-spacing:1px}
+.vb-expiry{font-family:var(--mono);font-size:9px;color:var(--steel);letter-spacing:1px}
+.vb-btn{font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:2px;
+  text-transform:uppercase;padding:8px 18px;border:1px solid rgba(91,168,218,0.35);
+  color:var(--blue2);background:transparent;cursor:pointer;transition:all .2s;text-decoration:none}
+.vb-btn:hover{background:var(--blue-dim);color:#fff;border-color:var(--blue-dim)}
+
+/* LOADING */
+#loading{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:60vh;gap:16px;color:var(--steel);font-family:var(--mono);font-size:12px}
+.loading-spin{width:32px;height:32px;border:2px solid rgba(59,139,196,0.2);
+  border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* CONTENT WRAPPER */
+.content-wrap{max-width:900px;margin:0 auto;padding:48px 32px 80px}
+
+/* ── BRIEF STYLES ── */
+.article-card{background:var(--ink2);border:1px solid rgba(59,139,196,0.15)}
+.article-header{background:var(--ink);border-bottom:1px solid rgba(59,139,196,0.1);
+  padding:22px 36px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.article-org{display:flex;align-items:center;gap:14px}
+.article-org-name{font-family:var(--sans);font-size:14px;font-weight:700;letter-spacing:3px;
+  text-transform:uppercase;color:var(--blue2);line-height:1}
+.article-org-sub{font-family:var(--sans);font-size:9px;letter-spacing:2px;
+  color:var(--steel);text-transform:uppercase;margin-top:4px}
+.article-ref{text-align:right;font-family:var(--sans);font-size:9px;
+  letter-spacing:2px;color:var(--steel);text-transform:uppercase;line-height:2}
+.article-ref strong{color:var(--blue);font-weight:500}
+.class-bar{background:var(--blue);padding:5px 36px;display:flex;align-items:center;justify-content:space-between}
+.class-text{font-family:var(--sans);font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#fff}
+.risk-ticker-strip{background:rgba(0,0,0,0.3);border-bottom:1px solid rgba(59,139,196,0.1);
+  padding:10px 36px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.risk-ticker{display:flex;align-items:center;gap:7px;padding:4px 12px;border:1px solid;border-radius:2px;
+  font-family:var(--sans);font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+.rt-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.risk-ticker.t-CRITICAL{border-color:rgba(176,48,48,0.5);background:rgba(176,48,48,0.1);color:#D05050}
+.risk-ticker.t-CRITICAL .rt-dot{background:#D05050}
+.risk-ticker.t-HIGH{border-color:rgba(176,112,32,0.5);background:rgba(176,112,32,0.1);color:#D0A050}
+.risk-ticker.t-HIGH .rt-dot{background:#D0A050}
+.risk-ticker.t-MEDIUM{border-color:rgba(59,139,196,0.4);background:rgba(59,139,196,0.08);color:var(--blue2)}
+.risk-ticker.t-MEDIUM .rt-dot{background:var(--blue2)}
+.risk-ticker.t-LOW{border-color:rgba(39,174,96,0.4);background:rgba(39,174,96,0.08);color:#4CAF50}
+.risk-ticker.t-LOW .rt-dot{background:#4CAF50}
+.risk-strip-label{font-family:var(--sans);font-size:8px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--steel);margin-right:4px}
+.article-body{padding:40px 36px 36px}
+.art-type{font-family:var(--sans);font-size:10px;font-weight:600;letter-spacing:3px;
+  text-transform:uppercase;color:var(--blue);margin-bottom:16px;
+  display:flex;align-items:center;gap:10px}
+.art-type::before{content:'';width:22px;height:1px;background:var(--blue)}
+.art-headline{font-family:var(--serif);font-size:1.9rem;font-weight:500;
+  color:var(--paper);line-height:1.2;margin-bottom:10px}
+.art-deck{font-family:var(--serif);font-size:1.02rem;font-weight:300;font-style:italic;
+  color:var(--mist);line-height:1.6;margin-bottom:24px;padding-bottom:20px;
+  border-bottom:1px solid rgba(59,139,196,0.1)}
+.art-byline{display:flex;align-items:center;gap:18px;margin-bottom:28px}
+.byline-avatar{width:36px;height:36px;border-radius:50%;background:var(--surface);
+  border:1px solid rgba(59,139,196,0.3);display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-size:14px;color:var(--blue2)}
+.byline-name{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:1.5px;
+  color:var(--paper);text-transform:uppercase}
+.byline-role{font-size:0.8rem;color:var(--steel);margin-top:2px}
+.byline-date{margin-left:auto;font-family:var(--sans);font-size:10px;letter-spacing:2px;color:var(--steel);text-transform:uppercase}
+.key-j{background:rgba(59,139,196,0.07);border-left:3px solid var(--blue);padding:18px 22px;margin-bottom:24px}
+.kj-label{font-family:var(--sans);font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--blue);margin-bottom:7px}
+.kj-text{font-family:var(--serif);font-size:1rem;color:var(--paper);line-height:1.62}
+.risk-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}
+.risk-cell{background:rgba(255,255,255,0.025);padding:14px;border-top:2px solid;text-align:center}
+.risk-cell.h{border-color:var(--risk-high)}.risk-cell.m{border-color:var(--risk-med)}.risk-cell.e{border-color:#5080B0}.risk-cell.low{border-color:#207050}
+.rlabel{font-family:var(--sans);font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--steel);margin-bottom:4px}
+.rval{font-family:var(--serif);font-size:0.92rem;color:var(--paper)}
+.rlvl{font-family:var(--sans);font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+.risk-cell.h .rlvl{color:#D05050}.risk-cell.m .rlvl{color:#D0A050}.risk-cell.e .rlvl{color:var(--blue2)}.risk-cell.low .rlvl{color:#4CAF50}
+.art-subhead{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:2.5px;
+  text-transform:uppercase;color:var(--paper);margin:24px 0 10px;
+  padding-bottom:8px;border-bottom:1px solid rgba(59,139,196,0.1)}
+.art-text{font-size:0.91rem;color:var(--mist);line-height:1.86}
+.art-text p+p{margin-top:12px}
+.art-text strong{color:var(--paper);font-weight:500}
+.ab-card{border:1px solid rgba(59,139,196,0.15);background:rgba(255,255,255,0.02);padding:14px 16px;margin-bottom:10px}
+.ab-card-head{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.ab-num{font-family:var(--sans);font-size:9px;font-weight:700;letter-spacing:2px;color:var(--blue);flex-shrink:0}
+.ab-title{font-family:var(--sans);font-size:12px;font-weight:600;color:var(--paper);line-height:1.35}
+.ab-body{font-size:0.87rem;color:var(--mist);line-height:1.75}
+.ab-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;padding-top:6px;border-top:1px solid rgba(59,139,196,0.08)}
+.ab-meta span{font-family:var(--mono);font-size:9px;color:var(--steel)}
+.recommendations{background:rgba(59,139,196,0.05);border:1px solid rgba(59,139,196,0.15);padding:18px 22px;margin:20px 0}
+.rec-label{font-family:var(--sans);font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--blue);margin-bottom:12px}
+.rec-item{display:flex;gap:12px;margin-bottom:9px;font-size:0.88rem;color:var(--mist);line-height:1.65}
+.rec-num{font-family:var(--sans);font-size:9px;font-weight:700;color:var(--blue);flex-shrink:0;padding-top:2px;width:18px}
+.art-sources{margin-top:24px;padding-top:16px;border-top:1px solid rgba(59,139,196,0.08);
+  font-family:var(--sans);font-size:9px;letter-spacing:1.8px;color:var(--wire);text-transform:uppercase;line-height:2}
+.art-sources strong{color:var(--steel)}
+.art-footer{background:rgba(59,139,196,0.05);border-top:1px solid rgba(59,139,196,0.12);
+  padding:14px 36px;display:flex;align-items:center;justify-content:space-between}
+.art-footer-disc{font-family:var(--sans);font-size:8.5px;letter-spacing:1.5px;color:var(--wire);text-transform:uppercase}
+.art-footer-wordmark{font-family:var(--sans);font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--blue);opacity:0.4}
+
+/* ── ASSESSMENT STYLES ── */
+.assess-wrap{background:var(--ink2);border:1px solid rgba(59,139,196,0.15)}
+.assess-header{background:var(--ink);border-bottom:1px solid rgba(59,139,196,0.1);
+  padding:28px 36px;display:flex;align-items:flex-start;gap:24px}
+.assess-title-block h1{font-family:var(--serif);font-size:2rem;font-weight:400;
+  color:var(--paper);margin-bottom:6px}
+.assess-meta-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px}
+.assess-meta-badge{font-family:var(--mono);font-size:9px;padding:3px 9px;
+  border:1px solid rgba(59,139,196,0.2);color:var(--blue2);letter-spacing:1px}
+.assess-body{padding:36px}
+.assess-section{margin-bottom:28px}
+.assess-section-head{font-family:var(--sans);font-size:11px;font-weight:700;
+  letter-spacing:3px;text-transform:uppercase;color:var(--blue2);
+  margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.assess-section-head::before{content:'';width:16px;height:1px;background:var(--blue)}
+.assess-section-body{font-size:0.9rem;color:var(--mist);line-height:1.8}
+.threat-card{background:rgba(255,255,255,0.025);border:1px solid rgba(59,139,196,0.1);
+  padding:14px 16px;margin-bottom:8px;display:flex;gap:16px;align-items:flex-start}
+.threat-level{font-family:var(--sans);font-size:8px;font-weight:700;
+  letter-spacing:2px;padding:3px 8px;border-radius:2px;flex-shrink:0;margin-top:2px}
+.tl-crit{background:rgba(176,48,48,0.2);color:#D05050;border:1px solid rgba(176,48,48,0.3)}
+.tl-high{background:rgba(176,112,32,0.2);color:#D0A050;border:1px solid rgba(176,112,32,0.3)}
+.tl-med{background:rgba(59,139,196,0.15);color:var(--blue2);border:1px solid rgba(59,139,196,0.3)}
+.tl-low{background:rgba(39,174,96,0.1);color:#4CAF50;border:1px solid rgba(39,174,96,0.2)}
+
+/* ── DIGEST STYLES ── */
+.digest-wrap{background:var(--ink2);border:1px solid rgba(59,139,196,0.15);padding:40px}
+.digest-header{text-align:center;margin-bottom:36px;padding-bottom:28px;
+  border-bottom:1px solid rgba(59,139,196,0.1)}
+.digest-header h1{font-family:var(--serif);font-size:2.4rem;font-weight:300;
+  color:var(--paper);margin-bottom:8px}
+.digest-header p{font-family:var(--mono);font-size:10px;color:var(--steel);letter-spacing:1.5px}
+.digest-region{margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid rgba(59,139,196,0.08)}
+.digest-region-head{font-family:var(--sans);font-size:12px;font-weight:700;
+  letter-spacing:3px;text-transform:uppercase;color:var(--blue2);margin-bottom:10px}
+.digest-region-body{font-size:0.9rem;color:var(--mist);line-height:1.8}
+
+/* WATERMARK */
+@media print{
+  .view-bar{display:none}
+  body::after{content:'VIGINOTE · CONFIDENTIAL · NOT FOR REDISTRIBUTION';
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-35deg);
+    font-family:monospace;font-size:48px;font-weight:700;color:rgba(0,0,0,0.06);
+    pointer-events:none;white-space:nowrap;z-index:9999}
+}
+</style>
+</head>
+<body>
+
+<!-- VIEW BAR -->
+<div class="view-bar">
+  <a href="/" class="vb-logo">
+    <svg width="22" height="26" viewBox="0 0 72 84" fill="none">
+      <path d="M36 3L66 14L66 40C66 58 36 72 36 72S6 58 6 40L6 14Z" fill="#151d2e" stroke="#3B8BC4" stroke-width="2"/>
+      <circle cx="36" cy="32" r="7" fill="none" stroke="#5BA8DA" stroke-width="2.5"/>
+      <circle cx="36" cy="32" r="3" fill="#5BA8DA"/>
+    </svg>
+    <span class="vb-wordmark">VIGINOTE</span>
+  </a>
+  <span class="vb-badge" id="vb-type">—</span>
+  <span class="vb-expiry" id="vb-expiry"></span>
+  <button class="vb-btn" onclick="window.print()">⬇ Save PDF</button>
+</div>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="loading-spin"></div>
+  <span>Loading intelligence…</span>
+</div>
+
+<!-- CONTENT -->
+<div class="content-wrap" id="content-wrap" style="display:none"></div>
+
+<script>
+var DATA = __DELIVERABLE_DATA__;
+
+function init(){
+  if(!DATA||!DATA.content){
+    document.getElementById('loading').innerHTML='<span style="color:#ef4444">Unable to load deliverable.</span>';
+    return;
+  }
+
+  // Update view bar
+  var typeLabels={brief:'Intelligence Brief',assessment:'Location Assessment',digest:'Weekly Digest'};
+  document.getElementById('vb-type').textContent=(typeLabels[DATA.type]||DATA.type).toUpperCase();
+  document.getElementById('vb-expiry').textContent=DATA.time_remaining||'';
+  document.title='VigiNote — '+(DATA.title||typeLabels[DATA.type]||'Intelligence');
+
+  var wrap=document.getElementById('content-wrap');
+  document.getElementById('loading').style.display='none';
+  wrap.style.display='block';
+
+  if(DATA.type==='brief') renderBrief(wrap, DATA.content);
+  else if(DATA.type==='assessment') renderAssessment(wrap, DATA.content);
+  else if(DATA.type==='digest') renderDigest(wrap, DATA.content);
+  else wrap.innerHTML='<pre style="color:#94a3b8;font-family:monospace;font-size:11px">'+JSON.stringify(DATA.content,null,2)+'</pre>';
+}
+
+// ── BRIEF RENDERER ────────────────────────────────────────────────────────
+function renderBrief(wrap, g){
+  var html='<div class="article-card">';
+
+  // Header
+  html+='<div class="article-header">';
+  html+='<div class="article-org"><div>';
+  html+='<div class="article-org-name">VIGINOTE</div>';
+  html+='<div class="article-org-sub">Geopolitical Intelligence · Open-Source Analysis</div>';
+  html+='</div></div>';
+  html+='<div class="article-ref">';
+  html+='<strong>REF:</strong> '+(g.ref||g.brief_ref||'—')+'<br>';
+  html+='<strong>ISSUED:</strong> '+(g.date||new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}).toUpperCase());
+  html+='</div></div>';
+
+  // Classification bar
+  html+='<div class="class-bar"><span class="class-text">'+(g.classification||'CLIENT CONFIDENTIAL · AUTHORISED DISTRIBUTION')+'</span></div>';
+
+  // Risk tickers
+  if(g.alert_summaries&&g.alert_summaries.length){
+    html+='<div class="risk-ticker-strip"><span class="risk-strip-label">Alert Status</span>';
+    g.alert_summaries.forEach(function(a){
+      var r=(a.risk||'MEDIUM').toUpperCase();
+      html+='<div class="risk-ticker t-'+r+'"><span class="rt-dot"></span>'+r+' · SCR '+(a.score||'—')+'</div>';
+    });
+    html+='</div>';
+  }
+
+  // Body
+  html+='<div class="article-body">';
+  html+='<div class="art-type">'+(g.type_label||'Intelligence Brief')+'</div>';
+  html+='<h1 class="art-headline">'+(g.headline||DATA.title||'Intelligence Brief')+'</h1>';
+  html+='<p class="art-deck">'+(g.deck||'')+'</p>';
+
+  // Byline
+  html+='<div class="art-byline"><div class="byline-avatar">CF</div><div>';
+  html+='<div class="byline-name">Chad Frankal</div>';
+  html+='<div class="byline-role">'+(g.byline_role||'Senior Intelligence Analyst · Viginote')+'</div>';
+  html+='</div><div class="byline-date">'+(g.date||new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}).toUpperCase())+'</div></div>';
+
+  // Key judgement
+  if(g.key_judgement){
+    html+='<div class="key-j"><div class="kj-label">● Key Judgement</div>';
+    html+='<div class="kj-text">'+g.key_judgement+'</div></div>';
+  }
+
+  // Risk matrix
+  if(g.risk_matrix&&g.risk_matrix.length){
+    html+='<div class="risk-row">';
+    g.risk_matrix.forEach(function(r){
+      html+='<div class="risk-cell '+(r.cell||'e')+'">';
+      html+='<div class="rlabel">'+r.label+'</div>';
+      html+='<div class="rval">'+r.subject+'</div>';
+      html+='<div class="rlvl">'+(r.bars||'■■□□')+' '+r.level+'</div></div>';
+    });
+    html+='</div>';
+  }
+
+  // Situational overview
+  var overview=Array.isArray(g.situational_overview)?g.situational_overview:[g.situational_overview||''];
+  if(overview.some(function(p){return p;})){
+    html+='<div class="art-subhead">Situational Overview</div>';
+    html+='<div class="art-text">'+overview.filter(Boolean).map(function(p){return'<p>'+p+'</p>';}).join('')+'</div>';
+  }
+
+  // Alert summaries
+  if(g.alert_summaries&&g.alert_summaries.length){
+    html+='<div class="art-subhead">Intelligence Alerts</div>';
+    g.alert_summaries.forEach(function(a,i){
+      var r=(a.risk||'MEDIUM').toUpperCase();
+      html+='<div class="ab-card"><div class="ab-card-head">';
+      html+='<span class="ab-num">ALERT 0'+(i+1)+'</span>';
+      html+='<div class="risk-ticker t-'+r+'" style="font-size:8px;padding:2px 7px"><span class="rt-dot"></span>'+r+'</div>';
+      html+='<div class="ab-title">'+(a.title||'')+'</div></div>';
+      html+='<div class="ab-body">'+(a.enhanced||'')+'</div>';
+      html+='<div class="ab-meta"><span>'+(a.region||'')+'</span><span>'+(a.source||'')+'</span><span>Score: '+(a.score||'—')+'</span></div>';
+      html+='</div>';
+    });
+  }
+
+  // Risk vectors
+  var rv=g.risk_vectors||{};
+  if(rv.supply_chain||rv.personnel||rv.regulatory){
+    html+='<div class="art-subhead">Risk Vectors</div><div class="art-text">';
+    if(rv.supply_chain)html+='<p><strong>Supply Chain:</strong> '+rv.supply_chain+'</p>';
+    if(rv.personnel)html+='<p><strong>Personnel & Travel:</strong> '+rv.personnel+'</p>';
+    if(rv.regulatory)html+='<p><strong>Regulatory & Financial:</strong> '+rv.regulatory+'</p>';
+    html+='</div>';
+  }
+
+  // Assessment
+  var assessment=Array.isArray(g.assessment)?g.assessment:[g.assessment||''];
+  if(assessment.some(function(p){return p;})){
+    html+='<div class="art-subhead">Viginote Assessment</div>';
+    html+='<div class="art-text">'+assessment.filter(Boolean).map(function(p){return'<p>'+p+'</p>';}).join('')+'</div>';
+  }
+
+  // Recommendations
+  if(g.recommendations&&g.recommendations.length){
+    html+='<div class="recommendations"><div class="rec-label">■ Recommended Actions</div>';
+    g.recommendations.forEach(function(r,i){
+      html+='<div class="rec-item"><span class="rec-num">0'+(i+1)+'.</span><span>'+r+'</span></div>';
+    });
+    html+='</div>';
+  }
+
+  // Sources
+  if(g.sources){
+    html+='<div class="art-sources"><strong>Sources:</strong> '+g.sources+'<br>';
+    html+='<strong>Reliability:</strong> '+(g.source_reliability||'B-2')+'</div>';
+  }
+
+  html+='</div>'; // /article-body
+
+  // Footer
+  html+='<div class="art-footer">';
+  html+='<div class="art-footer-disc">© Viginote '+(new Date().getFullYear())+' · Confidential · Not for redistribution</div>';
+  html+='<div class="art-footer-wordmark">VIGINOTE</div></div>';
+
+  html+='</div>'; // /article-card
+  wrap.innerHTML=html;
+}
+
+// ── ASSESSMENT RENDERER ───────────────────────────────────────────────────
+function renderAssessment(wrap, g){
+  var lvlClass={CRITICAL:'tl-crit',HIGH:'tl-high',MEDIUM:'tl-med',LOW:'tl-low'};
+  var html='<div class="assess-wrap">';
+
+  html+='<div class="assess-header">';
+  html+='<div class="assess-title-block">';
+  html+='<h1>'+( g.location||DATA.title||'Location Assessment')+'</h1>';
+  html+='<div class="assess-meta-row">';
+  if(g.overall_risk)html+='<span class="assess-meta-badge">RISK: '+g.overall_risk+'</span>';
+  html+='<span class="assess-meta-badge">'+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}).toUpperCase()+'</span>';
+  html+='<span class="assess-meta-badge">VIGINOTE INTELLIGENCE</span>';
+  html+='</div></div></div>';
+
+  html+='<div class="assess-body">';
+
+  if(g.executive_summary){
+    html+='<div class="assess-section">';
+    html+='<div class="assess-section-head">Executive Summary</div>';
+    html+='<div class="assess-section-body">'+g.executive_summary+'</div></div>';
+  }
+
+  if(g.threat_matrix&&g.threat_matrix.length){
+    html+='<div class="assess-section">';
+    html+='<div class="assess-section-head">Threat Matrix</div>';
+    g.threat_matrix.forEach(function(t){
+      var lv=(t.level||'MEDIUM').toUpperCase();
+      var cls=lvlClass[lv]||'tl-med';
+      html+='<div class="threat-card">';
+      html+='<span class="threat-level '+cls+'">'+lv+'</span>';
+      html+='<div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:600;color:var(--paper);margin-bottom:4px">'+(t.category||'')+'</div>';
+      html+='<div style="font-size:0.88rem;color:var(--mist);line-height:1.6">'+(t.assessment||t.description||'')+'</div></div>';
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+
+  if(g.hotspots&&g.hotspots.length){
+    html+='<div class="assess-section">';
+    html+='<div class="assess-section-head">High-Risk Areas</div>';
+    g.hotspots.forEach(function(h){
+      var lv=(h.risk_level||'MEDIUM').toUpperCase();
+      var cls=lvlClass[lv]||'tl-med';
+      html+='<div class="threat-card">';
+      html+='<span class="threat-level '+cls+'">'+lv+'</span>';
+      html+='<div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:600;color:var(--paper);margin-bottom:4px">'+(h.name||'')+'</div>';
+      html+='<div style="font-size:0.88rem;color:var(--mist);line-height:1.6">'+(h.description||'')+'</div>';
+      if(h.recommendation)html+='<div style="font-size:0.82rem;color:var(--steel);margin-top:6px;font-style:italic">⚠ '+h.recommendation+'</div>';
+      html+='</div></div>';
+    });
+    html+='</div>';
+  }
+
+  if(g.recommendations&&g.recommendations.length){
+    html+='<div class="assess-section">';
+    html+='<div class="assess-section-head">Recommendations</div>';
+    html+='<div class="recommendations" style="margin:0"><div class="rec-label">■ Security Measures</div>';
+    g.recommendations.forEach(function(r,i){
+      html+='<div class="rec-item"><span class="rec-num">0'+(i+1)+'.</span><span>'+(typeof r==='string'?r:(r.measure||JSON.stringify(r)))+'</span></div>';
+    });
+    html+='</div></div>';
+  }
+
+  html+='<div style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(59,139,196,0.1);font-family:var(--mono);font-size:9px;color:var(--wire);letter-spacing:1.5px;text-transform:uppercase">';
+  html+='© Viginote '+(new Date().getFullYear())+' · Confidential Analytical Product · Not for Redistribution</div>';
+  html+='</div></div>'; // /assess-body /assess-wrap
+  wrap.innerHTML=html;
+}
+
+// ── DIGEST RENDERER ───────────────────────────────────────────────────────
+function renderDigest(wrap, g){
+  var html='<div class="digest-wrap">';
+  html+='<div class="digest-header">';
+  html+='<h1>'+(g.digest_title||DATA.title||'Weekly Intelligence Digest')+'</h1>';
+  html+='<p>'+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}).toUpperCase()+' · VIGINOTE INTELLIGENCE</p>';
+  if(g.executive_summary)html+='<p style="font-size:0.95rem;color:var(--mist);margin-top:16px;line-height:1.7">'+g.executive_summary+'</p>';
+  html+='</div>';
+
+  if(g.regional_summaries&&g.regional_summaries.length){
+    g.regional_summaries.forEach(function(r){
+      html+='<div class="digest-region">';
+      html+='<div class="digest-region-head">'+(r.region||'').replace(/_/g,' ')+'</div>';
+      html+='<div class="digest-region-body">'+(r.summary||r.content||'')+'</div>';
+      html+='</div>';
+    });
+  } else if(g.content||g.summary){
+    html+='<div class="art-text"><p>'+(g.content||g.summary||'')+'</p></div>';
+  }
+
+  html+='<div style="margin-top:28px;padding-top:16px;border-top:1px solid rgba(59,139,196,0.1);font-family:var(--mono);font-size:9px;color:var(--wire);letter-spacing:1.5px;text-transform:uppercase;text-align:center">';
+  html+='© Viginote '+(new Date().getFullYear())+' · Confidential · Not for Redistribution</div>';
+  html+='</div>';
+  wrap.innerHTML=html;
+}
+
+init();
+</script>
+</body>
+</html>
