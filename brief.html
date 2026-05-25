@@ -940,7 +940,7 @@ async function saveBrief(){
   try{
     var r = await fetch(window.location.origin+'/deliverables/save',{
       method:'POST', credentials:'include',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'application/json','X-Feed-Token':sessionStorage.getItem('vgn_t')||''},
       body: JSON.stringify({
         type:'brief',
         title: g.headline || typeLabelStr || 'Intelligence Brief',
@@ -980,7 +980,7 @@ function closePublish(){
 async function loadPubClients(){
   var list = document.getElementById('pub-client-list');
   try{
-    var r = await fetch(window.location.origin+'/admin/clients',{credentials:'include'});
+    var r = await fetch(window.location.origin+'/admin/clients',{credentials:'include',headers:{'X-Feed-Token':sessionStorage.getItem('vgn_t')||''}});
     var d = await r.json();
     var clients = (d.clients||[]).filter(c => c.username !== 'viginote_admin');
     if(!clients.length){ list.innerHTML='<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);text-align:center;padding:10px">No clients yet. Add via Client Manager.</div>'; return; }
@@ -1007,7 +1007,7 @@ async function publishBrief(){
   try{
     var r = await fetch(window.location.origin+'/deliverables/'+_savedDeliverableId+'/publish',{
       method:'POST', credentials:'include',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'application/json','X-Feed-Token':sessionStorage.getItem('vgn_t')||''},
       body: JSON.stringify({clients: selected})
     });
     var d = await r.json();
