@@ -312,22 +312,19 @@ async def page_hub(request: Request):
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def page_dashboard(request: Request):
-    if not _verify_admin(request): return _admin_redirect()
     return _serve("dashboard.html")
 
 @app.get("/assessment", response_class=HTMLResponse)
 async def page_assessment(request: Request):
-    if not _verify_admin(request): return _admin_redirect()
     return _serve("assessment.html")
 
 @app.get("/digest", response_class=HTMLResponse)
 async def page_digest(request: Request):
-    if not _verify_admin(request): return _admin_redirect()
     return _serve("digest.html")
 
 @app.get("/brief", response_class=HTMLResponse)
 async def page_brief(request: Request):
-    if not _verify_admin(request): return _admin_redirect()
+    # Page is accessible — AI generation endpoint has its own auth
     return _serve("brief.html")
 
 @app.get("/client", response_class=HTMLResponse)
