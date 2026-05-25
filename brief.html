@@ -175,7 +175,7 @@ select.lp-input{cursor:pointer}
 .pub-panel.show{display:block}
 .pub-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
   background:linear-gradient(90deg,var(--blue-dim),var(--blue));border-radius:10px 10px 0 0}
-.pub-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+.pub-title{font-family:sans-serif;font-size:13px;font-weight:700;
   letter-spacing:1px;color:var(--text);margin-bottom:14px}
 .pub-client-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;
   max-height:200px;overflow-y:auto}
@@ -185,10 +185,10 @@ select.lp-input{cursor:pointer}
 .pub-client-item:hover{border-color:var(--border2)}
 .pub-client-item.selected{border-color:var(--blue);background:var(--blue-pale)}
 .pub-client-name{font-size:12px;font-weight:500;color:var(--text);flex:1}
-.pub-client-tier{font-family:'JetBrains Mono',monospace;font-size:8px;
+.pub-client-tier{font-family:monospace;font-size:8px;
   padding:1px 6px;border-radius:2px}
 .pub-actions{display:flex;gap:8px}
-.pub-btn{flex:1;padding:9px;border-radius:5px;font-family:'Syne',sans-serif;
+.pub-btn{flex:1;padding:9px;border-radius:5px;font-family:sans-serif;
   font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;
   border:none;transition:all .15s}
 .pub-btn-blue{background:var(--blue-dim);color:#fff}
@@ -198,12 +198,12 @@ select.lp-input{cursor:pointer}
 .pub-link-box{background:rgba(255,255,255,0.03);border:1px solid var(--border);
   border-radius:5px;padding:8px 10px;margin-top:10px;display:none}
 .pub-link-box.show{display:block}
-.pub-link-label{font-family:'JetBrains Mono',monospace;font-size:8px;
+.pub-link-label{font-family:monospace;font-size:8px;
   color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px}
-.pub-link-url{font-family:'JetBrains Mono',monospace;font-size:10px;
+.pub-link-url{font-family:monospace;font-size:10px;
   color:var(--blue);word-break:break-all;cursor:pointer}
 .pub-link-url:hover{text-decoration:underline}
-.pub-msg{font-family:'JetBrains Mono',monospace;font-size:10px;margin-top:8px;
+.pub-msg{font-family:monospace;font-size:10px;margin-top:8px;
   padding:6px 10px;border-radius:4px;display:none}
 .pub-msg.ok{background:var(--low-bg);color:var(--low);border:1px solid var(--low-border)}
 .pub-msg.err{background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border)}
@@ -244,7 +244,7 @@ select.lp-input{cursor:pointer}
   display:block;line-height:1.2;
 }
 #vgn-watermark-sub{
-  font-family:'JetBrains Mono',monospace;
+  font-family:monospace;
   font-size:14px;color:#ffffff;
   letter-spacing:3px;display:block;
   margin-top:6px;
@@ -263,7 +263,7 @@ select.lp-input{cursor:pointer}
     </svg>
     <div><span class="tn-wordmark">VIGINOTE</span><span class="tn-sub">Intelligence Platform</span></div>
   </a>
-    <a href="/hub" class="nav-link" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.15);padding:4px 10px;border-radius:4px;text-decoration:none;font-family:'JetBrains Mono',monospace;letter-spacing:1px">← Hub</a>
+    <a href="/hub" class="nav-link" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.15);padding:4px 10px;border-radius:4px;text-decoration:none;font-family:monospace;letter-spacing:1px">← Hub</a>
   <a href="/dashboard" class="nav-link">LinkedIn Studio</a>
   <a href="/brief" class="nav-link active">Client Brief</a>
   <a href="/assessment" class="nav-link">Assessment</a>
@@ -903,7 +903,7 @@ loadAlerts();
 <div class="pub-panel" id="pub-panel">
   <div class="pub-title">⬆ Publish to Client</div>
   <div class="pub-client-list" id="pub-client-list">
-    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);text-align:center;padding:10px">Loading clients…</div>
+    <div style="font-family:monospace;font-size:10px;color:var(--text3);text-align:center;padding:10px">Loading clients…</div>
   </div>
   <div class="pub-actions">
     <button class="pub-btn pub-btn-blue" onclick="publishBrief()">Publish</button>
@@ -912,7 +912,7 @@ loadAlerts();
   <div class="pub-link-box" id="pub-link-box">
     <div class="pub-link-label">Share Link</div>
     <div class="pub-link-url" id="pub-link-url" onclick="copyLink()">—</div>
-    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);margin-top:4px">Click to copy · Valid 30 days</div>
+    <div style="font-family:monospace;font-size:9px;color:var(--text3);margin-top:4px">Click to copy · Valid 30 days</div>
   </div>
   <div class="pub-msg" id="pub-msg"></div>
 </div>
@@ -983,14 +983,14 @@ async function loadPubClients(){
     var r = await fetch(window.location.origin+'/admin/clients',{credentials:'include',headers:{'X-Feed-Token':sessionStorage.getItem('vgn_t')||''}});
     var d = await r.json();
     var clients = (d.clients||[]).filter(c => c.username !== 'viginote_admin');
-    if(!clients.length){ list.innerHTML='<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);text-align:center;padding:10px">No clients yet. Add via Client Manager.</div>'; return; }
+    if(!clients.length){ list.innerHTML='<div style="font-family:monospace;font-size:10px;color:var(--text3);text-align:center;padding:10px">No clients yet. Add via Client Manager.</div>'; return; }
     list.innerHTML = clients.map(c=>`
       <div class="pub-client-item" id="pci-${c.username}" onclick="togglePubClient('${c.username}')">
         <div class="pub-client-name">${c.label||c.username}</div>
         <span class="pub-client-tier" style="background:rgba(59,130,246,0.1);color:var(--blue)">${(c.tier||'analyst').toUpperCase()}</span>
       </div>`).join('');
   }catch(e){
-    list.innerHTML=`<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--critical);padding:10px">Error loading clients: ${e.message}</div>`;
+    list.innerHTML=`<div style="font-family:monospace;font-size:10px;color:var(--critical);padding:10px">Error loading clients: ${e.message}</div>`;
   }
 }
 
