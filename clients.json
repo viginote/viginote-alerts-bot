@@ -9,16 +9,5 @@
     "brief_allowance": -1,
     "briefs_used": 0,
     "label": "VigiNote Admin"
-  },
-  "chad": {
-    "password": "demo1234",
-    "tier": "analyst",
-    "regions": ["MIDDLE_EAST","WEST_EAST_AFRICA"],
-    "countries": ["PS","IL","SD","SO","NG"],
-    "streams": ["geographic","maritime"],
-    "watchlist": ["Gaza","Sudan","RSF","Iran","Israel","Hamas","Houthi","Ukraine","NATO","Khartoum","Somalia"],
-    "brief_allowance": 2,
-    "briefs_used": 0,
-    "label": "Chad"
   }
 }
