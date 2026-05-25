@@ -324,17 +324,17 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
           <div class="dc-name">Live Feed</div>
           <div class="dc-desc">Monitor all incoming intelligence alerts across regions and streams</div>
         </div>
-        <div class="dash-card dc-purple" onclick="switchPanel('brief')">
+        <div class="dash-card dc-purple" onclick="window.open('/brief','_blank')">
           <div class="dc-icon">📋</div>
           <div class="dc-name">Brief Studio</div>
           <div class="dc-desc">Select alerts and generate a formatted client intelligence brief</div>
         </div>
-        <div class="dash-card dc-teal" onclick="switchPanel('assessment')">
+        <div class="dash-card dc-teal" onclick="window.open('/assessment','_blank')">
           <div class="dc-icon">🗺</div>
           <div class="dc-name">Assessment</div>
           <div class="dc-desc">Generate a full location risk assessment with geospatial map</div>
         </div>
-        <div class="dash-card dc-amber" onclick="switchPanel('digest')">
+        <div class="dash-card dc-amber" onclick="window.open('/digest','_blank')">
           <div class="dc-icon">📊</div>
           <div class="dc-name">Weekly Digest</div>
           <div class="dc-desc">Compile a weekly intelligence digest across all regions</div>
@@ -473,6 +473,7 @@ var currentDelFilter = 'all';
 var publishingId = null;
 
 // ── IFRAME ROUTES ─────────────────────────────────────────────────────────
+// Studios open in new tab — avoids iframe cookie issues
 var PANEL_SRCS = {
   feed:       '/intelligence',
   linkedin:   '/dashboard',
@@ -480,6 +481,7 @@ var PANEL_SRCS = {
   assessment: '/assessment',
   digest:     '/digest',
 };
+var EXTERNAL_PANELS = ['linkedin','brief','assessment','digest'];
 
 // ── TIME ──────────────────────────────────────────────────────────────────
 function updateTime(){
@@ -517,11 +519,26 @@ function switchPanel(name){
 
   currentPanel = name;
 
-  // Lazy-load iframes on first visit
-  if(PANEL_SRCS[name]){
-    var iframe = document.getElementById('frame-'+name);
-    if(iframe && !iframe.src.includes(PANEL_SRCS[name])){
-      iframe.src = PANEL_SRCS[name];
+  // External panels open in new tab (avoids iframe cookie issues)
+  if(EXTERNAL_PANELS.indexOf(name) >= 0){
+    window.open(PANEL_SRCS[name], '_blank');
+    // Show placeholder in the panel
+    var panel = document.getElementById('panel-'+name);
+    if(panel){
+      panel.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:var(--text3);font-family:'JetBrains Mono',monospace;text-align:center;padding:40px">'
+        +'<div style="font-size:36px">'+({linkedin:'📰',brief:'📋',assessment:'🗺',digest:'📊'}[name]||'📄')+'</div>'
+        +'<div style="font-size:13px;color:var(--text2);font-family:'Syne',sans-serif;font-weight:700">'+name.charAt(0).toUpperCase()+name.slice(1)+' Studio</div>'
+        +'<div style="font-size:11px;color:var(--text3);line-height:1.7">Opened in a new tab.<br>Generate your deliverable there,<br>then return here to publish it.</div>'
+        +'<button onclick="window.open(''+PANEL_SRCS[name]+'','_blank')" style="margin-top:8px;padding:10px 20px;background:var(--blue-dim);color:#fff;border:none;border-radius:5px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px">Open Studio →</button>'
+        +'</div>';
+    }
+    return;
+  }
+  // Internal panels load inline
+  if(name === 'feed'){
+    var iframe = document.getElementById('frame-feed');
+    if(iframe && !iframe.src){
+      iframe.src = PANEL_SRCS['feed'];
     }
   }
 
