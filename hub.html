@@ -549,7 +549,7 @@ function switchPanel(name){
         '<div style="font-size:36px">' + (icons[name]||'📄') + '</div>',
         '<div style="font-size:13px;color:var(--text2);font-weight:700">' + name.charAt(0).toUpperCase() + name.slice(1) + ' Studio</div>',
         '<div style="font-size:11px;line-height:1.7">Opened in a new tab.<br>Generate your deliverable there,<br>then return here to publish it.</div>',
-        '<button onclick="window.open('' + studioUrl + '','_blank')" style="margin-top:8px;padding:10px 20px;background:var(--blue-dim);color:#fff;border:none;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer">Open Studio ↗</button>',
+        '<button onclick="window.open(\'' + studioUrl + '\', \'_blank\')" style="margin-top:8px;padding:10px 20px;background:var(--blue-dim);color:#fff;border:none;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer">Open Studio ↗</button>',
         '</div>'
       ].join('');    }
     return;
@@ -862,7 +862,7 @@ function loadCmClients(){
     var html='';
     (d.clients||[]).forEach(function(c){
       var isActive=cmCurrentUser===c.username;
-      html+='<div onclick="selectCmClient(''+c.username+'')" style="padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;'+(isActive?'background:var(--blue-pale);border-left:3px solid var(--blue)':'')+'">'
+      html+='<div onclick="selectCmClient(\''+c.username+'\')" style="padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;'+(isActive?'background:var(--blue-pale);border-left:3px solid var(--blue)':'')+'">'
         +'<div style="font-size:12px;font-weight:500;color:var(--text)">'+(c.label||c.username)+'</div>'
         +'<div style="font-family:monospace;font-size:9px;color:var(--text3);margin-top:2px">@'+c.username+' · '+(c.tier||'analyst').toUpperCase()+'</div>'
         +'</div>';
@@ -887,7 +887,7 @@ function renderCmForm(c,isNew){
   var regionsHtml=Object.keys(ALL_REGIONS_CM).map(function(r){return chk(r,ALL_REGIONS_CM[r],c&&c.regions&&c.regions.indexOf(r)>=0,'cm-r');}).join('');
   area.innerHTML='<div style="display:flex;flex-direction:column;gap:14px">'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-    +'<div><span style="'+lbl+'">Username</span><input id="cf-u" style="'+inp+'"'+(isNew?'':' readonly style="'+inp+';opacity:.6"')+' value="'+(c?c.username:'')+'"></div>'
+    +'<div><span style="'+lbl+'">Username</span><input id="cf-u" style="'+inp+(isNew?'':';opacity:.6')+'"'+(isNew?'':' readonly')+' value="'+(c?c.username:'')+'"></div>'
     +'<div><span style="'+lbl+'">Password</span><input id="cf-p" style="'+inp+'" value="'+(c?c.password:'')+'"></div>'
     +'<div><span style="'+lbl+'">Display Label</span><input id="cf-l" style="'+inp+'" placeholder="Company Name" value="'+(c?c.label||'':'')+'"></div>'
     +'<div><span style="'+lbl+'">Tier</span><select id="cf-t" style="'+inp+'" onchange="onCmTier()">'
