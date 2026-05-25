@@ -442,6 +442,14 @@ async def deliverable_delete(del_id: str, request: Request):
         return {"status": "deleted"}
     raise HTTPException(status_code=404, detail="Deliverable not found.")
 
+@app.get("/view/{token}/data")
+async def view_deliverable_data(token: str, request: Request):
+    """JSON data endpoint for the view page."""
+    rec = get_by_token(token)
+    if not rec or is_expired(rec):
+        raise HTTPException(status_code=404, detail="Not found or expired.")
+    mark_viewed(rec["id"])
+    return rec
 @app.get("/view/{token}", response_class=HTMLResponse)
 async def view_deliverable(token: str, request: Request):
     """Public view — render a deliverable by its unguessable token."""
@@ -472,14 +480,6 @@ async def view_deliverable(token: str, request: Request):
     )
     return HTMLResponse(content=injected)
 
-@app.get("/view/{token}/data")
-async def view_deliverable_data(token: str, request: Request):
-    """JSON data endpoint for the view page."""
-    rec = get_by_token(token)
-    if not rec or is_expired(rec):
-        raise HTTPException(status_code=404, detail="Not found or expired.")
-    mark_viewed(rec["id"])
-    return rec
 
 @app.post("/auth/login")
 async def auth_login(req: LoginRequest):
@@ -742,19 +742,15 @@ async def admin_logout(response: Response):
     return RedirectResponse(url="/admin/login", status_code=302)
 
 @app.get("/portal", response_class=HTMLResponse)
-async def page_portal():
-    """Serve client portal with config injected."""
-    p = BASE_DIR / "portal.html"
-    if not p.exists():
-        raise HTTPException(status_code=404, detail="portal.html not found")
-    cfg = {
-        "client": os.getenv("PORTAL_CLIENT_NAME", "VigiNote Client"),
-        "region": os.getenv("PORTAL_REGION", ""),
-        "location": os.getenv("PORTAL_LOCATION", ""),
-        "watchlist": WATCHLIST,
-    }
-    html = p.read_text().replace("__CLIENT_CONFIG__", json.dumps(cfg))
-    return HTMLResponse(content=html)
+async def page_portal(request: Request):
+    """Client portal — unified interface at /client."""
+    # Check if client is authenticated
+    tok = _token_from_request(request)
+    uname = _verify_token(tok) if tok else None
+    if uname:
+        return RedirectResponse(url="/client", status_code=302)
+    # Not logged in — serve client login page
+    return _serve("client.html")
 
 # =======================
 # INGEST (from bot)
