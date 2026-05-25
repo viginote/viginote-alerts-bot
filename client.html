@@ -19,7 +19,7 @@
   --critical:#ef4444;--critical-bg:rgba(239,68,68,0.1);--critical-border:rgba(239,68,68,0.2);
 }
 html{-webkit-font-smoothing:antialiased;height:100%}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);height:100%;overflow:hidden}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);height:100%;overflow:hidden;position:fixed;width:100%}
 
 /* ══ LOGIN ══════════════════════════════════════════════════════════════════ */
 #login-screen{
@@ -67,7 +67,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
   text-align:center;margin-top:22px;line-height:1.8}
 
 /* ══ APP SHELL ══════════════════════════════════════════════════════════════ */
-#app{display:none;flex-direction:column;height:100vh;overflow:hidden}
+#app{display:none;flex-direction:column;height:100vh;overflow:hidden;position:fixed;top:0;left:0;right:0;bottom:0}
 
 /* TOPBAR */
 .topbar{background:var(--bg2);height:52px;display:flex;align-items:center;
@@ -124,11 +124,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 .mtab.on{color:var(--blue);border-bottom-color:var(--blue)}
 
 /* MAIN BODY */
-.app-body{flex:1;display:flex;overflow:hidden;min-height:0}
+.app-body{flex:1;display:flex;overflow:hidden;min-height:0;position:relative}
 
 /* ── FEED PANEL ── */
 .feed-panel{width:55%;border-right:1px solid var(--border);
-  display:flex;flex-direction:column;overflow:hidden;min-height:0}
+  display:flex;flex-direction:column;min-height:0}
 .feed-filters{display:flex;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);
   background:var(--bg2);flex-wrap:wrap;flex-shrink:0}
 .ff-select{padding:5px 9px;border:1px solid var(--border2);border-radius:4px;
@@ -191,8 +191,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 .feed-empty h3{font-family:'Syne',sans-serif;font-size:15px;color:var(--text2);letter-spacing:1px}
 
 /* ── ANALYTICS PANEL ── */
-.analytics-panel{width:45%;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);min-height:0}
-.analytics-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:16px;display:flex;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch}
+.analytics-panel{width:45%;display:flex;flex-direction:column;background:var(--bg);min-height:0}
+.analytics-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:16px;
+  display:flex;flex-direction:column;gap:14px;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+  scrollbar-color:var(--border2) transparent}
+.analytics-scroll::-webkit-scrollbar{width:4px}
+.analytics-scroll::-webkit-scrollbar-track{background:transparent}
+.analytics-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 
 /* Stats strip */
 .stats-strip{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
@@ -308,7 +315,28 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 .dd-btn-ghost:hover{border-color:var(--blue);color:var(--blue)}
 
 /* ── RESPONSIVE ── */
-@media(max-width:900px){
+.inbox-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  overflow:hidden;margin-bottom:10px;transition:all .2s;cursor:pointer}
+.inbox-card:hover{border-color:var(--border2)}
+.inbox-card.unread{border-left:3px solid var(--blue)}
+.inbox-card-head{display:flex;align-items:center;gap:10px;padding:12px 14px;
+  border-bottom:1px solid var(--border)}
+.inbox-type-badge{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;
+  letter-spacing:1.5px;padding:3px 8px;border-radius:2px;flex-shrink:0;text-transform:uppercase}
+.ib-brief{background:rgba(168,85,247,0.12);color:#a855f7;border:1px solid rgba(168,85,247,0.25)}
+.ib-assessment{background:rgba(20,184,166,0.1);color:#14b8a6;border:1px solid rgba(20,184,166,0.2)}
+.ib-digest{background:rgba(245,158,11,0.1);color:var(--medium);border:1px solid rgba(245,158,11,0.2)}
+.inbox-card-title{font-size:12px;font-weight:500;color:var(--text);flex:1;line-height:1.35}
+.inbox-unread-dot{width:7px;height:7px;border-radius:50%;background:var(--blue);flex-shrink:0}
+.inbox-card-meta{padding:8px 14px;display:flex;align-items:center;justify-content:space-between}
+.inbox-meta-left{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3)}
+.inbox-open-btn{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;
+  letter-spacing:1px;color:var(--blue);background:rgba(59,130,246,0.08);
+  border:1px solid rgba(59,130,246,0.2);padding:4px 10px;border-radius:3px;
+  cursor:pointer;text-decoration:none;transition:all .15s}
+.inbox-open-btn:hover{background:var(--blue-dim);color:#fff;border-color:var(--blue-dim)}
+
+@media(max-width:900px){@media(max-width:900px){
   .feed-panel{width:100%;min-height:0}
   .analytics-panel{display:none}
   .analytics-panel.mobile-show{display:flex;width:100%;min-height:0}
@@ -393,6 +421,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
   <div class="mobile-tabs">
     <button class="mtab on" id="mtab-feed" onclick="mobileTab('feed')">📡 Feed</button>
     <button class="mtab" id="mtab-analytics" onclick="mobileTab('analytics')">📊 Analytics</button>
+    <button class="mtab" id="mtab-inbox" onclick="mobileTab('inbox')">📬 Inbox <span id="inbox-badge" style="display:none;background:#ef4444;color:#fff;border-radius:10px;padding:1px 5px;font-size:9px;margin-left:3px"></span></button>
   </div>
 
   <!-- BODY -->
@@ -430,6 +459,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
       </div>
     </div>
 
+    <!-- DELIVERABLES INBOX PANEL -->
+    <div class="analytics-panel" id="inbox-panel" style="display:none">
+      <div class="analytics-scroll" id="inbox-scroll">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);padding:20px;text-align:center">Loading inbox…</div>
+      </div>
+    </div>
   </div><!-- /app-body -->
 </div><!-- /app -->
 
@@ -562,6 +597,7 @@ function startApp(){
   buildRegionFilter();
   loadFeed();
   loadAnalytics();
+  loadInbox();
   startTicker();
 }
 
@@ -875,15 +911,19 @@ function renderAnalytics(traj, alertsD, wl, orgsD, locsD, hrs){
   }
 
   // Watchlist
-  var wlTerms=wl.watchlist||[];
+  // Use profile watchlist if API returns fewer terms
+  var apiTerms=wl.watchlist||[];
+  var profileTerms=profile.watchlist||[];
+  var wlTerms=apiTerms.length>=profileTerms.length?apiTerms:profileTerms;
   var wlMatches=wl.matches||{};
   if(wlTerms.length){
-    html+='<div class="an-section"><div class="an-head"><span class="an-title">Watchlist</span><span class="an-meta">'+wlTerms.length+' terms</span></div>';
+    html+='<div class="an-section"><div class="an-head"><span class="an-title">Watchlist Monitor</span><span class="an-meta">'+wlTerms.length+' terms</span></div>';
     html+='<div class="an-body">';
     wlTerms.forEach(function(term){
       var hits=(wlMatches[term]||[]).length;
       var cls=hits>=5?'hot':hits>=1?'warm':'zero';
-      html+='<div class="wl-row"><span class="wl-term">'+term+'</span><span class="wl-count '+cls+'">'+hits+'</span></div>';
+      var countStr=hits>0?String(hits):'—';
+      html+='<div class="wl-row"><span class="wl-term">'+term+'</span><span class="wl-count '+cls+'" style="font-size:18px;font-family:'Syne',sans-serif;font-weight:800">'+countStr+'</span></div>';
     });
     html+='</div></div>';
   }
@@ -958,17 +998,55 @@ function renderAnalytics(traj, alertsD, wl, orgsD, locsD, hrs){
 function mobileTab(tab){
   var feed=document.getElementById('feed-panel');
   var analytics=document.getElementById('analytics-panel');
-  if(tab==='feed'){
-    feed.classList.remove('mobile-hide');
-    analytics.classList.remove('mobile-show');
-    document.getElementById('mtab-feed').classList.add('on');
-    document.getElementById('mtab-analytics').classList.remove('on');
-  } else {
-    feed.classList.add('mobile-hide');
-    analytics.classList.add('mobile-show');
-    document.getElementById('mtab-feed').classList.remove('on');
-    document.getElementById('mtab-analytics').classList.add('on');
-  }
+  var inbox=document.getElementById('inbox-panel');
+  feed.classList.add('mobile-hide'); analytics.classList.remove('mobile-show'); inbox.style.display='none';
+  document.getElementById('mtab-feed').classList.remove('on');
+  document.getElementById('mtab-analytics').classList.remove('on');
+  if(document.getElementById('mtab-inbox')) document.getElementById('mtab-inbox').classList.remove('on');
+  if(tab==='feed'){feed.classList.remove('mobile-hide');document.getElementById('mtab-feed').classList.add('on');}
+  else if(tab==='analytics'){analytics.classList.add('mobile-show');document.getElementById('mtab-analytics').classList.add('on');}
+  else if(tab==='inbox'){inbox.style.display='flex';inbox.style.width='100%';if(document.getElementById('mtab-inbox'))document.getElementById('mtab-inbox').classList.add('on');loadInbox();}
+}
+
+function loadInbox(){
+  var scroll=document.getElementById('inbox-scroll');
+  if(!scroll)return;
+  scroll.innerHTML='<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);padding:20px;text-align:center">Loading…</div>';
+  var headers=tok?{'X-Feed-Token':tok}:{};
+  fetch(API+'/deliverables/client',{headers:headers})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var items=d.deliverables||[];
+    var unread=items.filter(function(i){return!i.viewed;}).length;
+    var badge=document.getElementById('inbox-badge');
+    if(badge){if(unread>0){badge.textContent=unread;badge.style.display='inline';}else badge.style.display='none';}
+    if(!items.length){
+      scroll.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;gap:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);text-align:center"><span style="font-size:24px">📬</span><span>Your inbox is empty.<br>Briefs and assessments<br>published to you appear here.</span></div>';
+      return;
+    }
+    var typeCls={brief:'ib-brief',assessment:'ib-assessment',digest:'ib-digest'};
+    var typeLabel={brief:'Brief',assessment:'Assessment',digest:'Digest'};
+    var typeIcon={brief:'📋',assessment:'🗺',digest:'📊'};
+    scroll.innerHTML='<div class="an-section"><div class="an-head"><span class="an-title">📬 Intelligence Inbox</span><span class="an-meta">'+items.length+' deliverable'+(items.length!==1?'s':'')+'</span></div><div class="an-body">'
+      +items.map(function(item){
+        var isUnread=!item.viewed;
+        var created=new Date(item.created_at*1000).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+        return '<div class="inbox-card'+(isUnread?' unread':'')+'">'
+          +'<div class="inbox-card-head">'
+          +'<span class="inbox-type-badge '+typeCls[item.type]+'">'+typeIcon[item.type]+' '+(typeLabel[item.type]||item.type)+'</span>'
+          +'<div class="inbox-card-title">'+(item.title||'Intelligence Deliverable')+'</div>'
+          +(isUnread?'<div class="inbox-unread-dot"></div>':'')
+          +'</div>'
+          +'<div class="inbox-card-meta">'
+          +'<span class="inbox-meta-left">'+created+' · '+(item.time_remaining||'')+'</span>'
+          +'<a class="inbox-open-btn" href="'+API+'/view/'+item.token+'" target="_blank">Open →</a>'
+          +'</div></div>';
+      }).join('')
+    +'</div></div>';
+  })
+  .catch(function(e){
+    scroll.innerHTML='<div style="padding:16px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--critical)">Error loading inbox: '+e.message+'</div>';
+  });
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────
