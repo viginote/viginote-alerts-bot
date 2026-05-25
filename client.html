@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VigiNote — Location Assessment Studio</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<title>VigiNote — Weekly Digest Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
@@ -14,13 +13,11 @@
   --border:#1e2d4a;--border2:#243558;
   --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
   --blue:#3b82f6;--blue-dim:#1d4ed8;--blue-pale:rgba(59,130,246,0.08);
-  --low:#22c55e;--low-bg:rgba(34,197,94,0.1);--low-border:rgba(34,197,94,0.25);
-  --medium:#f59e0b;--medium-bg:rgba(245,158,11,0.1);--medium-border:rgba(245,158,11,0.25);
-  --high:#f97316;--high-bg:rgba(249,115,22,0.1);--high-border:rgba(249,115,22,0.25);
-  --critical:#ef4444;--critical-bg:rgba(239,68,68,0.1);--critical-border:rgba(239,68,68,0.25);
-  --extreme:#a855f7;--extreme-bg:rgba(168,85,247,0.1);--extreme-border:rgba(168,85,247,0.25);
+  --low:#22c55e;--high:#f97316;--critical:#ef4444;
+  --report-bg:#ffffff;--report-text:#0a0f1e;--report-text2:#1e2840;
+  --report-mist:#8a9ab5;--report-border:#d0d8e8;--report-navy:#0f1f5c;--report-navy2:#1a2f6e;
 }
-html{font-size:14px;-webkit-font-smoothing:antialiased}
+html{-webkit-font-smoothing:antialiased;font-size:14px}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
 .topbar{background:var(--bg2);height:56px;display:flex;align-items:center;padding:0 28px;gap:20px;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
@@ -33,152 +30,98 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 .app{display:flex;height:calc(100vh - 56px)}
 
-.input-panel{width:320px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
-.ip-header{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+/* INPUT PANEL */
+.input-panel{width:300px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
+.ip-header{padding:20px;border-bottom:1px solid var(--border)}
 .ip-header h2{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:0.5px}
 .ip-header p{font-size:12px;color:var(--text3);line-height:1.6}
 .ip-section{padding:14px 20px;border-bottom:1px solid var(--border)}
 .ip-section label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:8px}
-.ip-input{width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:6px;font-size:13px;color:var(--text);font-family:'Inter',sans-serif;background:var(--bg3);transition:border-color 0.15s}
+.ip-input{width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:6px;font-size:13px;color:var(--text);font-family:'Inter',sans-serif;background:var(--bg3);transition:border-color 0.15s}
 .ip-input:focus{outline:none;border-color:var(--blue)}
-.ip-input::placeholder{color:var(--text3)}
 select.ip-input{cursor:pointer}
-.mode-cards{display:flex;flex-direction:column;gap:6px}
-.mode-card{border:1px solid var(--border);border-radius:6px;padding:10px 12px;cursor:pointer;transition:all 0.15s;display:flex;align-items:flex-start;gap:10px}
-.mode-card:hover,.mode-card.selected{border-color:var(--blue);background:var(--blue-pale)}
-.mode-card input[type=radio]{margin-top:2px;accent-color:var(--blue)}
-.mode-card-body .mc-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
-.mode-card-body .mc-desc{font-size:11px;color:var(--text3);line-height:1.4}
 .ip-footer{padding:16px 20px;margin-top:auto}
-.btn-generate{width:100%;padding:11px;background:var(--blue-dim);color:#fff;border:none;border-radius:7px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:0.3px}
-.btn-generate:hover{background:var(--blue)}
-.btn-generate:disabled{opacity:0.4;cursor:not-allowed}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:'Inter',sans-serif;transition:all 0.15s;text-decoration:none}
+.btn-gen{width:100%;padding:11px;background:var(--blue-dim);color:#fff;border:none;border-radius:7px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.15s;letter-spacing:0.3px}
+.btn-gen:hover{background:var(--blue)}
+.btn-gen:disabled{opacity:0.4;cursor:not-allowed}
+.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:none}
+.btn-gen.loading .spin{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:'Inter',sans-serif;transition:all 0.15s;text-decoration:none}
 .btn:hover{border-color:var(--blue);color:var(--blue)}
 .btn-navy{background:var(--blue-dim);color:#fff;border-color:var(--blue-dim)}
-.btn-navy:hover{background:var(--blue)}
+.btn-navy:hover{background:var(--blue);border-color:var(--blue)}
 .btn-sm{padding:5px 10px;font-size:11px}
-.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:none}
-.btn-generate.loading .spin{display:block}
-.btn-generate.loading .btn-label{opacity:0.6}
-@keyframes spin{to{transform:rotate(360deg)}}
 
 .report-panel{flex:1;overflow-y:auto;background:var(--bg)}
 .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:var(--text3);text-align:center;padding:40px}
-.empty-icon{font-size:40px;opacity:0.2;line-height:1;border:1px solid var(--border);border-radius:50%;width:72px;height:72px;display:flex;align-items:center;justify-content:center}
+.empty-icon{font-size:48px;opacity:0.2}
 .empty-state h3{font-family:'Syne',sans-serif;font-size:20px;color:var(--text2);font-weight:600}
 .empty-state p{font-size:13px;max-width:380px;line-height:1.7;color:var(--text3)}
-.sample-locations{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:4px}
-.sample-loc{font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:20px;color:var(--text3);cursor:pointer;transition:all 0.12s;font-family:'JetBrains Mono',monospace}
-.sample-loc:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-pale)}
 
+/* REPORT — white surface inside dark UI */
 #report-output{display:none}
-.report-wrap{max-width:900px;margin:0 auto;padding:0 28px 80px}
-.report-topbar{padding:16px 0;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);margin-bottom:32px;position:sticky;top:0;background:var(--bg);z-index:50}
+.report-wrap{max-width:860px;margin:0 auto;padding:0 28px 80px}
+.report-topbar{padding:14px 0;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);margin-bottom:28px;position:sticky;top:0;background:var(--bg);z-index:50}
 .report-topbar h3{font-size:14px;font-weight:600;color:var(--text);margin-right:auto;font-family:'Syne',sans-serif;letter-spacing:0.5px}
 
-/* REPORT CARDS */
-.report-header{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:40px 44px 36px;margin-bottom:28px;position:relative;overflow:hidden}
-.rh-accent{position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--blue-dim),var(--blue),var(--blue-dim))}
-.rh-meta{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-.rh-class{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);background:var(--bg3);padding:3px 10px;border-radius:3px;border:1px solid var(--border2);font-family:'JetBrains Mono',monospace}
-.rh-date{font-size:11px;color:var(--text3);margin-left:auto;font-family:'JetBrains Mono',monospace}
-.report-title{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--text);line-height:1.15;margin-bottom:16px}
-.rh-stats{display:flex;gap:20px;flex-wrap:wrap;margin-top:20px;padding-top:18px;border-top:1px solid var(--border)}
-.rh-stat{display:flex;flex-direction:column;gap:3px}
-.rh-stat .s-label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);font-family:'JetBrains Mono',monospace}
-.rh-stat .s-val{font-size:14px;font-weight:600;color:var(--text);font-family:'Syne',sans-serif}
+.digest-header{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:36px 40px 30px;margin-bottom:24px;position:relative;overflow:hidden}
+.dh-accent{position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--blue-dim),var(--blue),var(--blue-dim))}
+.dh-over{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;font-family:'JetBrains Mono',monospace}
+.digest-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--text);line-height:1.2;margin-bottom:8px}
+.dh-period{font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.dh-stats{display:flex;gap:24px;flex-wrap:wrap;margin-top:20px;padding-top:18px;border-top:1px solid var(--border)}
+.dh-stat .s-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.dh-stat .s-val{font-size:18px;font-weight:700;color:var(--text);font-family:'Syne',sans-serif;margin-top:2px}
 
-.risk-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;padding:4px 10px;border-radius:4px}
-.risk-badge .dot{width:6px;height:6px;border-radius:50%}
-.risk-LOW{background:var(--low-bg);color:var(--low);border:1px solid var(--low-border)}.risk-LOW .dot{background:var(--low)}
-.risk-MEDIUM{background:var(--medium-bg);color:var(--medium);border:1px solid var(--medium-border)}.risk-MEDIUM .dot{background:var(--medium)}
-.risk-HIGH{background:var(--high-bg);color:var(--high);border:1px solid var(--high-border)}.risk-HIGH .dot{background:var(--high)}
-.risk-CRITICAL{background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border)}.risk-CRITICAL .dot{background:var(--critical)}
-.risk-EXTREME{background:var(--extreme-bg);color:var(--extreme);border:1px solid var(--extreme-border)}.risk-EXTREME .dot{background:var(--extreme)}
-.traj-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:4px;border:1px solid var(--border2);color:var(--text2);background:var(--bg3)}
+.dsection{margin-bottom:24px}
+.ds-head{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);letter-spacing:0.5px}
 
-.report-section{margin-bottom:28px}
-.section-head{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
-.section-num{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;color:var(--blue);letter-spacing:1px}
-.section-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);letter-spacing:0.3px}
+.review-box{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:18px 22px}
+.review-box p{font-size:14px;line-height:1.85;color:var(--text2);margin-bottom:12px}
+.review-box p:last-child{margin-bottom:0}
 
-.exec-box{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:20px 24px}
-.exec-box p{font-size:14px;line-height:1.85;color:var(--text2);margin-bottom:12px}
-.exec-box p:last-child{margin-bottom:0}
+.top-stories{display:flex;flex-direction:column;gap:8px}
+.story-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 18px;display:flex;gap:14px;align-items:flex-start;transition:border-color 0.15s}
+.story-card:hover{border-color:var(--border2)}
+.story-num{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--border2);flex-shrink:0;line-height:1;margin-top:2px}
+.story-content .s-hl{font-size:13px;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:4px}
+.story-content .s-sig{font-size:12px;color:var(--text2);line-height:1.6}
+.story-content .s-region{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:5px;font-family:'JetBrains Mono',monospace}
 
-.profile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
-.profile-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
-.profile-card .pc-label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:5px;font-family:'JetBrains Mono',monospace}
-.profile-card .pc-val{font-size:13px;font-weight:500;color:var(--text);line-height:1.4}
-.profile-card .pc-list{list-style:none;font-size:12px;color:var(--text2);line-height:1.6}
-.profile-card .pc-list li::before{content:"·  ";color:var(--text3)}
+.region-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.region-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;transition:border-color 0.15s}
+.region-card:hover{border-color:var(--border2)}
+.rc-region{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;font-family:'JetBrains Mono',monospace}
+.rc-summary{font-size:12px;color:var(--text2);line-height:1.6}
+.traj-pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:3px}
+.traj-IMPROVING{background:rgba(34,197,94,0.1);color:var(--low)}
+.traj-STABLE{background:rgba(100,116,139,0.1);color:var(--text3)}
+.traj-DETERIORATING{background:rgba(239,68,68,0.1);color:var(--critical)}
 
-.threat-grid{display:grid;gap:10px}
-.threat-row{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px 18px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;transition:border-color 0.15s}
-.threat-row:hover{border-color:var(--border2)}
-.tr-left .tr-cat{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
-.tr-left .tr-assess{font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:8px}
-.tr-left .tr-impact{font-size:11px;color:var(--text3);line-height:1.5}
-.tr-left .tr-impact strong{color:var(--text2)}
-.tr-indicators{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
-.ind-chip{font-size:10px;padding:2px 7px;border-radius:3px;background:var(--bg3);border:1px solid var(--border2);color:var(--text3);font-family:'JetBrains Mono',monospace}
-.tr-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;min-width:110px}
-.score-bar-wrap{width:100%;background:var(--bg3);border-radius:4px;height:4px;overflow:hidden}
-.score-bar{height:100%;border-radius:4px;transition:width 0.6s ease}
-.score-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)}
+.watch-list{display:flex;flex-direction:column;gap:8px}
+.watch-item{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--high);border-radius:0 8px 8px 0;padding:12px 16px;font-size:13px;color:var(--text2);line-height:1.6}
 
-.hotspot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
-.hotspot-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;border-top:2px solid transparent;transition:border-color 0.15s}
-.hotspot-card:hover{border-color:var(--border2)}
-.hotspot-card.risk-LOW{border-top-color:var(--low)}.hotspot-card.risk-MEDIUM{border-top-color:var(--medium)}.hotspot-card.risk-HIGH{border-top-color:var(--high)}.hotspot-card.risk-CRITICAL{border-top-color:var(--critical)}.hotspot-card.risk-EXTREME{border-top-color:var(--extreme)}
-.hs-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.hs-desc{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:8px}
-.hs-rec{font-size:11px;color:var(--text3);line-height:1.5;padding-top:8px;border-top:1px solid var(--border)}
-.hs-rec strong{color:var(--text2)}
+.stat-callout{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:20px 24px;display:flex;align-items:center;gap:16px}
+.sc-num{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--blue);line-height:1;flex-shrink:0}
+.sc-text{font-size:14px;color:var(--text2);line-height:1.6}
 
-.advisory-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.adv-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
-.adv-card.full{grid-column:1/-1}
-.adv-title{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--blue);margin-bottom:10px;font-family:'JetBrains Mono',monospace}
-.adv-list{list-style:none}
-.adv-list li{font-size:12px;color:var(--text2);line-height:1.6;padding:4px 0;border-bottom:1px solid var(--border);display:flex;gap:8px}
-.adv-list li:last-child{border-bottom:none}
-.adv-list li::before{content:"→";color:var(--blue);font-weight:700;flex-shrink:0}
-.adv-text{font-size:12px;color:var(--text2);line-height:1.65}
+.li-box{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:20px 24px}
+.li-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;font-family:'JetBrains Mono',monospace}
+.li-text{font-size:13px;line-height:1.75;color:var(--text2);white-space:pre-wrap;margin-bottom:14px}
+.li-actions{display:flex;gap:8px}
+.btn-outline{background:transparent;color:var(--text2);border:1px solid var(--border2);font-size:12px;font-weight:600;padding:7px 14px;border-radius:5px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue)}
 
-.crime-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.crime-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
-.crime-card.full{grid-column:1/-1}
+.digest-footer{margin-top:32px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.df-brand{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--text3);letter-spacing:2px}
+.df-disc{font-size:10px;color:var(--text3);text-align:right;line-height:1.5;max-width:380px;font-family:'JetBrains Mono',monospace}
 
-.measures-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.measure-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
-.m-cat{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;font-family:'JetBrains Mono',monospace}
-.m-list{list-style:none}
-.m-list li{font-size:12px;color:var(--text2);line-height:1.6;padding:3px 0;display:flex;gap:8px;border-bottom:1px dashed var(--border)}
-.m-list li:last-child{border-bottom:none}
-.m-list li::before{content:"✓";color:var(--low);font-weight:700;flex-shrink:0}
-
-.teaser-box{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:24px 28px}
-.teaser-box .t-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;font-family:'JetBrains Mono',monospace}
-.teaser-box .t-text{font-size:14px;line-height:1.75;color:var(--text2);white-space:pre-wrap;margin-bottom:14px}
-.teaser-box .t-actions{display:flex;gap:8px}
-.btn-tl{background:transparent;color:var(--text2);border:1px solid var(--border2);font-size:12px;font-weight:600;padding:7px 14px;border-radius:5px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s}
-.btn-tl:hover{border-color:var(--blue);color:var(--blue)}
-
-.report-footer{margin-top:40px;padding:20px 0;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
-.rf-brand{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--text3);letter-spacing:2px}
-.rf-disc{font-size:10px;color:var(--text3);max-width:400px;line-height:1.5;text-align:right;font-family:'JetBrains Mono',monospace}
-
-.overlay{position:fixed;inset:0;background:rgba(10,15,30,0.85);z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;backdrop-filter:blur(6px)}
+.overlay{position:fixed;inset:0;background:rgba(10,15,30,0.85);z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;backdrop-filter:blur(6px)}
 .overlay.show{display:flex}
-.ov-spinner{width:48px;height:48px;border:3px solid rgba(59,130,246,0.2);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite}
+.ov-spin{width:44px;height:44px;border:3px solid rgba(59,130,246,0.2);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite}
 .ov-msg{color:var(--text);font-size:15px;font-weight:700;font-family:'Syne',sans-serif;letter-spacing:0.5px}
-.ov-sub{color:var(--text3);font-size:12px;text-align:center;max-width:300px;line-height:1.5;font-family:'JetBrains Mono',monospace}
-.progress-steps{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:8px}
-.ps{font-size:10px;padding:3px 9px;border-radius:10px;background:rgba(59,130,246,0.08);color:var(--text3);transition:all 0.3s;font-family:'JetBrains Mono',monospace}
-.ps.active{background:rgba(59,130,246,0.2);color:var(--blue)}
-.ps.done{background:rgba(34,197,94,0.15);color:var(--low)}
+.ov-sub{color:var(--text3);font-size:12px;text-align:center;max-width:280px;line-height:1.5;font-family:'JetBrains Mono',monospace}
 
 /* ── PUBLISH PANEL ── */
 .pub-panel{position:fixed;right:24px;bottom:24px;background:#0e1420;
@@ -217,190 +160,96 @@ select.ip-input{cursor:pointer}
 .pub-msg.err{background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2)}
 
 @media print{
-  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-  .topbar,.input-panel,.report-topbar,.teaser-box,.overlay{display:none!important}
+  .topbar,.input-panel,.report-topbar,.li-box,.overlay{display:none!important}
   .app{display:block!important;height:auto!important}
   .report-panel{overflow:visible!important;background:#fff!important}
   body{background:#fff!important}
   .report-wrap{max-width:100%!important;padding:0 30px 40px!important}
-  .report-header,.exec-box,.profile-card,.threat-row,.hotspot-card,.adv-card,.measure-card,.crime-card{background:#fff!important;border-color:#ddd!important}
-  .report-title,.section-title,.tr-left .tr-cat,.hs-name,.rh-stat .s-val{color:#000!important}
-  .rh-stat .s-label,.rh-class,.section-num,.m-cat,.adv-title,.ind-chip,.tr-left .tr-impact,.hs-rec,.rf-disc,.rf-brand{color:#555!important}
-  .tr-left .tr-assess,.exec-box p,.adv-text,.adv-list li,.m-list li,.rc-summary{color:#222!important}
-  .threat-row,.hotspot-card,.adv-card,.measure-card{page-break-inside:avoid!important;break-inside:avoid!important}
+  .digest-header,.review-box,.story-card,.region-card,.watch-item,.stat-callout{background:#fff!important;border-color:#ddd!important;color:#000!important}
+  .digest-title,.ds-head,.story-content .s-hl,.sc-text,.rc-summary,.watch-item{color:#000!important}
+  .dh-over,.dh-period,.story-content .s-region,.rc-region,.df-disc,.df-brand{color:#555!important}
+  .story-content .s-sig,.review-box p,.dh-stat .s-val{color:#222!important}
+  .story-card,.region-card,.watch-item{page-break-inside:avoid}
   @page{size:A4;margin:0.5in 0.6in}
-  /* Watermark */
-  #vgn-watermark{display:flex!important}
 }
-/* Watermark */
-#vgn-watermark{
-  display:none;
-  position:fixed;top:0;left:0;width:100%;height:100%;
-  pointer-events:none;z-index:9999;
-  align-items:center;justify-content:center;
-}
-#vgn-watermark-inner{
-  transform:rotate(-35deg);
-  text-align:center;
-  opacity:0.06;
-  user-select:none;
-}
-#vgn-watermark-text{
-  font-size:52px;font-weight:700;
-  color:#000;letter-spacing:6px;
-  text-transform:uppercase;white-space:nowrap;
-  display:block;line-height:1.2;
-}
-#vgn-watermark-sub{
-  font-size:13px;color:#000;
-  letter-spacing:3px;display:block;
-  margin-top:6px;
-}
-
-/* ── LEAFLET MAP ─────────────────────────────────────────────────────────── */
-.map-section{margin-bottom:28px}
-#assessment-map{
-  height:420px;width:100%;border-radius:8px;
-  border:1px solid var(--border);
-  background:var(--bg2);z-index:1;
-}
-.map-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;padding:10px 14px;
-  background:var(--bg2);border:1px solid var(--border);border-radius:6px}
-.ml-item{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;
-  font-size:10px;color:var(--text3)}
-.ml-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;border:2px solid rgba(255,255,255,0.2)}
-.map-note{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);
-  margin-top:6px;text-align:right}
-/* Override Leaflet dark tiles */
-.leaflet-tile-pane{filter:brightness(0.85) contrast(1.1) saturate(0.7) hue-rotate(180deg) invert(1) hue-rotate(180deg)}
-.leaflet-container{background:#0a0d14!important}
-.leaflet-popup-content-wrapper{background:var(--bg2)!important;border:1px solid var(--border)!important;
-  border-radius:6px!important;color:var(--text)!important;box-shadow:0 4px 20px rgba(0,0,0,0.5)!important}
-.leaflet-popup-tip{background:var(--bg2)!important}
-.leaflet-popup-content{font-family:'Inter',sans-serif!important;font-size:12px!important;
-  color:var(--text)!important;margin:10px 14px!important}
-.popup-name{font-weight:600;margin-bottom:4px;font-size:13px}
-.popup-risk{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;
-  letter-spacing:1px;padding:2px 7px;border-radius:2px;display:inline-block;margin-bottom:6px}
-.popup-desc{font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:5px}
-.popup-rec{font-size:10px;color:var(--text3);font-style:italic}
-@media print{
-  #assessment-map{display:none!important}
-  .map-section .map-note,.map-legend{display:none!important}
-  .map-print-placeholder{display:block!important;padding:12px;background:#f5f5f5;
-    border:1px solid #ddd;border-radius:4px;font-size:11px;color:#555;
-    font-family:monospace;text-align:center;margin-bottom:12px}
-}
-.map-print-placeholder{display:none}
 </style>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WLcE=" crossorigin=""></script>
 </head>
 <body>
 <div class="overlay" id="overlay">
-  <div class="ov-spinner"></div>
-  <div class="ov-msg" id="ov-msg">Generating Assessment…</div>
-  <div class="ov-sub" id="ov-sub">Claude is analysing intelligence for this location</div>
-  <div class="progress-steps">
-    <span class="ps active" id="ps1">Profiling location</span>
-    <span class="ps" id="ps2">Assessing threats</span>
-    <span class="ps" id="ps3">Mapping hotspots</span>
-    <span class="ps" id="ps4">Building advisory</span>
-    <span class="ps" id="ps5">Finalising report</span>
-  </div>
+  <div class="ov-spin"></div>
+  <div class="ov-msg">Generating Weekly Digest…</div>
+  <div class="ov-sub">Claude is analysing your week's intelligence</div>
 </div>
 <nav class="topbar">
   <a href="/dashboard" class="topbar-brand">
-    <svg width="26" height="30" viewBox="0 0 72 84" fill="none">
+    <svg width="22" height="26" viewBox="0 0 72 84" fill="none">
       <path d="M36 3 L66 14 L66 40 C66 58 36 72 36 72 C36 72 6 58 6 40 L6 14 Z" fill="#151d2e" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round"/>
       <path d="M12 32 C18 20 54 20 60 32 C54 44 18 44 12 32 Z" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
       <circle cx="36" cy="32" r="7" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
       <circle cx="36" cy="32" r="3" fill="#3b82f6"/>
-      <line x1="24" y1="47" x2="24" y2="58" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
-      <line x1="30" y1="47" x2="30" y2="63" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
-      <line x1="36" y1="47" x2="36" y2="60" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
-      <line x1="42" y1="47" x2="42" y2="56" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round"/>
-      <circle cx="24" cy="58" r="2.5" fill="#1d4ed8"/>
-      <circle cx="30" cy="63" r="2.5" fill="#1d4ed8"/>
-      <circle cx="36" cy="60" r="2.5" fill="#1d4ed8"/>
-      <circle cx="42" cy="56" r="2.5" fill="#1d4ed8"/>
     </svg>
     <div><span class="brand-text">VIGINOTE</span><span class="brand-sub">Intelligence Platform</span></div>
   </a>
     <a href="/hub" class="nav-link" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.15);padding:4px 10px;border-radius:4px;text-decoration:none;font-family:'JetBrains Mono',monospace;letter-spacing:1px">← Hub</a>
   <a href="/dashboard" class="nav-link">News Studio</a>
-  <a href="/assessment" class="nav-link active">Location Assessment</a>
-  <a href="/digest" class="nav-link">Weekly Digest</a>
+  <a href="/assessment" class="nav-link">Location</a>
+  <a href="/digest" class="nav-link active">Weekly Digest</a>
   <a href="/portal" class="nav-link">Client Portal</a>
 </nav>
 <div class="app">
   <div class="input-panel">
     <div class="ip-header">
-      <h2>Location Assessment</h2>
-      <p>Generate an intelligence-grade security assessment for any city, region, or country</p>
+      <h2>Weekly Digest</h2>
+      <p>Generate your weekly intelligence digest from collected alerts. Claude analyses and writes the full report.</p>
     </div>
     <div class="ip-section">
-      <label>Location *</label>
-      <input type="search" class="ip-input" id="loc-input" placeholder="e.g. Khartoum, Sudan" autocomplete="off" autocorrect="off" spellcheck="false">
-    </div>
-    <div class="ip-section">
-      <label>Event context (optional)</label>
-      <input type="search" class="ip-input" id="event-input" placeholder="e.g. FIFA World Cup 2026" autocomplete="off" autocorrect="off" spellcheck="false">
-    </div>
-    <div class="ip-section">
-      <label>Intelligence mode</label>
-      <div class="mode-cards">
-        <label class="mode-card selected" id="mc-ai">
-          <input type="radio" name="mode" value="ai" checked onchange="selectMode(this)">
-          <div class="mode-card-body"><div class="mc-title">AI Knowledge</div><div class="mc-desc">Full assessment from Claude's intelligence knowledge base.</div></div>
-        </label>
-        <label class="mode-card" id="mc-alerts">
-          <input type="radio" name="mode" value="alerts" onchange="selectMode(this)">
-          <div class="mode-card-body"><div class="mc-title">VigiNote Alerts</div><div class="mc-desc">Grounded in real alerts your bot has collected.</div></div>
-        </label>
-        <label class="mode-card" id="mc-combined">
-          <input type="radio" name="mode" value="combined" onchange="selectMode(this)">
-          <div class="mode-card-body"><div class="mc-title">Combined ✦ Recommended</div><div class="mc-desc">AI knowledge enriched with live alert data.</div></div>
-        </label>
-      </div>
-    </div>
-    <div class="ip-section" id="hours-section" style="display:none">
-      <label>Alert look-back window</label>
+      <label>Time window</label>
       <select class="ip-input" id="hours-input">
-        <option value="72">Last 3 days</option>
         <option value="168" selected>Last 7 days</option>
-        <option value="336">Last 2 weeks</option>
+        <option value="336">Last 14 days</option>
         <option value="720">Last 30 days</option>
       </select>
     </div>
+    <div class="ip-section">
+      <label>Region focus</label>
+      <select class="ip-input" id="region-input">
+        <option value="">All regions</option>
+        <option value="GLOBAL">Global</option>
+        <option value="MIDDLE_EAST">Middle East</option>
+        <option value="EUROPE">Europe</option>
+        <option value="ASIA">Asia</option>
+        <option value="WEST_EAST_AFRICA">West / East Africa</option>
+        <option value="SOUTHERN_AFRICA">Southern Africa</option>
+        <option value="SOUTH_AMERICA">South America</option>
+      </select>
+    </div>
+    <div class="ip-section">
+      <label>Minimum score</label>
+      <select class="ip-input" id="score-input">
+        <option value="4">4+ (broad)</option>
+        <option value="5" selected>5+ (standard)</option>
+        <option value="7">7+ (high severity)</option>
+      </select>
+    </div>
     <div class="ip-footer">
-      <button type="button" class="btn-generate" id="gen-btn" onclick="generateAssessment()">
-        <div class="spin"></div><span class="btn-label">Generate Assessment</span>
+      <button type="button" class="btn-gen" id="gen-btn" onclick="generateDigest()">
+        <div class="spin"></div><span>Generate Digest</span>
       </button>
     </div>
   </div>
 
   <div class="report-panel" id="report-panel">
     <div class="empty-state" id="empty-state">
-      <div class="empty-icon">◎</div>
-      <h3>Location Security Assessment</h3>
-      <p>Enter any city, country, or region for a comprehensive intelligence-grade security assessment with threat matrix, hotspots, and visitor advisory.</p>
-      <div class="sample-locations">
-        <span class="sample-loc" onclick="quickLoad('Khartoum, Sudan')">Khartoum</span>
-        <span class="sample-loc" onclick="quickLoad('Gaza, Palestine')">Gaza</span>
-        <span class="sample-loc" onclick="quickLoad('Kyiv, Ukraine')">Kyiv</span>
-        <span class="sample-loc" onclick="quickLoad('Mexico City')">Mexico City</span>
-        <span class="sample-loc" onclick="quickLoad('Mogadishu, Somalia')">Mogadishu</span>
-        <span class="sample-loc" onclick="quickLoad('Caracas, Venezuela')">Caracas</span>
-        <span class="sample-loc" onclick="quickLoad('Yangon, Myanmar')">Yangon</span>
-        <span class="sample-loc" onclick="quickLoad('Port-au-Prince, Haiti')">Port-au-Prince</span>
-      </div>
+      <div class="empty-icon">📊</div>
+      <h3>Weekly Intelligence Digest</h3>
+      <p>Claude analyses your collected alerts and writes a comprehensive week-in-review ready for clients and LinkedIn.</p>
     </div>
     <div id="report-output">
       <div class="report-wrap">
         <div class="report-topbar">
-          <h3 id="topbar-title">Assessment</h3>
-          <button type="button" class="btn btn-sm" onclick="generateAssessment()">↺ Regenerate</button>
-          <button type="button" class="btn btn-sm" onclick="saveAssessment()" id="as-save-btn">☁ Save</button>
+          <h3 id="topbar-title">Weekly Digest</h3>
+          <button type="button" class="btn btn-sm" onclick="generateDigest()">↺ Regenerate</button>
+          <button type="button" class="btn btn-sm" onclick="saveDigest()" id="dg-save-btn">☁ Save</button>
           <button type="button" class="btn btn-sm btn-navy" onclick="openPublish()">⬆ Publish</button>
           <button type="button" class="btn btn-sm btn-navy" onclick="window.print()">⬇ PDF</button>
         </div>
@@ -411,288 +260,96 @@ select.ip-input{cursor:pointer}
 </div>
 
 <script>
-const API_BASE=window.location.origin;
-function selectMode(radio){document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('selected'));radio.closest('.mode-card').classList.add('selected');document.getElementById('hours-section').style.display=radio.value!=='ai'?'block':'none'}
-function quickLoad(loc){document.getElementById('loc-input').value=loc}
-function riskBadge(level){const l=(level||'MEDIUM').toUpperCase();return`<span class="risk-badge risk-${l}"><span class="dot"></span>${l}</span>`}
-function scoreBarColor(level){const map={LOW:'#22c55e',MEDIUM:'#f59e0b',HIGH:'#f97316',CRITICAL:'#ef4444',EXTREME:'#a855f7'};return map[(level||'MEDIUM').toUpperCase()]||'#64748b'}
-function trajectoryIcon(t){if(!t)return'';const map={IMPROVING:'↑ Improving',STABLE:'→ Stable',DETERIORATING:'↓ Deteriorating'};const colors={IMPROVING:'color:var(--low)',STABLE:'color:var(--text2)',DETERIORATING:'color:var(--critical)'};return`<span class="traj-badge" style="${colors[t]||''}">${map[t]||t}</span>`}
-function listItems(arr,cls='adv-list'){if(!arr||!arr.length)return'<p style="font-size:12px;color:var(--text3)">No data available</p>';return`<ul class="${cls}">${arr.map(i=>`<li>${i}</li>`).join('')}</ul>`}
-
-function buildReport(g,mode){
-  const lp=g.location_profile||{};const ov=g.overall_risk_level||'MEDIUM';
-  const threatHTML=(g.threat_matrix||[]).map(t=>{const score=t.risk_score||5;const pct=(score/10)*100;const color=scoreBarColor(t.risk_level);const indicators=(t.key_indicators||[]).map(i=>`<span class="ind-chip">${i}</span>`).join('');return`<div class="threat-row"><div class="tr-left"><div class="tr-cat">${t.category||''}</div><div class="tr-assess">${t.assessment||''}</div>${t.visitor_impact?`<div class="tr-impact"><strong>Visitor impact:</strong> ${t.visitor_impact}</div>`:''} ${indicators?`<div class="tr-indicators">${indicators}</div>`:''}</div><div class="tr-right">${riskBadge(t.risk_level)}<div class="score-bar-wrap"><div class="score-bar" style="width:${pct}%;background:${color}"></div></div><div class="score-num">${score}/10</div></div></div>`}).join('');
-  const hotspotsHTML=(g.hotspots||[]).map(h=>`<div class="hotspot-card risk-${(h.risk_level||'MEDIUM').toUpperCase()}"><div class="hs-name"><span>${h.name||''}</span>${riskBadge(h.risk_level)}</div><div class="hs-desc">${h.description||''}</div><div class="hs-rec"><strong>Advisory:</strong> ${h.recommendation||''}</div></div>`).join('');
-  const va=g.visitor_advisory||{};
-  const advisoryHTML=`<div class="advisory-grid"><div class="adv-card"><div class="adv-title">Before Travel</div>${listItems(va.before_travel)}</div><div class="adv-card"><div class="adv-title">Emergency Contacts</div>${listItems(va.emergency_contacts)}</div><div class="adv-card"><div class="adv-title">Areas to Avoid</div>${listItems(va.areas_to_avoid)}</div><div class="adv-card"><div class="adv-title">Safer Zones</div>${listItems(va.safe_zones)}</div><div class="adv-card full"><div class="adv-title">Transport</div><p class="adv-text">${va.transport||''}</p></div><div class="adv-card full"><div class="adv-title">Accommodation</div><p class="adv-text">${va.accommodation||''}</p></div><div class="adv-card full"><div class="adv-title">Communication Security</div><p class="adv-text">${va.communication||''}</p></div></div>`;
-  const oc=g.organised_crime_profile||{};
-  const crimeHTML=`<div class="crime-grid"><div class="crime-card"><div class="adv-title">Active Groups</div>${listItems(oc.active_groups)}</div><div class="crime-card"><div class="adv-title">Primary Methods</div>${listItems(oc.primary_methods)}</div><div class="crime-card full"><div class="adv-title">Visitor Targeting</div><p class="adv-text">${oc.visitor_targeting||''}</p></div><div class="crime-card full"><div class="adv-title">Current Trend</div><p class="adv-text">${oc.trend||''}</p></div></div>`;
-  const measuresHTML=`<div class="measures-grid">${(g.recommended_measures||[]).map(m=>`<div class="measure-card"><div class="m-cat">${m.category||''}</div>${listItems(m.measures,'m-list')}</div>`).join('')}</div>`;
-  const execParas=(g.executive_summary||'').split('\n\n').filter(Boolean).map(p=>`<p>${p}</p>`).join('');
-
-  return`
-  <div class="report-header">
-    <div class="rh-accent"></div>
-    <div class="rh-meta"><span class="rh-class">${g.classification||'CLIENT CONFIDENTIAL'}</span><span class="rh-date">${g.assessment_date||''}</span></div>
-    <div class="report-title">${g.report_title||g.location+' Security Assessment'}</div>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">${riskBadge(ov)}<span style="font-size:13px;color:var(--text3)">Overall Risk</span>${trajectoryIcon(g.risk_trajectory)}<span style="font-size:12px;color:var(--text3)">${g.risk_trajectory_note||''}</span></div>
-    <div class="rh-stats">
-      <div class="rh-stat"><span class="s-label">Location</span><span class="s-val">${g.location||''}</span></div>
-      <div class="rh-stat"><span class="s-label">Risk Score</span><span class="s-val">${g.overall_risk_score||'—'}/10</span></div>
-      <div class="rh-stat"><span class="s-label">Threat Categories</span><span class="s-val">${(g.threat_matrix||[]).length}</span></div>
-      <div class="rh-stat"><span class="s-label">Hotspots</span><span class="s-val">${(g.hotspots||[]).length}</span></div>
-    </div>
-  </div>
-  <div class="report-section"><div class="section-head"><span class="section-num">01</span><span class="section-title">Executive Summary</span></div><div class="exec-box">${execParas}</div>${g.intelligence_note?`<p style="font-size:11px;color:var(--text3);margin-top:8px;font-family:'JetBrains Mono',monospace">${g.intelligence_note}</p>`:''}</div>
-  <div class="report-section"><div class="section-head"><span class="section-num">02</span><span class="section-title">Location Profile</span></div><div class="profile-grid"><div class="profile-card"><div class="pc-label">Country</div><div class="pc-val">${lp.country||g.location||''}</div></div><div class="profile-card"><div class="pc-label">Region</div><div class="pc-val">${lp.region||''}</div></div><div class="profile-card"><div class="pc-label">Population</div><div class="pc-val">${lp.population||''}</div></div><div class="profile-card" style="grid-column:1/-1"><div class="pc-label">Strategic Significance</div><div class="pc-val">${lp.strategic_significance||''}</div></div></div></div>
-  <div class="report-section"><div class="section-head"><span class="section-num">03</span><span class="section-title">Threat Matrix</span></div><div class="threat-grid">${threatHTML}</div></div>
-  ${g.hotspots&&g.hotspots.length?`
-  <div class="report-section map-section">
-    <div class="section-head"><span class="section-num">04</span><span class="section-title">Geospatial Risk Map</span></div>
-    <div class="map-print-placeholder">📍 Interactive map available in digital version · ${(g.hotspots||[]).length} risk locations plotted</div>
-    <div id="assessment-map" style="height:420px;width:100%;border-radius:8px;border:1px solid #1e2d4a;background:#0a0d14;z-index:1;position:relative"></div>
-    <div class="map-legend" id="map-legend">
-      <div class="ml-item on" onclick="filterMapPins('all',this)" style="cursor:pointer;padding:4px 8px;border-radius:3px;border:1px solid rgba(59,130,246,0.2);background:rgba(59,130,246,0.08)"><div class="ml-dot" style="background:#94a3b8"></div>All</div>
-      <div class="ml-item" onclick="filterMapPins('CRITICAL',this)" style="cursor:pointer;padding:4px 8px;border-radius:3px;border:1px solid transparent" title="Show Critical only"><div class="ml-dot" style="background:#ef4444"></div>Critical</div>
-      <div class="ml-item" onclick="filterMapPins('HIGH',this)" style="cursor:pointer;padding:4px 8px;border-radius:3px;border:1px solid transparent" title="Show High only"><div class="ml-dot" style="background:#f97316"></div>High</div>
-      <div class="ml-item" onclick="filterMapPins('MEDIUM',this)" style="cursor:pointer;padding:4px 8px;border-radius:3px;border:1px solid transparent" title="Show Medium only"><div class="ml-dot" style="background:#f59e0b"></div>Medium</div>
-      <div class="ml-item" onclick="filterMapPins('LOW',this)" style="cursor:pointer;padding:4px 8px;border-radius:3px;border:1px solid transparent" title="Show Low only"><div class="ml-dot" style="background:#22c55e"></div>Low</div>
-    </div>
-    <div class="map-note">Click legend to filter · Click pins for details · Scroll to zoom</div>
-  </div>
-  <div class="report-section"><div class="section-head"><span class="section-num">05</span><span class="section-title">Area Hotspot Assessment</span></div><div class="hotspot-grid">${hotspotsHTML}</div></div>
-  `:''}
-  <div class="report-section"><div class="section-head"><span class="section-num">05</span><span class="section-title">Visitor & Traveller Advisory</span></div>${advisoryHTML}</div>
-  <div class="report-section"><div class="section-head"><span class="section-num">07</span><span class="section-title">Organised Crime Profile</span></div>${crimeHTML}</div>
-  <div class="report-section"><div class="section-head"><span class="section-num">08</span><span class="section-title">Recommended Security Measures</span></div>${measuresHTML}</div>
-  ${g.linkedin_teaser?`<div class="report-section no-print"><div class="section-head"><span class="section-num">09</span><span class="section-title">LinkedIn Teaser Post</span></div><div class="teaser-box"><div class="t-label">Ready to post — edit as needed</div><div class="t-text" id="teaser-text">${g.linkedin_teaser}</div><div class="t-actions"><button type="button" class="btn-tl" onclick="copyTeaser()">📋 Copy post</button><a href="https://www.linkedin.com" target="_blank" rel="noopener" class="btn-tl" style="text-decoration:none">Open LinkedIn →</a></div></div></div>`:''}
-  <div class="report-footer"><div class="rf-brand">VIGINOTE</div><div class="rf-disc">Generated from open-source intelligence and AI analysis. For professional use only. Not for redistribution without authorisation.</div></div>`;
-}
-
-
-// ── LEAFLET MAP ──────────────────────────────────────────────────────────────
-let _map = null;
-let req_location = '';
-
-const RISK_COLOURS = {
-  CRITICAL:'#ef4444',HIGH:'#f97316',
-  MEDIUM:'#f59e0b',LOW:'#22c55e',EXTREME:'#a855f7'
-};
-
-var _mapMarkers = [];  // track all markers for filter
-
-function filterMapPins(level, el){
-  // Update legend active state
-  document.querySelectorAll('.ml-item').forEach(i => {
-    i.style.background = 'transparent';
-    i.style.borderColor = 'transparent';
-  });
-  if(el){
-    el.style.background = 'rgba(59,130,246,0.08)';
-    el.style.borderColor = 'rgba(59,130,246,0.2)';
-  }
-  // Show/hide markers
-  _mapMarkers.forEach(function(m){
-    if(level === 'all' || m.riskLevel === level){
-      m.marker.addTo(_map);
-    } else {
-      m.marker.remove();
-    }
-  });
-}
-
-async function initMap(hotspots, locationName){
-  if(_map){ _map.remove(); _map = null; }
-  _mapMarkers = [];
-  const mapEl = document.getElementById('assessment-map');
-  if(!mapEl) return;
-
-  // Force the map div to be visible and sized before Leaflet touches it
-  mapEl.style.height = '420px';
-  mapEl.style.display = 'block';
-  mapEl.innerHTML = '';  // clear any previous content
-
-  const valid = (hotspots||[]).filter(h=>h.lat!=null&&h.lng!=null&&!(h.lat===0&&h.lng===0));
-
-  let centre=[20,20], zoom=2;
-  if(valid.length){
-    centre=[valid.reduce((s,h)=>s+h.lat,0)/valid.length,
-            valid.reduce((s,h)=>s+h.lng,0)/valid.length];
-    zoom = valid.length===1?11:8;
-  }
-
-  _map = L.map('assessment-map',{center:centre,zoom:zoom,zoomControl:true});
-
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
-    attribution:'© OpenStreetMap © CARTO',
-    subdomains:'abcd',maxZoom:18
-  }).addTo(_map);
-
-  valid.forEach(h=>{
-    const lvl=(h.risk_level||'MEDIUM').toUpperCase();
-    const col=RISK_COLOURS[lvl]||'#3b82f6';
-    const r=lvl==='CRITICAL'||lvl==='EXTREME'?14:lvl==='HIGH'?12:10;
-
-    const m=L.circleMarker([h.lat,h.lng],{
-      radius:r,fillColor:col,color:'#ffffff',
-      weight:1.5,opacity:0.9,fillOpacity:0.75
-    });
-
-    const textCol={CRITICAL:'#fca5a5',HIGH:'#fdba74',MEDIUM:'#fcd34d',
-      LOW:'#86efac',EXTREME:'#d8b4fe'}[lvl]||'#93c5fd';
-    const bgCol={CRITICAL:'rgba(127,29,29,0.9)',HIGH:'rgba(124,45,18,0.9)',
-      MEDIUM:'rgba(120,53,15,0.9)',LOW:'rgba(20,83,45,0.9)',
-      EXTREME:'rgba(88,28,135,0.9)'}[lvl]||'rgba(30,58,138,0.9)';
-
-    m.bindPopup(`
-      <div style="font-family:'Inter',sans-serif">
-        <div style="font-weight:600;font-size:13px;margin-bottom:5px">${h.name||''}</div>
-        <div style="display:inline-block;background:${bgCol};color:${textCol};font-size:8px;
-          font-weight:700;letter-spacing:1.5px;padding:2px 7px;border-radius:2px;
-          margin-bottom:7px;font-family:monospace">${lvl}</div>
-        <div style="font-size:11px;color:#94a3b8;line-height:1.5;margin-bottom:5px">${h.description||''}</div>
-        <div style="font-size:10px;color:#64748b;font-style:italic">⚠ ${h.recommendation||''}</div>
-      </div>`,{maxWidth:260,minWidth:180}
-    );
-    m.addTo(_map);
-    _mapMarkers.push({marker: m, riskLevel: lvl});
-
-    if(lvl==='CRITICAL'||lvl==='EXTREME'){
-      L.circleMarker([h.lat,h.lng],{
-        radius:20,fillColor:'transparent',
-        color:col,weight:1,opacity:0.3
-      }).addTo(_map);
-    }
-  });
-
-  // If AI didn't return coords, try geocoding the location name via Nominatim
-  if(!valid.length){
-    const locName = locationName || '';
-    if(locName){
-      try{
-        const geo = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(locName)}&format=json&limit=1`,
-          {headers:{'Accept-Language':'en'}}
-        );
-        const gd = await geo.json();
-        if(gd && gd[0]){
-          const lat = parseFloat(gd[0].lat);
-          const lng = parseFloat(gd[0].lon);
-          _map.setView([lat,lng], 9);
-          // Plot hotspots without coords using location centre with small offsets
-          (hotspots||[]).forEach((h,i)=>{
-            const lvl=(h.risk_level||'MEDIUM').toUpperCase();
-            const col=RISK_COLOURS[lvl]||'#3b82f6';
-            const offset = 0.04*(i+1);
-            const jLat = lat + (i%2===0?offset:-offset);
-            const jLng = lng + (i%3===0?offset*1.5:-offset*0.8);
-            const m=L.circleMarker([jLat,jLng],{
-              radius:10,fillColor:col,color:'#fff',weight:1.5,opacity:0.9,fillOpacity:0.75
-            });
-            m.bindPopup(`<div style="font-family:'Inter',sans-serif">
-              <div style="font-weight:600;font-size:13px;margin-bottom:4px">${h.name}</div>
-              <div style="font-size:10px;color:#94a3b8;margin-bottom:4px">${h.description||''}</div>
-              <div style="font-size:9px;color:#64748b;font-style:italic">⚠ ${h.recommendation||''}</div>
-              <div style="font-size:9px;color:#475569;margin-top:4px">📍 Approximate location</div>
-            </div>`,{maxWidth:240});
-            m.addTo(_map);
-          });
-          return;
-        }
-      }catch(e){ console.warn('Geocode fallback failed:', e); }
-    }
-    // Final fallback — show message
-    document.getElementById('assessment-map').innerHTML=
-      '<div style="display:flex;align-items:center;justify-content:center;height:100%;'+
-      'font-family:monospace;font-size:11px;color:#334155;flex-direction:column;gap:8px">'+
-      '<span>📍</span><span>Regenerate to load map data</span></div>';
-    return;
-  }
-
-  if(valid.length>1){
-    try{_map.fitBounds(L.latLngBounds(valid.map(h=>[h.lat,h.lng])).pad(0.25));}catch(e){}
-  }
-
-  // Force size recalculation
-  setTimeout(()=>{ if(_map) _map.invalidateSize(true); }, 100);
-}
-
-async function generateAssessment(){
-  const location=document.getElementById('loc-input').value.trim();
-  if(!location){document.getElementById('loc-input').focus();return}
-  const mode=document.querySelector('input[name=mode]:checked')?.value||'ai';
-  const event=document.getElementById('event-input').value.trim();
+const API=window.location.origin;
+async function generateDigest(){
   const hours=parseInt(document.getElementById('hours-input').value)||168;
+  const region=document.getElementById('region-input').value||null;
+  const score=parseInt(document.getElementById('score-input').value)||5;
   const btn=document.getElementById('gen-btn');btn.disabled=true;btn.classList.add('loading');
-  document.getElementById('ov-msg').textContent='Generating Assessment…';
-  document.getElementById('ov-sub').textContent=`Analysing intelligence for ${location}`;
   document.getElementById('overlay').classList.add('show');
-  const steps=['ps1','ps2','ps3','ps4','ps5'];let step=0;
-  const si=setInterval(()=>{if(step>0)document.getElementById(steps[step-1]).classList.replace('active','done');if(step<steps.length){document.getElementById(steps[step]).classList.add('active');step++}},14000/steps.length);
   try{
-    const resp=await fetch(`${API_BASE}/ai/assessment`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location,event:event||null,mode,hours})});
-    const data=await resp.json();clearInterval(si);
-    if(!resp.ok)throw new Error(data.detail||'Assessment failed');
-    if(!data.generated){alert(data.message||'No data returned.');return}
-    document.getElementById('report-body').innerHTML=buildReport(data.generated,mode);
+    const resp=await fetch(`${API}/ai/digest`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({hours,region:region||null,min_score:score})});
+    const data=await resp.json();
+    if(!resp.ok)throw new Error(data.detail||'Digest generation failed');
+    if(!data.digest){alert(data.message||'No alerts found. Try a longer time window.');return}
+    buildDigest(data.digest,data.alert_count);
+    window._lastDigestData = data.digest;
+    saveDigest();
     document.getElementById('empty-state').style.display='none';
     document.getElementById('report-output').style.display='block';
-    window._currentReport = data.generated;
-    _captureAssessment(data.generated);
-    document.getElementById('topbar-title').textContent=data.generated.location+' Assessment';
+    document.getElementById('topbar-title').textContent='Weekly Digest — '+(data.digest.period||'');
     document.getElementById('report-panel').scrollTo({top:0,behavior:'smooth'});
-    // Init Leaflet map after DOM is painted
-    if(data.generated.hotspots && data.generated.hotspots.length){
-      setTimeout(async ()=>{
-        // Scroll map into view first so Leaflet can measure it
-        const mapSection = document.getElementById('assessment-map');
-        if(mapSection) mapSection.scrollIntoView({behavior:'smooth', block:'center'});
-        await new Promise(r => setTimeout(r, 150));
-        await initMap(data.generated.hotspots, data.generated.location);
-        // Multiple invalidateSize calls to catch any layout shift
-        setTimeout(()=>{ if(_map){ _map.invalidateSize(true); }}, 200);
-        setTimeout(()=>{ if(_map){ _map.invalidateSize(true); }}, 600);
-        setTimeout(()=>{ if(_map){ _map.invalidateSize(true); }}, 1200);
-      }, 400);
-    }
-  }catch(e){clearInterval(si);alert('Generation failed: '+e.message);}
-  finally{document.getElementById('overlay').classList.remove('show');btn.disabled=false;btn.classList.remove('loading');steps.forEach(s=>{document.getElementById(s).classList.remove('active','done')});document.getElementById('ps1').classList.add('active')}
+  }catch(e){alert('Failed: '+e.message);}
+  finally{document.getElementById('overlay').classList.remove('show');btn.disabled=false;btn.classList.remove('loading')}
 }
-function copyTeaser(){const txt=document.getElementById('teaser-text')?.textContent||'';navigator.clipboard.writeText(txt).then(()=>{const btn=event.target;btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent='📋 Copy post',2000)})}
-document.getElementById('loc-input').addEventListener('keydown',e=>{if(e.key==='Enter')generateAssessment()});
+function buildDigest(d,alertCount){
+  const trajIcons={IMPROVING:'↑',STABLE:'→',DETERIORATING:'↓'};
+  const topStoriesHTML=(d.top_stories||[]).map((s,i)=>`
+  <div class="story-card">
+    <div class="story-num">0${i+1}</div>
+    <div class="story-content">
+      <div class="s-region">${s.region||''}</div>
+      <div class="s-hl">${s.headline||''}</div>
+      <div class="s-sig">${s.significance||''}</div>
+    </div>
+  </div>`).join('');
+  const roundupHTML=(d.regional_roundup||[]).map(r=>`
+  <div class="region-card">
+    <div class="rc-region"><span>${(r.region||'').replace(/_/g,' ')}</span><span class="traj-pill traj-${r.trend||'STABLE'}">${trajIcons[r.trend]||'→'} ${r.trend||'STABLE'}</span></div>
+    <div class="rc-summary">${r.summary||''}</div>
+    ${r.alert_count?`<div style="font-size:10px;color:var(--text3);margin-top:6px;font-family:'JetBrains Mono',monospace">${r.alert_count} alerts this period</div>`:''}
+  </div>`).join('');
+  const watchHTML=(d.watch_next_week||[]).map(w=>`<div class="watch-item">${w}</div>`).join('');
+  const reviewParas=(d.week_in_review||'').split('\n\n').filter(Boolean).map(p=>`<p>${p}</p>`).join('');
+  document.getElementById('report-body').innerHTML=`
+  <div class="digest-header">
+    <div class="dh-accent"></div>
+    <div class="dh-over">VigiNote Intelligence · Weekly Digest</div>
+    <div class="digest-title">${d.digest_title||'Weekly Intelligence Digest'}</div>
+    <div class="dh-period">${d.period||''}</div>
+    <div class="dh-stats">
+      <div class="dh-stat"><div class="s-label">Alerts Analysed</div><div class="s-val">${alertCount||'—'}</div></div>
+      <div class="dh-stat"><div class="s-label">Top Stories</div><div class="s-val">${(d.top_stories||[]).length}</div></div>
+      <div class="dh-stat"><div class="s-label">Regions</div><div class="s-val">${(d.regional_roundup||[]).length}</div></div>
+    </div>
+  </div>
+  <div class="dsection"><div class="ds-head">Week in Review</div><div class="review-box">${reviewParas}</div></div>
+  ${topStoriesHTML?`<div class="dsection"><div class="ds-head">Top Stories</div><div class="top-stories">${topStoriesHTML}</div></div>`:''}
+  ${roundupHTML?`<div class="dsection"><div class="ds-head">Regional Roundup</div><div class="region-grid">${roundupHTML}</div></div>`:''}
+  ${watchHTML?`<div class="dsection"><div class="ds-head">Watch Next Week</div><div class="watch-list">${watchHTML}</div></div>`:''}
+  ${d.stat_headline?`<div class="dsection"><div class="stat-callout"><div class="sc-num">📈</div><div class="sc-text">${d.stat_headline}</div></div></div>`:''}
+  ${d.source_note?`<div style="font-size:11px;color:var(--text3);font-style:italic;margin-bottom:20px;font-family:'JetBrains Mono',monospace">${d.source_note}</div>`:''}
+  ${d.linkedin_post?`<div class="dsection no-print"><div class="ds-head">LinkedIn Post</div><div class="li-box"><div class="li-label">Ready to post — edit as needed</div><div class="li-text" id="li-text">${d.linkedin_post}</div><div class="li-actions"><button type="button" class="btn-outline" onclick="copyLinkedIn()">📋 Copy post</button><a href="https://www.linkedin.com" target="_blank" rel="noopener" class="btn-outline" style="text-decoration:none">Open LinkedIn →</a></div></div></div>`:''}
+  <div class="digest-footer"><div class="df-brand">VIGINOTE</div><div class="df-disc">Weekly Intelligence Digest. Generated from open-source intelligence. For professional use only.</div></div>`;
+}
+function copyLinkedIn(){const txt=document.getElementById('li-text')?.textContent||'';navigator.clipboard.writeText(txt).then(()=>{const btn=event.target;btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent='📋 Copy post',2000)})}
 </script>
 <!-- Watermark -->
-<div id="vgn-watermark" style="display:none">
-  <div id="vgn-watermark-inner">
-    <span id="vgn-watermark-text">VIGINOTE</span>
-    <span id="vgn-watermark-sub"></span>
+<div id="vgn-watermark" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;align-items:center;justify-content:center">
+  <div style="transform:rotate(-35deg);text-align:center;opacity:0.06;user-select:none">
+    <span style="font-size:52px;font-weight:700;color:#000;letter-spacing:6px;text-transform:uppercase;white-space:nowrap;display:block;line-height:1.2">VIGINOTE · CONFIDENTIAL</span>
+    <span id="vgn-wm-sub" style="font-size:13px;color:#000;letter-spacing:3px;display:block;margin-top:6px"></span>
   </div>
 </div>
-
 <script>
-(function(){
-  function updateWatermark(){
-    // Grab location from input field if present
-    const loc   = document.getElementById('location-input')?.value?.trim()
-               || document.querySelector('.report-title')?.textContent?.trim()
-               || 'LOCATION ASSESSMENT';
-    const date  = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}).toUpperCase();
-    const ref   = 'VGN-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random()*9000)+1000);
-    document.getElementById('vgn-watermark-text').textContent = 'VIGINOTE · CONFIDENTIAL';
-    document.getElementById('vgn-watermark-sub').textContent  = loc.toUpperCase() + ' · ' + date + ' · ' + ref;
-  }
-  window.addEventListener('beforeprint', updateWatermark);
-})();
+window.addEventListener('beforeprint',function(){
+  document.getElementById('vgn-watermark').style.display='flex';
+  document.getElementById('vgn-wm-sub').textContent=
+    new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}).toUpperCase()+' · VIGINOTE INTELLIGENCE · NOT FOR REDISTRIBUTION';
+});
+window.addEventListener('afterprint',function(){
+  document.getElementById('vgn-watermark').style.display='none';
+});
 </script>
 
 <!-- PUBLISH PANEL -->
 <div class="pub-panel" id="pub-panel">
-  <div class="pub-title">⬆ Publish Assessment</div>
+  <div class="pub-title">⬆ Publish Digest</div>
   <div class="pub-client-list" id="pub-client-list">
     <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#64748b;text-align:center;padding:10px">Loading clients…</div>
   </div>
   <div class="pub-actions">
-    <button class="pub-btn pub-btn-blue" onclick="publishAssessment()">Publish</button>
+    <button class="pub-btn pub-btn-blue" onclick="publishDigest()">Publish</button>
     <button class="pub-btn pub-btn-ghost" onclick="closePublish()">Cancel</button>
   </div>
   <div class="pub-link-box" id="pub-link-box">
@@ -704,87 +361,70 @@ document.getElementById('loc-input').addEventListener('keydown',e=>{if(e.key==='
 </div>
 
 <script>
-var _savedId = null, _savedToken = null, _lastGenData = null;
+var _savedId=null,_savedToken=null;
 
-// Hook into generateAssessment to capture data after generation
-var _origGenAssessment = window.generateAssessment;
-window.generateAssessment = async function(){
-  await _origGenAssessment.apply(this, arguments);
-};
-
-// Called after buildReport with the generated data
-function _captureAssessment(data){
-  _lastGenData = data;
-  saveAssessment();
-}
-
-async function saveAssessment(){
-  if(!_lastGenData && !window._currentReport) return;
-  var data = _lastGenData || window._currentReport;
-  var saveBtn = document.getElementById('as-save-btn');
-  if(saveBtn){ saveBtn.textContent='☁ Saving…'; saveBtn.disabled=true; }
+async function saveDigest(){
+  var data=window._lastDigestData;
+  if(!data)return;
+  var saveBtn=document.getElementById('dg-save-btn');
+  if(saveBtn){saveBtn.textContent='☁ Saving…';saveBtn.disabled=true;}
   try{
-    var r = await fetch(window.location.origin+'/deliverables/save',{
-      method:'POST', credentials:'include',
+    var r=await fetch(window.location.origin+'/deliverables/save',{
+      method:'POST',credentials:'include',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        type:'assessment',
-        title:(data.location||'Location')+' — Risk Assessment',
-        content: data,
+      body:JSON.stringify({
+        type:'digest',
+        title:(data.digest_title||data.period||'Weekly Intelligence Digest'),
+        content:data,
         clients:[],
         one_off:false,
       })
     });
-    var d = await r.json();
+    var d=await r.json();
     if(d.id){
-      _savedId = d.id; _savedToken = d.token;
-      if(saveBtn){ saveBtn.textContent='☁ Saved'; saveBtn.disabled=false; }
+      _savedId=d.id;_savedToken=d.token;
+      if(saveBtn){saveBtn.textContent='☁ Saved';saveBtn.disabled=false;}
       document.getElementById('pub-link-url').textContent=window.location.origin+'/view/'+d.token;
       document.getElementById('pub-link-box').classList.add('show');
     }
-  }catch(e){
-    if(saveBtn){ saveBtn.textContent='☁ Save'; saveBtn.disabled=false; }
-  }
+  }catch(e){if(saveBtn){saveBtn.textContent='☁ Save';saveBtn.disabled=false;}}
 }
 
 async function openPublish(){
-  if(!_savedId){ await saveAssessment(); }
+  if(!_savedId){await saveDigest();}
   document.getElementById('pub-panel').classList.add('show');
-  loadPubClients();
-}
-function closePublish(){ document.getElementById('pub-panel').classList.remove('show'); }
-
-async function loadPubClients(){
-  var list = document.getElementById('pub-client-list');
+  var list=document.getElementById('pub-client-list');
   try{
-    var r = await fetch(window.location.origin+'/admin/clients',{credentials:'include'});
-    var d = await r.json();
-    var clients = (d.clients||[]).filter(c=>c.username!=='viginote_admin');
-    if(!clients.length){ list.innerHTML='<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#64748b;text-align:center;padding:10px">No clients yet.</div>'; return; }
-    list.innerHTML = clients.map(c=>`<div class="pub-client-item" id="pci-${c.username}" onclick="this.classList.toggle('selected')"><div class="pub-client-name">${c.label||c.username}</div><span style="font-family:'JetBrains Mono',monospace;font-size:8px;background:rgba(59,130,246,0.1);color:#3b82f6;padding:1px 6px;border-radius:2px">${(c.tier||'analyst').toUpperCase()}</span></div>`).join('');
-  }catch(e){ list.innerHTML=`<div style="color:#ef4444;font-family:'JetBrains Mono',monospace;font-size:10px;padding:10px">Error: ${e.message}</div>`; }
+    var r=await fetch(window.location.origin+'/admin/clients',{credentials:'include'});
+    var d=await r.json();
+    var clients=(d.clients||[]).filter(c=>c.username!=='viginote_admin');
+    if(!clients.length){list.innerHTML='<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#64748b;text-align:center;padding:10px">No clients yet.</div>';return;}
+    list.innerHTML=clients.map(c=>`<div class="pub-client-item" id="pci-${c.username}" onclick="this.classList.toggle('selected')"><div class="pub-client-name">${c.label||c.username}</div><span style="font-family:'JetBrains Mono',monospace;font-size:8px;background:rgba(59,130,246,0.1);color:#3b82f6;padding:1px 6px;border-radius:2px">${(c.tier||'analyst').toUpperCase()}</span></div>`).join('');
+  }catch(e){list.innerHTML=`<div style="color:#ef4444;font-family:'JetBrains Mono',monospace;font-size:10px;padding:10px">Error: ${e.message}</div>`;}
 }
 
-async function publishAssessment(){
-  if(!_savedId){ showPubMsg('Save first.','err'); return; }
+function closePublish(){document.getElementById('pub-panel').classList.remove('show');}
+
+async function publishDigest(){
+  if(!_savedId){showPubMsg('Save first.','err');return;}
   var selected=[...document.querySelectorAll('.pub-client-item.selected')].map(el=>el.id.replace('pci-',''));
-  if(!selected.length){ showPubMsg('Select at least one client.','err'); return; }
+  if(!selected.length){showPubMsg('Select at least one client.','err');return;}
   try{
     await fetch(window.location.origin+'/deliverables/'+_savedId+'/publish',{
-      method:'POST', credentials:'include',
+      method:'POST',credentials:'include',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({clients:selected})
     });
     showPubMsg('Published to '+selected.length+' client'+(selected.length!==1?'s':'')+'.','ok');
     setTimeout(closePublish,3000);
-  }catch(e){ showPubMsg('Error: '+e.message,'err'); }
+  }catch(e){showPubMsg('Error: '+e.message,'err');}
 }
 
 function copyLink(){
   navigator.clipboard.writeText(window.location.origin+'/view/'+(_savedToken||''))
-    .then(()=>{ var el=document.getElementById('pub-link-url'); var orig=el.textContent; el.textContent='✓ Copied!'; setTimeout(()=>el.textContent=orig,2000); });
+    .then(()=>{var el=document.getElementById('pub-link-url');var o=el.textContent;el.textContent='✓ Copied!';setTimeout(()=>el.textContent=o,2000);});
 }
-function showPubMsg(msg,type){ var el=document.getElementById('pub-msg'); el.textContent=msg; el.className='pub-msg '+type; el.style.display='block'; }
+function showPubMsg(msg,type){var el=document.getElementById('pub-msg');el.textContent=msg;el.className='pub-msg '+type;el.style.display='block';}
 </script>
 </body>
 </html>
