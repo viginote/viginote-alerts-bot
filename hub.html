@@ -3,961 +3,930 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VigiNote — Intelligence Platform</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<title>VigiNote — Admin Workspace</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --critical:#ef4444;--critical-bg:rgba(239,68,68,0.1);--critical-border:rgba(239,68,68,0.2);
-  --low:#22c55e;--low-bg:rgba(34,197,94,0.1);--low-border:rgba(34,197,94,0.2);
-  --blue-pale:rgba(59,130,246,0.1);--ui-bg:#0e1420;--ui-text4:#334155;
   --bg:#080c14;--bg2:#0e1420;--bg3:#111827;--bg4:#151d2e;
   --border:#1e2d4a;--border2:#243558;
   --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--text4:#334155;
   --blue:#3b82f6;--blue-dim:#1d4ed8;--blue-pale:rgba(59,130,246,0.1);
   --low:#22c55e;--low-bg:rgba(34,197,94,0.1);--low-border:rgba(34,197,94,0.2);
+  --critical:#ef4444;--critical-bg:rgba(239,68,68,0.1);--critical-border:rgba(239,68,68,0.2);
+  --medium:#f59e0b;--medium-bg:rgba(245,158,11,0.1);--medium-border:rgba(245,158,11,0.2);
+  --high:#f97316;
 }
-html{-webkit-font-smoothing:antialiased}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+html,body{height:100%;-webkit-font-smoothing:antialiased;overflow:hidden}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
+  display:flex;flex-direction:column}
 
 /* ── TOPBAR ── */
-.topbar{background:var(--bg2);height:56px;display:flex;align-items:center;padding:0 28px;gap:16px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
-.tb-brand{display:flex;align-items:center;gap:12px;margin-right:auto;text-decoration:none}
-.tb-wordmark{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;letter-spacing:2px;color:var(--text)}
-.tb-sub{font-size:9px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--text3);display:block;margin-top:-3px;font-family:'JetBrains Mono',monospace}
-.pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--low);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{box-shadow:0 0 0 4px rgba(34,197,94,0)}}
-.live-badge{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:600;color:var(--low);background:var(--low-bg);border:1px solid var(--low-border);padding:3px 10px;border-radius:3px;font-family:'JetBrains Mono',monospace;letter-spacing:1px}
+.topbar{height:52px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0;z-index:100}
+.tb-brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.tb-wordmark{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;
+  letter-spacing:3px;color:var(--text)}
+.tb-sub{font-size:8px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--text3);display:block;font-family:'JetBrains Mono',monospace}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(--low);
+  animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}
+  50%{box-shadow:0 0 0 4px rgba(34,197,94,0)}}
+.pill{font-family:'JetBrains Mono',monospace;font-size:9px;padding:3px 9px;
+  border-radius:3px;letter-spacing:1px}
+.pill-live{color:var(--low);background:var(--low-bg);border:1px solid var(--low-border);
+  display:flex;align-items:center;gap:5px}
+.pill-admin{color:var(--medium);background:var(--medium-bg);border:1px solid var(--medium-border)}
 .tb-time{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3)}
-.tb-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--text3);font-family:'JetBrains Mono',monospace;transition:all .15s;letter-spacing:.5px;text-decoration:none}
+.tb-btn{padding:5px 11px;border-radius:4px;font-size:10px;font-weight:600;
+  cursor:pointer;border:1px solid var(--border2);background:transparent;
+  color:var(--text3);font-family:'JetBrains Mono',monospace;
+  transition:all .15s;letter-spacing:.5px;text-decoration:none;white-space:nowrap}
 .tb-btn:hover{border-color:var(--blue);color:var(--blue)}
 
-/* ── MAIN ── */
-.main{flex:1;max-width:1200px;margin:0 auto;width:100%;padding:48px 28px 80px}
+/* ── MAIN LAYOUT ── */
+.workspace{flex:1;display:flex;overflow:hidden}
 
-/* ── HEADER ── */
-.hub-header{margin-bottom:48px}
-.hub-greeting{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
-.hub-title{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--text);letter-spacing:0.5px;line-height:1.1;margin-bottom:8px}
-.hub-title span{color:var(--blue)}
-.hub-desc{font-size:14px;color:var(--text2);max-width:520px;line-height:1.7}
+/* ── SIDEBAR ── */
+.sidebar{width:220px;flex-shrink:0;background:var(--bg2);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;
+  overflow:hidden}
+.sb-section{padding:8px}
+.sb-label{font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:700;
+  letter-spacing:2.5px;text-transform:uppercase;color:var(--text4);
+  padding:10px 8px 6px;display:block}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;
+  border-radius:6px;cursor:pointer;transition:all .15s;border:1px solid transparent;
+  text-decoration:none;width:100%;background:none;text-align:left}
+.nav-item:hover{background:rgba(255,255,255,.04);border-color:var(--border)}
+.nav-item.active{background:var(--blue-pale);border-color:rgba(59,130,246,.25);color:var(--blue)}
+.nav-item.active .nav-icon{color:var(--blue)}
+.nav-item.active .nav-label{color:var(--blue)}
+.nav-icon{font-size:16px;flex-shrink:0;width:20px;text-align:center}
+.nav-label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;
+  letter-spacing:.5px;color:var(--text2);flex:1}
+.nav-badge{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;
+  background:var(--critical);color:#fff;border-radius:10px;
+  padding:1px 6px;min-width:18px;text-align:center}
+.nav-badge.blue{background:var(--blue-dim)}
+.nav-badge.green{background:#15803d}
+.sb-divider{height:1px;background:var(--border);margin:6px 8px}
 
-/* ── STATS STRIP ── */
-.stats-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:48px}
-.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px 18px;position:relative;overflow:hidden}
-.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-.stat-card.s-blue::before{background:var(--blue-dim)}
-.stat-card.s-red::before{background:#ef4444}
-.stat-card.s-green::before{background:var(--low)}
-.sc-l{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
-.sc-v{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--text);line-height:1}
-.sc-v.crit{color:#ef4444}.sc-v.grn{color:var(--low)}
-.sc-sub{font-size:10px;color:var(--text3);margin-top:4px;font-family:'JetBrains Mono',monospace}
+/* Stats strip in sidebar */
+.sb-stats{padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.sb-stat{background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  padding:8px 10px}
+.sbs-l{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--text3);
+  letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.sbs-v{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--text);line-height:1}
+.sbs-v.crit{color:var(--critical)}.sbs-v.high{color:var(--high)}.sbs-v.grn{color:var(--low)}
 
-/* ── SECTION LABELS ── */
-.section-label{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:14px;display:flex;align-items:center;gap:12px}
-.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+/* ── WORKSPACE AREA ── */
+.ws-area{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
 
-/* ── TOOL GRID ── */
-.tool-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:48px}
-.tool-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:24px 22px;text-decoration:none;display:flex;flex-direction:column;gap:14px;transition:all .2s;position:relative;overflow:hidden;cursor:pointer}
-.tool-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;transition:opacity .2s;opacity:0}
-.tool-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.3)}
-.tool-card:hover::before{opacity:1}
-.tool-card.c-blue::before{background:linear-gradient(90deg,var(--blue-dim),var(--blue))}
-.tool-card.c-purple::before{background:linear-gradient(90deg,#7c3aed,#a855f7)}
-.tool-card.c-green::before{background:linear-gradient(90deg,#15803d,var(--low))}
-.tool-card.c-amber::before{background:linear-gradient(90deg,#b45309,#f59e0b)}
-.tool-card.c-red::before{background:linear-gradient(90deg,#991b1b,#ef4444)}
-.tool-card.c-teal::before{background:linear-gradient(90deg,#0f766e,#14b8a6)}
-.tool-icon{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-.tool-icon.i-blue{background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.2)}
-.tool-icon.i-purple{background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.2)}
-.tool-icon.i-green{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.18)}
-.tool-icon.i-amber{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.18)}
-.tool-icon.i-red{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.18)}
-.tool-icon.i-teal{background:rgba(20,184,166,0.1);border:1px solid rgba(20,184,166,0.18)}
-.tool-head{display:flex;align-items:flex-start;gap:14px}
-.tool-label{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
-.tool-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);letter-spacing:0.3px}
-.tool-desc{font-size:12px;color:var(--text2);line-height:1.65;flex:1}
-.tool-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border)}
-.tool-url{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text4);letter-spacing:1px}
-.tool-arrow{font-size:16px;color:var(--text4);transition:all .2s}
-.tool-card:hover .tool-arrow{color:var(--text2);transform:translateX(3px)}
-.tool-badge{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:2px}
-.badge-admin{background:rgba(245,158,11,0.12);color:#f59e0b;border:1px solid rgba(245,158,11,0.2)}
-.badge-client{background:rgba(59,130,246,0.1);color:var(--blue);border:1px solid rgba(59,130,246,0.2)}
-.badge-live{background:rgba(34,197,94,0.1);color:var(--low);border:1px solid rgba(34,197,94,0.2)}
+/* Welcome / Dashboard panel */
+#panel-dashboard{display:flex;flex-direction:column;height:100%;overflow-y:auto}
+.dash-hero{padding:40px 48px 32px;border-bottom:1px solid var(--border);flex-shrink:0}
+.dh-greeting{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.dh-title{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;
+  color:var(--text);line-height:1.1;margin-bottom:6px}
+.dh-title span{color:var(--blue)}
+.dh-desc{font-size:13px;color:var(--text2);line-height:1.7}
+.dash-grid{padding:28px 48px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.dash-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  padding:20px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.dash-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  opacity:0;transition:opacity .2s}
+.dash-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.dash-card:hover::before{opacity:1}
+.dc-blue::before{background:linear-gradient(90deg,var(--blue-dim),var(--blue))}
+.dc-purple::before{background:linear-gradient(90deg,#7c3aed,#a855f7)}
+.dc-teal::before{background:linear-gradient(90deg,#0f766e,#14b8a6)}
+.dc-amber::before{background:linear-gradient(90deg,#b45309,var(--medium))}
+.dc-green::before{background:linear-gradient(90deg,#15803d,var(--low))}
+.dc-red::before{background:linear-gradient(90deg,#991b1b,var(--critical))}
+.dc-icon{font-size:22px;margin-bottom:12px}
+.dc-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;
+  color:var(--text);margin-bottom:4px}
+.dc-desc{font-size:11px;color:var(--text3);line-height:1.5}
+.recent-alerts{padding:0 48px 40px}
+.ra-head{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;color:var(--text3);
+  margin-bottom:12px;display:flex;align-items:center;gap:12px}
+.ra-head::after{content:'';flex:1;height:1px;background:var(--border)}
+.ra-row{display:flex;align-items:center;gap:10px;padding:9px 12px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:5px;
+  margin-bottom:5px;text-decoration:none}
+.ra-sev{font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:700;
+  letter-spacing:1.5px;padding:2px 7px;border-radius:2px;flex-shrink:0}
+.ra-sev.crit{background:#7f1d1d;color:#fca5a5}
+.ra-sev.high{background:#7c2d12;color:#fdba74}
+.ra-sev.med{background:#1e3a8a;color:#93c5fd}
+.ra-title{font-size:12px;font-weight:500;color:var(--text);flex:1;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ra-meta{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);flex-shrink:0}
 
-/* ── QUICK ACTIONS ── */
-.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:48px}
-.quick-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;text-decoration:none;display:flex;align-items:center;gap:12px;transition:all .15s}
-.quick-card:hover{border-color:var(--border2);background:var(--bg3)}
-.quick-icon{font-size:18px;flex-shrink:0}
-.quick-text{flex:1}
-.quick-label{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px}
-.quick-name{font-size:12px;font-weight:500;color:var(--text)}
+/* Iframe workspace panels */
+.ws-frame-panel{flex:1;display:none;flex-direction:column;overflow:hidden}
+.ws-frame-panel.active{display:flex}
+.ws-frame-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;
+  background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
+.ws-frame-title{font-family:'JetBrains Mono',monospace;font-size:10px;
+  font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text2)}
+.ws-frame-path{font-family:'JetBrains Mono',monospace;font-size:9px;
+  color:var(--text4);margin-left:auto}
+.ws-iframe{flex:1;border:none;background:var(--bg)}
 
-/* ── RECENT ALERTS ── */
-.recent-list{display:flex;flex-direction:column;gap:6px}
-.recent-row{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:12px;text-decoration:none;transition:all .15s}
-.recent-row:hover{border-color:var(--border2);background:var(--bg3)}
-.rr-sev{font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:700;letter-spacing:1.5px;padding:3px 8px;border-radius:2px;flex-shrink:0}
-.sev-crit{background:#7f1d1d;color:#fca5a5}
-.sev-high{background:#7c2d12;color:#fdba74}
-.sev-med{background:#1e3a8a;color:#93c5fd}
-.rr-title{font-size:12px;font-weight:500;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rr-meta{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);flex-shrink:0}
+/* Deliverables panel */
+#panel-deliverables{display:none;flex-direction:column;height:100%;overflow:hidden}
+#panel-deliverables.active{display:flex}
+.del-head{padding:20px 28px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;flex-shrink:0}
+.del-head h2{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);flex:1}
+.del-filters{display:flex;gap:8px}
+.del-filter-btn{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;
+  letter-spacing:1px;padding:5px 12px;border-radius:3px;cursor:pointer;
+  border:1px solid var(--border2);background:transparent;color:var(--text3);transition:all .15s}
+.del-filter-btn:hover,.del-filter-btn.on{border-color:var(--blue);color:var(--blue);background:var(--blue-pale)}
+.del-list{flex:1;overflow-y:auto;padding:16px 28px;display:flex;flex-direction:column;gap:8px}
+.del-row{background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  padding:14px 18px;display:flex;align-items:center;gap:14px;transition:all .15s}
+.del-row:hover{border-color:var(--border2)}
+.del-type-badge{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;
+  letter-spacing:1.5px;padding:3px 9px;border-radius:3px;flex-shrink:0;text-transform:uppercase}
+.dtb-brief{background:rgba(168,85,247,.12);color:#a855f7;border:1px solid rgba(168,85,247,.25)}
+.dtb-assessment{background:rgba(20,184,166,.1);color:#14b8a6;border:1px solid rgba(20,184,166,.2)}
+.dtb-digest{background:rgba(245,158,11,.1);color:var(--medium);border:1px solid rgba(245,158,11,.2)}
+.del-title{font-size:13px;font-weight:500;color:var(--text);flex:1}
+.del-meta{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);
+  display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex-shrink:0}
+.del-actions{display:flex;gap:6px;flex-shrink:0}
+.del-btn{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;
+  letter-spacing:1px;padding:5px 10px;border-radius:3px;cursor:pointer;
+  border:1px solid;transition:all .15s;white-space:nowrap;text-decoration:none}
+.del-btn-view{color:var(--blue);border-color:rgba(59,130,246,.3);background:rgba(59,130,246,.08)}
+.del-btn-view:hover{background:var(--blue-dim);color:#fff;border-color:var(--blue-dim)}
+.del-btn-publish{color:var(--low);border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.08)}
+.del-btn-publish:hover{background:#15803d;color:#fff;border-color:#15803d}
+.del-btn-delete{color:var(--text3);border-color:var(--border2);background:transparent}
+.del-btn-delete:hover{color:var(--critical);border-color:var(--critical)}
+.del-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;gap:12px;color:var(--text3);font-family:'JetBrains Mono',monospace;
+  font-size:11px;text-align:center}
 
-@media(max-width:900px){
-  .tool-grid{grid-template-columns:1fr 1fr}
-  .stats-strip{grid-template-columns:repeat(3,1fr)}
-  .quick-grid{grid-template-columns:1fr 1fr}
+/* Clients panel */
+#panel-clients{display:none;flex-direction:column;height:100%;overflow:hidden}
+#panel-clients.active{display:flex}
+
+/* Publish modal */
+.pub-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);
+  z-index:500;display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px)}
+.pub-modal-overlay.show{display:flex}
+.pub-modal{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;
+  width:100%;max-width:420px;padding:24px;position:relative}
+.pub-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--blue-dim),var(--blue));border-radius:10px 10px 0 0}
+.pm-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
+  color:var(--text);margin-bottom:16px}
+.pm-sub{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);
+  margin-bottom:12px;padding:8px 12px;background:rgba(59,130,246,.06);
+  border:1px solid rgba(59,130,246,.15);border-radius:4px}
+.pm-client-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;
+  max-height:220px;overflow-y:auto}
+.pm-client-item{display:flex;align-items:center;gap:10px;padding:9px 12px;
+  background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:5px;cursor:pointer;transition:all .15s}
+.pm-client-item:hover{border-color:var(--border2)}
+.pm-client-item.on{border-color:var(--blue);background:var(--blue-pale)}
+.pm-client-name{font-size:12px;font-weight:500;color:var(--text);flex:1}
+.pm-client-tier{font-family:'JetBrains Mono',monospace;font-size:8px;
+  padding:1px 6px;border-radius:2px;background:rgba(59,130,246,.1);color:var(--blue)}
+.pm-link{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue);
+  padding:8px 12px;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);
+  border-radius:4px;margin-bottom:14px;word-break:break-all;cursor:pointer;display:none}
+.pm-link.show{display:block}
+.pm-actions{display:flex;gap:8px}
+.pm-btn{flex:1;padding:10px;border-radius:5px;font-family:'Syne',sans-serif;
+  font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s}
+.pm-btn-blue{background:var(--blue-dim);color:#fff}
+.pm-btn-blue:hover{background:var(--blue)}
+.pm-btn-ghost{background:transparent;color:var(--text3);border:1px solid var(--border2)}
+.pm-btn-ghost:hover{border-color:var(--blue);color:var(--blue)}
+.pm-msg{font-family:'JetBrains Mono',monospace;font-size:10px;margin-top:10px;
+  padding:7px 10px;border-radius:4px;display:none}
+.pm-msg.ok{background:var(--low-bg);color:var(--low);border:1px solid var(--low-border)}
+.pm-msg.err{background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border)}
+
+@media(max-width:768px){
+  .sidebar{display:none}
+  .dash-grid{grid-template-columns:1fr 1fr;padding:16px}
+  .dash-hero,.recent-alerts{padding-left:16px;padding-right:16px}
 }
-@media(max-width:600px){
-  .tool-grid{grid-template-columns:1fr}
-  .stats-strip{grid-template-columns:1fr 1fr}
-  .quick-grid{grid-template-columns:1fr}
-  .main{padding:24px 16px 60px}
-}
-
-/* ── CLIENT MANAGER ───────────────────────────────────────────────────── */
-.cm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;
-  display:none;align-items:flex-start;justify-content:center;
-  padding:40px 20px;overflow-y:auto;backdrop-filter:blur(4px)}
-.cm-overlay.show{display:flex}
-.cm-modal{background:var(--ui-surface);border:1px solid var(--ui-border);
-  border-radius:12px;width:100%;max-width:860px;overflow:hidden;
-  margin:auto;flex-shrink:0}
-.cm-modal::before{content:'';display:block;height:3px;
-  background:linear-gradient(90deg,var(--blue-dim),var(--blue))}
-.cm-head{padding:20px 24px;border-bottom:1px solid var(--ui-border);
-  display:flex;align-items:center;justify-content:space-between}
-.cm-head h2{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;
-  letter-spacing:1px;color:var(--ui-text)}
-.cm-close{background:none;border:none;color:var(--ui-text3);font-size:18px;
-  cursor:pointer;padding:4px 8px;border-radius:4px;transition:color .15s}
-.cm-close:hover{color:var(--ui-text)}
-.cm-body{display:grid;grid-template-columns:300px 1fr;min-height:500px}
-/* Client list */
-.cm-list{border-right:1px solid var(--ui-border);display:flex;flex-direction:column}
-.cm-list-head{padding:12px 16px;border-bottom:1px solid var(--ui-border);
-  display:flex;align-items:center;justify-content:space-between}
-.cm-list-label{font-family:'JetBrains Mono',monospace;font-size:9px;
-  font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ui-text3)}
-.cm-add-btn{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;
-  letter-spacing:1px;padding:5px 10px;border-radius:4px;cursor:pointer;
-  background:var(--blue-dim);color:#fff;border:none;transition:background .15s}
-.cm-add-btn:hover{background:var(--blue)}
-.cm-client-rows{flex:1;overflow-y:auto}
-.cm-client-row{padding:12px 16px;border-bottom:1px solid var(--ui-border);
-  cursor:pointer;transition:background .12s;display:flex;align-items:center;gap:10px}
-.cm-client-row:hover{background:rgba(255,255,255,.03)}
-.cm-client-row.active{background:var(--blue-pale);border-left:2px solid var(--blue)}
-.cm-row-name{font-size:12px;font-weight:500;color:var(--ui-text);flex:1}
-.cm-row-tier{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;
-  letter-spacing:1px;padding:2px 6px;border-radius:2px}
-.tier-pill-admin{background:rgba(245,158,11,.15);color:#f59e0b}
-.tier-pill-enterprise{background:rgba(34,197,94,.12);color:#22c55e}
-.tier-pill-operator{background:rgba(59,130,246,.12);color:#3b82f6}
-.tier-pill-analyst{background:rgba(100,116,139,.12);color:#94a3b8}
-.tier-pill-monitor{background:rgba(51,65,85,.2);color:#64748b}
-.cm-row-status{width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0}
-/* Form */
-.cm-form{padding:24px;overflow-y:auto;display:flex;flex-direction:column;gap:0}
-.cm-empty{display:flex;align-items:center;justify-content:center;
-  height:100%;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ui-text3);
-  text-align:center;padding:40px}
-.cm-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.cm-field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
-.cm-field.full{grid-column:1/-1}
-.cm-label{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;
-  letter-spacing:2px;text-transform:uppercase;color:var(--ui-text3)}
-.cm-input{padding:9px 12px;background:rgba(255,255,255,.04);
-  border:1px solid var(--ui-border2);border-radius:5px;
-  font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ui-text);
-  outline:none;transition:border-color .15s;width:100%}
-.cm-input:focus{border-color:var(--blue)}
-.cm-select{padding:9px 12px;background:var(--ui-bg);
-  border:1px solid var(--ui-border2);border-radius:5px;
-  font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ui-text);
-  outline:none;transition:border-color .15s;width:100%;cursor:pointer}
-.cm-select:focus{border-color:var(--blue)}
-/* Multi-select checkboxes */
-.cm-check-group{display:flex;flex-wrap:wrap;gap:6px;padding:10px;
-  background:rgba(255,255,255,.02);border:1px solid var(--ui-border2);
-  border-radius:5px;min-height:44px}
-.cm-check-item{display:flex;align-items:center;gap:5px;cursor:pointer;
-  padding:4px 8px;border-radius:3px;border:1px solid var(--ui-border);
-  transition:all .12s;user-select:none}
-.cm-check-item:hover{border-color:var(--blue);background:var(--blue-pale)}
-.cm-check-item.checked{border-color:var(--blue);background:var(--blue-pale);color:var(--blue)}
-.cm-check-item input{display:none}
-.cm-check-label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.3px}
-/* Country sub-group */
-.cm-country-group{margin-top:6px;padding:8px 10px;background:rgba(0,0,0,.2);
-  border-radius:4px;display:none}
-.cm-country-group.show{display:block}
-.cm-country-group-label{font-family:'JetBrains Mono',monospace;font-size:8px;
-  color:var(--ui-text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
-/* Watchlist input */
-.cm-tag-input-wrap{display:flex;flex-wrap:wrap;gap:5px;padding:8px;
-  background:rgba(255,255,255,.02);border:1px solid var(--ui-border2);
-  border-radius:5px;min-height:44px;cursor:text}
-.cm-tag-input-wrap:focus-within{border-color:var(--blue)}
-.cm-tag{display:flex;align-items:center;gap:4px;padding:3px 8px;
-  background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);
-  border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue)}
-.cm-tag-x{cursor:pointer;color:var(--ui-text3);font-size:12px;line-height:1;
-  transition:color .12s}
-.cm-tag-x:hover{color:var(--critical)}
-.cm-tag-input{border:none;background:transparent;outline:none;
-  font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ui-text);
-  min-width:120px;flex:1;padding:2px 4px}
-.cm-tag-input::placeholder{color:var(--ui-text4)}
-/* Form actions */
-.cm-actions{display:flex;gap:10px;padding:16px 24px;
-  border-top:1px solid var(--ui-border);flex-shrink:0}
-.cm-save-btn{flex:1;padding:10px;background:var(--blue-dim);color:#fff;
-  border:none;border-radius:5px;font-family:'Syne',sans-serif;font-size:13px;
-  font-weight:700;letter-spacing:1px;cursor:pointer;transition:background .15s}
-.cm-save-btn:hover{background:var(--blue)}
-.cm-delete-btn{padding:10px 16px;background:var(--critical-bg);color:var(--critical);
-  border:1px solid var(--critical-border);border-radius:5px;
-  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
-  cursor:pointer;transition:all .15s;display:none}
-.cm-delete-btn:hover{background:var(--critical);color:#fff}
-.cm-delete-btn.show{display:block}
-.cm-msg{font-family:'JetBrains Mono',monospace;font-size:10px;padding:8px 12px;
-  border-radius:4px;margin-bottom:12px;display:none}
-.cm-msg.ok{background:var(--low-bg);color:var(--low);border:1px solid var(--low-border)}
-.cm-msg.err{background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border)}
-/* Divider label */
-.cm-section-label{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;
-  letter-spacing:2px;text-transform:uppercase;color:var(--ui-text3);
-  margin:16px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--ui-border);
-  grid-column:1/-1}
-</style></style>
+</style>
 </head>
 <body>
 
+<!-- TOPBAR -->
 <nav class="topbar">
-  <a href="/hub" class="tb-brand">
-    <svg width="24" height="28" viewBox="0 0 72 84" fill="none">
-      <path d="M36 3 L66 14 L66 40 C66 58 36 72 36 72 C36 72 6 58 6 40 L6 14 Z" fill="#151d2e" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round"/>
-      <path d="M12 32 C18 20 54 20 60 32 C54 44 18 44 12 32 Z" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+  <div class="tb-brand">
+    <svg width="20" height="24" viewBox="0 0 72 84" fill="none">
+      <path d="M36 3L66 14L66 40C66 58 36 72 36 72S6 58 6 40L6 14Z" fill="#151d2e" stroke="#3b82f6" stroke-width="2"/>
       <circle cx="36" cy="32" r="7" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
       <circle cx="36" cy="32" r="3" fill="#3b82f6"/>
     </svg>
-    <div><span class="tb-wordmark">VIGINOTE</span><span class="tb-sub">Intelligence Platform</span></div>
-  </a>
-  <div class="live-badge"><div class="pulse-dot"></div>LIVE</div>
+    <div><span class="tb-wordmark">VIGINOTE</span><span class="tb-sub">Admin Workspace</span></div>
+  </div>
+  <div class="pill pill-live"><div class="pulse"></div>LIVE</div>
+  <div class="pill pill-admin">ADMIN</div>
   <div class="tb-time" id="tb-time"></div>
-  <button type="button" class="tb-btn" style="border-color:var(--blue);color:var(--blue)" onclick="openCM()">⊕ Client Manager</button>
+  <a href="/client" target="_blank" class="tb-btn">↗ Client View</a>
   <form action="/admin/logout" method="post" style="margin:0">
     <button type="submit" class="tb-btn">Sign Out</button>
   </form>
 </nav>
 
-<div class="main">
+<!-- WORKSPACE -->
+<div class="workspace">
 
-  <!-- Header -->
-  <div class="hub-header">
-    <div class="hub-greeting">VigiNote Intelligence Platform</div>
-    <h1 class="hub-title">Good <span id="greeting-time">morning</span>,<br>what are we building today?</h1>
-    <p class="hub-desc">All intelligence tools in one place. Generate briefs, assess locations, monitor live feeds, and publish to LinkedIn.</p>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-stats" id="sb-stats">
+      <div class="sb-stat"><div class="sbs-l">Alerts</div><div class="sbs-v" id="st-tot">—</div></div>
+      <div class="sb-stat"><div class="sbs-l">Critical</div><div class="sbs-v crit" id="st-crit">—</div></div>
+      <div class="sb-stat"><div class="sbs-l">High</div><div class="sbs-v high" id="st-high">—</div></div>
+      <div class="sb-stat"><div class="sbs-l">Sources</div><div class="sbs-v grn">162</div></div>
+    </div>
+    <div class="sb-divider"></div>
+
+    <span class="sb-label">Overview</span>
+    <div class="sb-section">
+      <button class="nav-item active" id="nav-dashboard" onclick="switchPanel('dashboard')">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Dashboard</span>
+      </button>
+      <button class="nav-item" id="nav-feed" onclick="switchPanel('feed')">
+        <span class="nav-icon">⚡</span>
+        <span class="nav-label">Live Feed</span>
+        <span class="nav-badge blue" id="feed-badge">—</span>
+      </button>
+    </div>
+
+    <span class="sb-label">Intelligence Studios</span>
+    <div class="sb-section">
+      <button class="nav-item" id="nav-linkedin" onclick="switchPanel('linkedin')">
+        <span class="nav-icon">📰</span>
+        <span class="nav-label">LinkedIn Studio</span>
+      </button>
+      <button class="nav-item" id="nav-brief" onclick="switchPanel('brief')">
+        <span class="nav-icon">📋</span>
+        <span class="nav-label">Brief Studio</span>
+      </button>
+      <button class="nav-item" id="nav-assessment" onclick="switchPanel('assessment')">
+        <span class="nav-icon">🗺</span>
+        <span class="nav-label">Assessment</span>
+      </button>
+      <button class="nav-item" id="nav-digest" onclick="switchPanel('digest')">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Weekly Digest</span>
+      </button>
+    </div>
+
+    <span class="sb-label">Distribution</span>
+    <div class="sb-section">
+      <button class="nav-item" id="nav-deliverables" onclick="switchPanel('deliverables')">
+        <span class="nav-icon">📬</span>
+        <span class="nav-label">Deliverables</span>
+        <span class="nav-badge" id="del-badge" style="display:none"></span>
+      </button>
+      <button class="nav-item" id="nav-clients" onclick="switchPanel('clients')">
+        <span class="nav-icon">👥</span>
+        <span class="nav-label">Client Manager</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- WORKSPACE AREA -->
+  <div class="ws-area">
+
+    <!-- DASHBOARD -->
+    <div id="panel-dashboard" style="display:flex">
+      <div class="dash-hero">
+        <div class="dh-greeting">VigiNote Admin Workspace</div>
+        <h1 class="dh-title">Good <span id="greeting">morning</span>.</h1>
+        <p class="dh-desc">Select a studio from the left to get started, or review the latest alerts below.</p>
+      </div>
+      <div class="dash-grid">
+        <div class="dash-card dc-blue" onclick="switchPanel('feed')">
+          <div class="dc-icon">⚡</div>
+          <div class="dc-name">Live Feed</div>
+          <div class="dc-desc">Monitor all incoming intelligence alerts across regions and streams</div>
+        </div>
+        <div class="dash-card dc-purple" onclick="switchPanel('brief')">
+          <div class="dc-icon">📋</div>
+          <div class="dc-name">Brief Studio</div>
+          <div class="dc-desc">Select alerts and generate a formatted client intelligence brief</div>
+        </div>
+        <div class="dash-card dc-teal" onclick="switchPanel('assessment')">
+          <div class="dc-icon">🗺</div>
+          <div class="dc-name">Assessment</div>
+          <div class="dc-desc">Generate a full location risk assessment with geospatial map</div>
+        </div>
+        <div class="dash-card dc-amber" onclick="switchPanel('digest')">
+          <div class="dc-icon">📊</div>
+          <div class="dc-name">Weekly Digest</div>
+          <div class="dc-desc">Compile a weekly intelligence digest across all regions</div>
+        </div>
+        <div class="dash-card dc-green" onclick="switchPanel('deliverables')">
+          <div class="dc-icon">📬</div>
+          <div class="dc-name">Deliverables</div>
+          <div class="dc-desc">Manage and publish saved briefs, assessments and digests to clients</div>
+        </div>
+        <div class="dash-card dc-red" onclick="switchPanel('clients')">
+          <div class="dc-icon">👥</div>
+          <div class="dc-name">Client Manager</div>
+          <div class="dc-desc">Onboard clients, set tiers, regions, streams and watchlist terms</div>
+        </div>
+      </div>
+      <div class="recent-alerts">
+        <div class="ra-head">Recent Intelligence</div>
+        <div id="recent-list">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);padding:12px 0">Loading…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE FEED iframe -->
+    <div class="ws-frame-panel" id="panel-feed">
+      <div class="ws-frame-bar">
+        <span class="ws-frame-title">⚡ Live Intelligence Feed</span>
+        <span class="ws-frame-path">/intelligence</span>
+      </div>
+      <iframe class="ws-iframe" id="frame-feed" src="" title="Live Feed"></iframe>
+    </div>
+
+    <!-- LINKEDIN STUDIO iframe -->
+    <div class="ws-frame-panel" id="panel-linkedin">
+      <div class="ws-frame-bar">
+        <span class="ws-frame-title">📰 LinkedIn Briefing Studio</span>
+        <span class="ws-frame-path">/dashboard</span>
+      </div>
+      <iframe class="ws-iframe" id="frame-linkedin" src="" title="LinkedIn Studio"></iframe>
+    </div>
+
+    <!-- BRIEF STUDIO iframe -->
+    <div class="ws-frame-panel" id="panel-brief">
+      <div class="ws-frame-bar">
+        <span class="ws-frame-title">📋 Client Brief Studio</span>
+        <span class="ws-frame-path">/brief</span>
+      </div>
+      <iframe class="ws-iframe" id="frame-brief" src="" title="Brief Studio"></iframe>
+    </div>
+
+    <!-- ASSESSMENT iframe -->
+    <div class="ws-frame-panel" id="panel-assessment">
+      <div class="ws-frame-bar">
+        <span class="ws-frame-title">🗺 Location Assessment</span>
+        <span class="ws-frame-path">/assessment</span>
+      </div>
+      <iframe class="ws-iframe" id="frame-assessment" src="" title="Location Assessment"></iframe>
+    </div>
+
+    <!-- DIGEST iframe -->
+    <div class="ws-frame-panel" id="panel-digest">
+      <div class="ws-frame-bar">
+        <span class="ws-frame-title">📊 Weekly Intelligence Digest</span>
+        <span class="ws-frame-path">/digest</span>
+      </div>
+      <iframe class="ws-iframe" id="frame-digest" src="" title="Weekly Digest"></iframe>
+    </div>
+
+    <!-- DELIVERABLES PANEL -->
+    <div id="panel-deliverables">
+      <div class="del-head">
+        <h2>📬 Deliverables</h2>
+        <div class="del-filters">
+          <button class="del-filter-btn on" onclick="filterDel('all',this)">All</button>
+          <button class="del-filter-btn" onclick="filterDel('brief',this)">Briefs</button>
+          <button class="del-filter-btn" onclick="filterDel('assessment',this)">Assessments</button>
+          <button class="del-filter-btn" onclick="filterDel('digest',this)">Digests</button>
+        </div>
+        <button class="tb-btn" onclick="loadDeliverables()" style="margin-left:8px">↺ Refresh</button>
+      </div>
+      <div class="del-list" id="del-list">
+        <div class="del-empty">
+          <span style="font-size:28px">📬</span>
+          <span>Loading deliverables…</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLIENTS PANEL — inline client manager -->
+    <div id="panel-clients" style="overflow:hidden">
+      <div style="padding:20px 28px 0;border-bottom:1px solid var(--border);
+        display:flex;align-items:center;gap:12px;flex-shrink:0">
+        <h2 style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;
+          color:var(--text);flex:1">👥 Client Manager</h2>
+        <button onclick="newClientInline()" class="tb-btn"
+          style="border-color:var(--blue);color:var(--blue)">+ New Client</button>
+      </div>
+      <div style="flex:1;display:flex;overflow:hidden">
+        <!-- Client list -->
+        <div style="width:260px;border-right:1px solid var(--border);
+          overflow-y:auto;flex-shrink:0" id="cm-list"></div>
+        <!-- Form area -->
+        <div style="flex:1;overflow-y:auto;padding:20px 24px" id="cm-form-area">
+          <div style="display:flex;align-items:center;justify-content:center;
+            height:100%;font-family:'JetBrains Mono',monospace;font-size:11px;
+            color:var(--text3);text-align:center">
+            Select a client to edit<br>or click + New Client
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /ws-area -->
+</div><!-- /workspace -->
+
+<!-- PUBLISH MODAL -->
+<div class="pub-modal-overlay" id="pub-overlay">
+  <div class="pub-modal">
+    <div class="pm-title">⬆ Publish to Clients</div>
+    <div class="pm-sub" id="pm-del-info">—</div>
+    <div class="pm-client-list" id="pm-client-list">Loading…</div>
+    <div class="pm-link" id="pm-link" onclick="copyPmLink()"></div>
+    <div class="pm-actions">
+      <button class="pm-btn pm-btn-blue" onclick="confirmPublish()">Publish</button>
+      <button class="pm-btn pm-btn-ghost" onclick="closePubModal()">Cancel</button>
+    </div>
+    <div class="pm-msg" id="pm-msg"></div>
   </div>
-
-  <!-- Stats -->
-  <div class="stats-strip">
-    <div class="stat-card s-blue"><div class="sc-l">Alerts Today</div><div class="sc-v" id="st-total">—</div><div class="sc-sub">across all regions</div></div>
-    <div class="stat-card s-red"><div class="sc-l">Critical</div><div class="sc-v crit" id="st-crit">—</div><div class="sc-sub">score ≥ 9</div></div>
-    <div class="stat-card s-green"><div class="sc-l">Corroborated</div><div class="sc-v grn" id="st-corr">—</div><div class="sc-sub">multi-source</div></div>
-    <div class="stat-card"><div class="sc-l">Regions Active</div><div class="sc-v" id="st-regions">—</div><div class="sc-sub">with alerts</div></div>
-    <div class="stat-card"><div class="sc-l">Sources</div><div class="sc-v" id="st-sources">99</div><div class="sc-sub">monitored feeds</div></div>
-  </div>
-
-  <!-- Studio tools -->
-  <div class="section-label">Intelligence Studios</div>
-  <div class="tool-grid">
-
-    <a href="/dashboard" class="tool-card c-blue">
-      <div class="tool-head">
-        <div class="tool-icon i-blue">📰</div>
-        <div>
-          <div class="tool-label">Content Studio</div>
-          <div class="tool-name">LinkedIn Briefing Studio</div>
-        </div>
-      </div>
-      <div class="tool-desc">Select alerts and generate a formatted LinkedIn intelligence post with thumbnail, headline, and caption. Build your audience and drive inbound leads.</div>
-      <div class="tool-footer">
-        <span class="tool-url">/dashboard</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="tool-badge badge-admin">ADMIN</span>
-          <span class="tool-arrow">→</span>
-        </div>
-      </div>
-    </a>
-
-    <a href="/brief" class="tool-card c-purple">
-      <div class="tool-head">
-        <div class="tool-icon i-purple">📋</div>
-        <div>
-          <div class="tool-label">Client Deliverable</div>
-          <div class="tool-name">Client Intelligence Brief</div>
-        </div>
-      </div>
-      <div class="tool-desc">Generate a formal intelligence brief from selected alerts. Includes key judgement, risk matrix, alert breakdown, analyst assessment, and recommendations. Print to PDF.</div>
-      <div class="tool-footer">
-        <span class="tool-url">/brief</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="tool-badge badge-admin">ADMIN</span>
-          <span class="tool-arrow">→</span>
-        </div>
-      </div>
-    </a>
-
-    <a href="/assessment" class="tool-card c-teal">
-      <div class="tool-head">
-        <div class="tool-icon i-teal">🗺</div>
-        <div>
-          <div class="tool-label">Location Intelligence</div>
-          <div class="tool-name">Location Assessment</div>
-        </div>
-      </div>
-      <div class="tool-desc">Enter any city, country or region. Claude generates a full intelligence assessment — threat matrix, hotspot map, travel advisory, crime profile and security measures.</div>
-      <div class="tool-footer">
-        <span class="tool-url">/assessment</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="tool-badge badge-admin">ADMIN</span>
-          <span class="tool-arrow">→</span>
-        </div>
-      </div>
-    </a>
-
-    <a href="/digest" class="tool-card c-amber">
-      <div class="tool-head">
-        <div class="tool-icon i-amber">📊</div>
-        <div>
-          <div class="tool-label">Weekly Report</div>
-          <div class="tool-name">Intelligence Digest</div>
-        </div>
-      </div>
-      <div class="tool-desc">Generate a structured weekly intelligence digest across all monitored regions. Summarises key events, trends, and analyst notes for client distribution.</div>
-      <div class="tool-footer">
-        <span class="tool-url">/digest</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="tool-badge badge-admin">ADMIN</span>
-          <span class="tool-arrow">→</span>
-        </div>
-      </div>
-    </a>
-
-    <a href="/intelligence" class="tool-card c-green">
-      <div class="tool-head">
-        <div class="tool-icon i-green">⚡</div>
-        <div>
-          <div class="tool-label">Live Feed</div>
-          <div class="tool-name">Intelligence Feed</div>
-        </div>
-      </div>
-      <div class="tool-desc">Real-time alert feed with full visual design. Filter by region and severity. Click any alert to read the full article. Client-gated with subscription tier access control.</div>
-      <div class="tool-footer">
-        <span class="tool-url">/intelligence</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="tool-badge badge-live">LIVE</span>
-          <span class="tool-badge badge-client">CLIENT</span>
-          <span class="tool-arrow">→</span>
-        </div>
-      </div>
-    </a>
-
-    <a href="/portal" class="tool-card c-red">
-      <div class="tool-head">
-        <div class="tool-icon i-red">🛡</div>
-        <div>
-          <div class="tool-label">Client Dashboard</div>
-          <div class="tool-name">Intelligence Portal</div>
-        </div>
-      </div>
-      <div class="tool-desc">Full client portal with regional heatmap, risk trajectory, travel advisories, corroborated events, analyst dispatch, timeline, entity tracking and source diversity.</div>
-      <div class="tool-footer">
-        <span class="tool-url">/portal</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="tool-badge badge-client">CLIENT</span>
-          <span class="tool-arrow">→</span>
-        </div>
-      </div>
-    </a>
-
-  </div>
-
-  <!-- Quick actions -->
-  <div class="section-label">Quick Access</div>
-  <div class="quick-grid">
-    <a href="/intelligence" class="quick-card">
-      <div class="quick-icon">🔴</div>
-      <div class="quick-text"><div class="quick-label">Live Now</div><div class="quick-name">Critical Alerts</div></div>
-    </a>
-    <a href="/portal" class="quick-card">
-      <div class="quick-icon">🌍</div>
-      <div class="quick-text"><div class="quick-label">Overview</div><div class="quick-name">Regional Heatmap</div></div>
-    </a>
-    <a href="/brief" class="quick-card">
-      <div class="quick-icon">📄</div>
-      <div class="quick-text"><div class="quick-label">Generate</div><div class="quick-name">New Client Brief</div></div>
-    </a>
-    <a href="/assessment" class="quick-card">
-      <div class="quick-icon">📍</div>
-      <div class="quick-text"><div class="quick-label">Assess</div><div class="quick-name">Location Risk</div></div>
-    </a>
-  </div>
-
-  <!-- Recent alerts -->
-  <div class="section-label">Recent Intelligence</div>
-  <div class="recent-list" id="recent-list">
-    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);padding:20px 0;text-align:center">Loading recent alerts…</div>
-  </div>
-
 </div>
 
 <script>
-const API = window.location.origin;
+var API = window.location.origin;
+var currentPanel = 'dashboard';
+var allDeliverables = [];
+var currentDelFilter = 'all';
+var publishingId = null;
 
-// Time
+// ── IFRAME ROUTES ─────────────────────────────────────────────────────────
+var PANEL_SRCS = {
+  feed:       '/intelligence',
+  linkedin:   '/dashboard',
+  brief:      '/brief',
+  assessment: '/assessment',
+  digest:     '/digest',
+};
+
+// ── TIME ──────────────────────────────────────────────────────────────────
 function updateTime(){
-  const now = new Date();
-  const h = now.getUTCHours();
+  var now = new Date();
   document.getElementById('tb-time').textContent =
     now.toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',
-    hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) + ' UTC';
-  const greet = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
-  document.getElementById('greeting-time').textContent = greet;
+    hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC';
+  var h = now.getUTCHours();
+  document.getElementById('greeting').textContent = h<12?'morning':h<17?'afternoon':'evening';
 }
 updateTime(); setInterval(updateTime, 30000);
 
-// Load stats + recent alerts
-async function loadDashboard(){
-  try{
-    const r = await fetch(`${API}/alerts?hours=24&min_score=4&limit=100`);
-    const d = await r.json();
-    const alerts = d.alerts || [];
-    document.getElementById('st-total').textContent = alerts.length;
-    document.getElementById('st-crit').textContent = alerts.filter(a=>a.is_critical||a.score>=9).length;
-    document.getElementById('st-corr').textContent = alerts.filter(a=>(a.source_count||1)>=2).length;
-    document.getElementById('st-regions').textContent = new Set(alerts.map(a=>a.region)).size;
+// ── SWITCH PANEL ──────────────────────────────────────────────────────────
+function switchPanel(name){
+  // Hide all panels
+  document.querySelectorAll('.ws-frame-panel, #panel-dashboard, #panel-deliverables, #panel-clients')
+    .forEach(function(el){
+      el.style.display='none';
+      el.classList.remove('active');
+    });
 
-    // Recent alerts list — top 6
-    const top = alerts.slice(0,6);
+  // Deactivate all nav items
+  document.querySelectorAll('.nav-item').forEach(function(el){el.classList.remove('active');});
+
+  // Show selected panel
+  var panel = document.getElementById('panel-'+name);
+  if(panel){
+    panel.style.display='flex';
+    panel.classList.add('active');
+  }
+
+  // Activate nav item
+  var navItem = document.getElementById('nav-'+name);
+  if(navItem) navItem.classList.add('active');
+
+  currentPanel = name;
+
+  // Lazy-load iframes on first visit
+  if(PANEL_SRCS[name]){
+    var iframe = document.getElementById('frame-'+name);
+    if(iframe && !iframe.src.includes(PANEL_SRCS[name])){
+      iframe.src = PANEL_SRCS[name];
+    }
+  }
+
+  // Load deliverables when switching to that panel
+  if(name==='deliverables') loadDeliverables();
+
+  // Load client manager iframe
+  if(name==='clients'){
+    var cf = document.getElementById('frame-clients');
+    // Embed the client manager as a standalone page
+    // Since we can't easily embed just the modal, open it in an iframe
+    // pointing to a dedicated client-manager page
+    if(cf && !cf.src) cf.src = 'about:blank';
+    renderClientsPanel();
+  }
+}
+
+// ── LOAD STATS + RECENT ───────────────────────────────────────────────────
+function loadDashboard(){
+  fetch(API+'/alerts?hours=24&min_score=4&limit=100')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var alerts = d.alerts||[];
+    var crit = alerts.filter(function(a){return a.is_critical||a.score>=9;}).length;
+    var high = alerts.filter(function(a){return a.score>=7&&a.score<9&&!a.is_critical;}).length;
+    document.getElementById('st-tot').textContent = alerts.length;
+    document.getElementById('st-crit').textContent = crit;
+    document.getElementById('st-high').textContent = high;
+    document.getElementById('feed-badge').textContent = alerts.length;
+
+    // Recent alerts
+    var top = alerts.slice(0,6);
     if(!top.length){
       document.getElementById('recent-list').innerHTML =
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3);padding:16px 0;text-align:center">No alerts in the last 24 hours.</div>';
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3);padding:12px 0">No alerts in the last 24 hours.</div>';
       return;
     }
-
-    function sevClass(score,crit){
-      if(crit||score>=9)return'crit';if(score>=7)return'high';return'med';
-    }
-    function sevLabel(score,crit){
-      if(crit||score>=9)return'CRITICAL';if(score>=7)return'HIGH';return'MEDIUM';
-    }
+    function sevInfo(s,c){return c||s>=9?{cl:'crit',l:'CRITICAL'}:s>=7?{cl:'high',l:'HIGH'}:{cl:'med',l:'MEDIUM'};}
     function fmtTs(ts){
-      try{
-        const d = typeof ts==='number'?new Date(ts*1000):new Date(ts);
+      try{var d=typeof ts==='number'?new Date(ts*1000):new Date(ts);
         return d.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC';
-      }catch(e){return'';}
+      }catch(e){return '';}
     }
+    document.getElementById('recent-list').innerHTML = top.map(function(a){
+      var s=sevInfo(a.score,a.is_critical);
+      return '<a href="#" class="ra-row" onclick="switchPanel(\'feed\');return false">'
+        +'<span class="ra-sev '+s.cl+'">'+s.l+'</span>'
+        +'<span class="ra-title">'+(a.title||'')+'</span>'
+        +'<span class="ra-meta">'+(a.region||'').replace(/_/g,' ')+' · '+fmtTs(a.ts_iso||a.ts)+'</span>'
+        +'</a>';
+    }).join('');
+  }).catch(function(){});
 
-    document.getElementById('recent-list').innerHTML = top.map(a=>`
-      <a href="/intelligence" class="recent-row">
-        <span class="rr-sev sev-${sevClass(a.score,a.is_critical)}">${sevLabel(a.score,a.is_critical)}</span>
-        <span class="rr-title">${a.title||''}</span>
-        <span class="rr-meta">${(a.region||'').replace(/_/g,' ')} · ${fmtTs(a.ts_iso||a.ts)}</span>
-      </a>`).join('');
+  // Load deliverables count
+  fetch(API+'/deliverables',{credentials:'include'})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var count=(d.deliverables||[]).length;
+    var badge=document.getElementById('del-badge');
+    if(count>0){badge.textContent=count;badge.style.display='block';}
+  }).catch(function(){});
+}
+
+// ── DELIVERABLES ──────────────────────────────────────────────────────────
+function loadDeliverables(){
+  var list = document.getElementById('del-list');
+  list.innerHTML = '<div class="del-empty"><span style="font-size:22px">⏳</span><span>Loading…</span></div>';
+  fetch(API+'/deliverables?limit=100',{credentials:'include'})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    allDeliverables = d.deliverables||[];
+    renderDeliverables();
+  })
+  .catch(function(e){
+    list.innerHTML='<div class="del-empty" style="color:var(--critical)">Error: '+e.message+'</div>';
+  });
+}
+
+function filterDel(type, el){
+  currentDelFilter = type;
+  document.querySelectorAll('.del-filter-btn').forEach(function(b){b.classList.remove('on');});
+  if(el) el.classList.add('on');
+  renderDeliverables();
+}
+
+function renderDeliverables(){
+  var list = document.getElementById('del-list');
+  var items = currentDelFilter==='all'
+    ? allDeliverables
+    : allDeliverables.filter(function(d){return d.type===currentDelFilter;});
+
+  if(!items.length){
+    list.innerHTML='<div class="del-empty"><span style="font-size:28px">📭</span>'
+      +'<span>No '+currentDelFilter+' deliverables yet.<br>Generate one from the studios.</span></div>';
+    return;
+  }
+
+  var typeCls={brief:'dtb-brief',assessment:'dtb-assessment',digest:'dtb-digest'};
+  var typeIcon={brief:'📋',assessment:'🗺',digest:'📊'};
+  var typeLabel={brief:'Brief',assessment:'Assessment',digest:'Digest'};
+
+  list.innerHTML = items.map(function(d){
+    var created=new Date(d.created_at*1000).toLocaleDateString('en-GB',
+      {day:'2-digit',month:'short',year:'numeric'});
+    var clients=(d.clients||[]).length;
+    return '<div class="del-row">'
+      +'<span class="del-type-badge '+typeCls[d.type]+'">'+typeIcon[d.type]+' '+(typeLabel[d.type]||d.type)+'</span>'
+      +'<div class="del-title">'+(d.title||'Untitled')+'</div>'
+      +'<div class="del-meta">'
+        +'<span>'+created+'</span>'
+        +'<span>'+(d.time_remaining||'—')+'</span>'
+        +'<span>'+(clients>0?'📤 '+clients+' client'+(clients!==1?'s':''):'Not published')+'</span>'
+      +'</div>'
+      +'<div class="del-actions">'
+        +'<a class="del-btn del-btn-view" href="'+API+'/view/'+d.token+'" target="_blank">View</a>'
+        +'<button class="del-btn del-btn-publish" onclick="openPubModal(\''+d.id+'\','+JSON.stringify(d.title||'').replace(/'/g,"\\'")+')">Publish</button>'
+        +'<button class="del-btn del-btn-delete" onclick="deleteDeliverable(\''+d.id+'\')">✕</button>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+async function deleteDeliverable(id){
+  if(!confirm('Delete this deliverable? Clients will lose access immediately.')) return;
+  try{
+    await fetch(API+'/deliverables/'+id,{method:'DELETE',credentials:'include'});
+    loadDeliverables();
+  }catch(e){alert('Error: '+e.message);}
+}
+
+// ── PUBLISH MODAL ─────────────────────────────────────────────────────────
+async function openPubModal(delId, title){
+  publishingId = delId;
+  document.getElementById('pm-del-info').textContent = title || 'Deliverable';
+  document.getElementById('pm-msg').style.display='none';
+  document.getElementById('pm-link').classList.remove('show');
+  document.getElementById('pub-overlay').classList.add('show');
+
+  // Load clients
+  var list = document.getElementById('pm-client-list');
+  list.innerHTML='<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--text3);text-align:center;padding:10px">Loading…</div>';
+  try{
+    var r = await fetch(API+'/admin/clients',{credentials:'include'});
+    var d = await r.json();
+    var clients=(d.clients||[]).filter(function(c){return c.username!=='viginote_admin';});
+
+    // Load current deliverable to pre-check already published clients
+    var dr = await fetch(API+'/deliverables/'+delId,{credentials:'include'});
+    var dd = await dr.json();
+    var existingClients = dd.clients||[];
+
+    // Show view link
+    var linkEl=document.getElementById('pm-link');
+    linkEl.textContent=API+'/view/'+(dd.token||'');
+    linkEl.classList.add('show');
+
+    if(!clients.length){
+      list.innerHTML='<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--text3);text-align:center;padding:10px">No clients yet. Add via Client Manager.</div>';
+      return;
+    }
+    list.innerHTML=clients.map(function(c){
+      var alreadyPublished=existingClients.indexOf(c.username)>=0;
+      return '<div class="pm-client-item'+(alreadyPublished?' on':'')+'" id="pm-ci-'+c.username+'" onclick="this.classList.toggle(\'on\')">'
+        +'<div class="pm-client-name">'+(c.label||c.username)+(alreadyPublished?' ✓':'')+'</div>'
+        +'<span class="pm-client-tier">'+(c.tier||'analyst').toUpperCase()+'</span>'
+        +'</div>';
+    }).join('');
   }catch(e){
-    document.getElementById('recent-list').innerHTML =
-      `<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#ef4444;padding:16px 0">Feed error: ${e.message}</div>`;
+    list.innerHTML='<div style="color:var(--critical);font-family:\'JetBrains Mono\',monospace;font-size:10px;padding:10px">Error: '+e.message+'</div>';
   }
 }
-loadDashboard();
-</script>
 
-<!-- ═══════════════════════════════════════════════════════
-     CLIENT MANAGER MODAL
-═══════════════════════════════════════════════════════ -->
-<div class="cm-overlay" id="cm-overlay">
-  <div class="cm-modal">
-    <div class="cm-head">
-      <h2>⊕ Client Manager</h2>
-      <button class="cm-close" onclick="closeCM()">✕</button>
-    </div>
-    <div class="cm-body">
-      <!-- CLIENT LIST -->
-      <div class="cm-list">
-        <div class="cm-list-head">
-          <span class="cm-list-label">Clients</span>
-          <button class="cm-add-btn" onclick="newClient()">+ New</button>
-        </div>
-        <div class="cm-client-rows" id="cm-client-rows">
-          <div style="padding:20px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ui-text3);text-align:center">Loading…</div>
-        </div>
-      </div>
-      <!-- FORM PANEL -->
-      <div style="display:flex;flex-direction:column;overflow:hidden">
-        <div class="cm-msg" id="cm-msg"></div>
-        <div class="cm-form" id="cm-form">
-          <div class="cm-empty" id="cm-empty">Select a client to edit<br>or click + New to create one</div>
-          <div id="cm-fields" style="display:none">
-            <div class="cm-form-grid">
-
-              <div class="cm-field">
-                <label class="cm-label">Username</label>
-                <input class="cm-input" id="cm-username" type="text" placeholder="client_name" autocorrect="off" autocapitalize="off">
-              </div>
-              <div class="cm-field">
-                <label class="cm-label">Password</label>
-                <input class="cm-input" id="cm-password" type="text" placeholder="secure password">
-              </div>
-              <div class="cm-field">
-                <label class="cm-label">Display Label</label>
-                <input class="cm-input" id="cm-label" type="text" placeholder="Company Name — Team">
-              </div>
-              <div class="cm-field">
-                <label class="cm-label">Tier</label>
-                <select class="cm-select" id="cm-tier" onchange="onTierChange()">
-                  <option value="monitor">Monitor — Free</option>
-                  <option value="analyst">Analyst — $149/mo</option>
-                  <option value="operator" selected>Operator — $399/mo</option>
-                  <option value="enterprise">Enterprise — $899/mo</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-              <div class="cm-field">
-                <label class="cm-label">Brief Allowance / Month</label>
-                <input class="cm-input" id="cm-briefs" type="number" value="5" min="0" max="100">
-              </div>
-
-              <div class="cm-section-label">Intelligence Streams</div>
-              <div class="cm-field full">
-                <label class="cm-label">Select Streams <span id="stream-limit-note" style="color:var(--blue);font-size:8px"></span></label>
-                <div class="cm-check-group" id="stream-checks"></div>
-              </div>
-
-              <div class="cm-section-label">Geographic Access</div>
-              <div class="cm-field full">
-                <label class="cm-label">Regions <span id="region-limit-note" style="color:var(--blue);font-size:8px"></span></label>
-                <div class="cm-check-group" id="region-checks"></div>
-              </div>
-              <div class="cm-field full" id="country-field">
-                <label class="cm-label">Country Filter <span style="color:var(--ui-text3);font-size:8px">(optional — narrows alerts to specific countries within region)</span></label>
-                <div id="country-groups"></div>
-              </div>
-
-              <div class="cm-section-label">Watchlist</div>
-              <div class="cm-field full">
-                <label class="cm-label">Watchlist Terms <span id="wl-limit-note" style="color:var(--blue);font-size:8px"></span> — type term and press Enter or comma</label>
-                <div class="cm-tag-input-wrap" id="wl-tag-wrap" onclick="document.getElementById('wl-input').focus()">
-                  <input class="cm-tag-input" id="wl-input" placeholder="Gaza, Sudan, RSF…" autocorrect="off">
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-        <div class="cm-actions" id="cm-actions" style="display:none">
-          <button class="cm-save-btn" onclick="saveClient()">Save Client</button>
-          <button class="cm-delete-btn" id="cm-delete-btn" onclick="deleteClient()">Delete</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-// ── DATA ──────────────────────────────────────────────────────────────────
-var API = window.location.origin;
-
-var ALL_REGIONS = {
-  'GLOBAL':'Global',
-  'MIDDLE_EAST':'Middle East',
-  'EUROPE':'Europe',
-  'ASIA':'Asia',
-  'WEST_EAST_AFRICA':'W/E Africa',
-  'SOUTHERN_AFRICA':'S Africa',
-  'SOUTH_AMERICA':'S America'
-};
-
-var REGION_COUNTRIES = {
-  'MIDDLE_EAST':{
-    'IL':'Israel','PS':'Palestine / Gaza','SY':'Syria','IQ':'Iraq',
-    'IR':'Iran','YE':'Yemen','LB':'Lebanon','JO':'Jordan',
-    'SA':'Saudi Arabia','AE':'UAE','TR':'Turkey','KW':'Kuwait',
-    'QA':'Qatar','BH':'Bahrain','OM':'Oman'
-  },
-  'EUROPE':{
-    'UA':'Ukraine','RU':'Russia','BY':'Belarus','GE':'Georgia',
-    'AM':'Armenia','AZ':'Azerbaijan','RS':'Serbia','XK':'Kosovo',
-    'BA':'Bosnia','PL':'Poland','RO':'Romania','GR':'Greece',
-    'TR':'Turkey','MD':'Moldova','MK':'N Macedonia','AL':'Albania'
-  },
-  'ASIA':{
-    'CN':'China','TW':'Taiwan','HK':'Hong Kong','KP':'N Korea',
-    'KR':'S Korea','JP':'Japan','MM':'Myanmar','TH':'Thailand',
-    'PH':'Philippines','VN':'Vietnam','AF':'Afghanistan',
-    'PK':'Pakistan','IN':'India','BD':'Bangladesh','ID':'Indonesia',
-    'MY':'Malaysia','SG':'Singapore'
-  },
-  'WEST_EAST_AFRICA':{
-    'SD':'Sudan','SS':'S Sudan','ET':'Ethiopia','SO':'Somalia',
-    'NG':'Nigeria','ML':'Mali','BF':'Burkina Faso','NE':'Niger',
-    'TD':'Chad','CF':'C African Rep','CD':'DR Congo',
-    'KE':'Kenya','UG':'Uganda','TZ':'Tanzania','RW':'Rwanda',
-    'GH':'Ghana','SN':'Senegal','CI':'Côte d'Ivoire','CM':'Cameroon'
-  },
-  'SOUTHERN_AFRICA':{
-    'ZA':'South Africa','ZW':'Zimbabwe','MZ':'Mozambique',
-    'ZM':'Zambia','MW':'Malawi','NA':'Namibia','BW':'Botswana',
-    'AO':'Angola','LS':'Lesotho','SZ':'Eswatini','MG':'Madagascar'
-  },
-  'SOUTH_AMERICA':{
-    'VE':'Venezuela','CO':'Colombia','BR':'Brazil','MX':'Mexico',
-    'HT':'Haiti','PE':'Peru','EC':'Ecuador','BO':'Bolivia',
-    'AR':'Argentina','CL':'Chile','CU':'Cuba','GT':'Guatemala',
-    'HN':'Honduras','NI':'Nicaragua'
-  }
-};
-
-var ALL_STREAMS = [
-  {id:'geographic',label:'🌍 Geographic',desc:'Conflict & security'},
-  {id:'maritime',  label:'⚓ Maritime',  desc:'Piracy & shipping'},
-  {id:'cyber',     label:'💻 Cyber',     desc:'Attacks & breaches'},
-  {id:'economic',  label:'📊 Economic',  desc:'Sanctions & trade'},
-  {id:'political', label:'🗳 Political', desc:'Elections & coups'},
-  {id:'executive', label:'🛡 Executive', desc:'Travel & KFR'}
-];
-
-var TIER_LIMITS = {
-  monitor:    {regions:1, streams:1, watchlist:3,  briefs:0},
-  analyst:    {regions:2, streams:2, watchlist:5,  briefs:2},
-  operator:   {regions:4, streams:4, watchlist:15, briefs:5},
-  enterprise: {regions:7, streams:6, watchlist:50, briefs:20},
-  admin:      {regions:7, streams:6, watchlist:999,briefs:-1}
-};
-
-var currentClients = {};
-var currentUsername = null;
-var watchlistTerms = [];
-var editingNew = false;
-
-// ── OPEN / CLOSE ──────────────────────────────────────────────────────────
-function openCM(){
-  document.getElementById('cm-overlay').classList.add('show');
-  loadClients();
+function closePubModal(){
+  document.getElementById('pub-overlay').classList.remove('show');
+  publishingId=null;
 }
-function closeCM(){
-  document.getElementById('cm-overlay').classList.remove('show');
-}
-document.getElementById('cm-overlay').addEventListener('click', function(e){
-  if(e.target === this) closeCM();
+
+document.getElementById('pub-overlay').addEventListener('click',function(e){
+  if(e.target===this) closePubModal();
 });
 
-// ── LOAD CLIENTS ──────────────────────────────────────────────────────────
-function loadClients(){
+async function confirmPublish(){
+  if(!publishingId) return;
+  var selected=[...document.querySelectorAll('.pm-client-item.on')]
+    .map(function(el){return el.id.replace('pm-ci-','');});
+  if(!selected.length){showPmMsg('Select at least one client.','err');return;}
+  try{
+    await fetch(API+'/deliverables/'+publishingId+'/publish',{
+      method:'POST',credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({clients:selected})
+    });
+    showPmMsg('Published to '+selected.length+' client'+(selected.length!==1?'s':'')+'. Active immediately.','ok');
+    setTimeout(function(){closePubModal();loadDeliverables();},2500);
+  }catch(e){showPmMsg('Error: '+e.message,'err');}
+}
+
+function copyPmLink(){
+  var el=document.getElementById('pm-link');
+  navigator.clipboard.writeText(el.textContent).then(function(){
+    var orig=el.textContent;
+    el.textContent='✓ Copied!';
+    setTimeout(function(){el.textContent=orig;},2000);
+  });
+}
+
+function showPmMsg(msg,type){
+  var el=document.getElementById('pm-msg');
+  el.textContent=msg;el.className='pm-msg '+type;el.style.display='block';
+}
+
+// ── CLIENTS PANEL (inline) ─────────────────────────────────────────────────
+function renderClientsPanel(){
+  loadCmClients();
+}
+// ── CLIENT MANAGER ────────────────────────────────────────────────────────
+var ALL_REGIONS_CM={'GLOBAL':'Global','MIDDLE_EAST':'Middle East','EUROPE':'Europe',
+  'ASIA':'Asia','WEST_EAST_AFRICA':'W/E Africa','SOUTHERN_AFRICA':'S Africa','SOUTH_AMERICA':'S America'};
+var ALL_STREAMS_CM=[
+  {id:'geographic',label:'🌍 Geographic'},{id:'maritime',label:'⚓ Maritime'},
+  {id:'cyber',label:'💻 Cyber'},{id:'economic',label:'📊 Economic'},
+  {id:'political',label:'🗳 Political'},{id:'executive',label:'🛡 Executive'}];
+var REGION_COUNTRIES_CM={
+  'MIDDLE_EAST':{'IL':'Israel','PS':'Palestine','SY':'Syria','IQ':'Iraq','IR':'Iran','YE':'Yemen','LB':'Lebanon','SA':'Saudi Arabia','AE':'UAE','TR':'Turkey'},
+  'EUROPE':{'UA':'Ukraine','RU':'Russia','BY':'Belarus','GE':'Georgia','AM':'Armenia','AZ':'Azerbaijan','RS':'Serbia','PL':'Poland','RO':'Romania','GR':'Greece'},
+  'ASIA':{'CN':'China','TW':'Taiwan','KP':'N Korea','MM':'Myanmar','AF':'Afghanistan','PK':'Pakistan','IN':'India','PH':'Philippines','VN':'Vietnam','ID':'Indonesia'},
+  'WEST_EAST_AFRICA':{'SD':'Sudan','SS':'S Sudan','ET':'Ethiopia','SO':'Somalia','NG':'Nigeria','ML':'Mali','BF':'Burkina Faso','CD':'DR Congo','KE':'Kenya','TZ':'Tanzania'},
+  'SOUTHERN_AFRICA':{'ZA':'South Africa','ZW':'Zimbabwe','MZ':'Mozambique','ZM':'Zambia','MW':'Malawi','NA':'Namibia','BW':'Botswana','AO':'Angola'},
+  'SOUTH_AMERICA':{'VE':'Venezuela','CO':'Colombia','BR':'Brazil','MX':'Mexico','HT':'Haiti','PE':'Peru','EC':'Ecuador','AR':'Argentina','CL':'Chile','CU':'Cuba'}
+};
+var TIER_LIMITS_CM={
+  monitor:{regions:1,streams:1,watchlist:3,briefs:0},
+  analyst:{regions:2,streams:2,watchlist:5,briefs:2},
+  operator:{regions:4,streams:4,watchlist:15,briefs:5},
+  enterprise:{regions:7,streams:6,watchlist:50,briefs:20},
+  admin:{regions:7,streams:6,watchlist:999,briefs:-1}
+};
+var cmWatchlistTerms=[],cmCurrentUser=null,cmClients={};
+
+function loadCmClients(){
   fetch(API+'/admin/clients',{credentials:'include'})
   .then(function(r){return r.json();})
   .then(function(d){
-    var rows = document.getElementById('cm-client-rows');
-    currentClients = {};
-    (d.clients||[]).forEach(function(c){currentClients[c.username]=c;});
-    if(!d.clients||!d.clients.length){
-      rows.innerHTML='<div style="padding:20px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ui-text3);text-align:center">No clients yet.<br>Click + New to add one.</div>';
-      return;
-    }
-    rows.innerHTML = d.clients.map(function(c){
-      var tierClass='tier-pill-'+(c.tier||'analyst');
-      var active = currentUsername===c.username?' active':'';
-      return '<div class="cm-client-row'+active+'" onclick="selectClient(''+c.username+'')">'
-        +'<div class="cm-row-status"></div>'
-        +'<div class="cm-row-name">'+(c.label||c.username)+'<br>'
-        +'<span style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--ui-text3)">@'+c.username+'</span></div>'
-        +'<span class="cm-row-tier '+tierClass+'">'+(c.tier||'analyst').toUpperCase()+'</span>'
+    cmClients={};
+    (d.clients||[]).forEach(function(c){cmClients[c.username]=c;});
+    var list=document.getElementById('cm-list');
+    if(!list)return;
+    var html='';
+    (d.clients||[]).forEach(function(c){
+      var isActive=cmCurrentUser===c.username;
+      html+='<div onclick="selectCmClient(''+c.username+'')" style="padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;'+(isActive?'background:var(--blue-pale);border-left:3px solid var(--blue)':'')+'">'
+        +'<div style="font-size:12px;font-weight:500;color:var(--text)">'+(c.label||c.username)+'</div>'
+        +'<div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);margin-top:2px">@'+c.username+' · '+(c.tier||'analyst').toUpperCase()+'</div>'
         +'</div>';
-    }).join('');
-  })
-  .catch(function(e){
-    document.getElementById('cm-client-rows').innerHTML='<div style="padding:16px;color:var(--critical);font-family:'JetBrains Mono',monospace;font-size:10px">Error: '+e.message+'</div>';
+    });
+    if(!html)html='<div style="padding:20px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);text-align:center">No clients yet</div>';
+    list.innerHTML=html;
   });
 }
 
-// ── SELECT CLIENT ─────────────────────────────────────────────────────────
-function selectClient(username){
-  currentUsername = username;
-  editingNew = false;
-  var c = currentClients[username];
-  if(!c) return;
-  // Highlight row
-  document.querySelectorAll('.cm-client-row').forEach(function(r){r.classList.remove('active');});
-  var rows = document.querySelectorAll('.cm-client-row');
-  rows.forEach(function(r){if(r.textContent.indexOf('@'+username)>=0)r.classList.add('active');});
-  showForm(c);
-}
+function selectCmClient(u){cmCurrentUser=u;var c=cmClients[u];if(c)renderCmForm(c,false);loadCmClients();}
+function newClientInline(){cmCurrentUser=null;renderCmForm(null,true);}
 
-function newClient(){
-  currentUsername = null;
-  editingNew = true;
-  document.querySelectorAll('.cm-client-row').forEach(function(r){r.classList.remove('active');});
-  showForm(null);
-}
-
-// ── SHOW FORM ─────────────────────────────────────────────────────────────
-function showForm(c){
-  document.getElementById('cm-empty').style.display='none';
-  document.getElementById('cm-fields').style.display='block';
-  document.getElementById('cm-actions').style.display='flex';
-  document.getElementById('cm-msg').style.display='none';
-
-  var isNew = !c;
-  document.getElementById('cm-username').value = c?c.username:'';
-  document.getElementById('cm-username').readOnly = !isNew;
-  document.getElementById('cm-username').style.opacity = isNew?'1':'0.6';
-  document.getElementById('cm-password').value = c?c.password:'';
-  document.getElementById('cm-label').value = c?(c.label||''):'';
-  document.getElementById('cm-tier').value = c?(c.tier||'analyst'):'operator';
-  document.getElementById('cm-briefs').value = c?(c.brief_allowance||5):5;
-
-  var delBtn = document.getElementById('cm-delete-btn');
-  if(isNew) delBtn.classList.remove('show');
-  else delBtn.classList.add('show');
-
-  // Set watchlist
-  watchlistTerms = c?(c.watchlist||[]):[];
-  renderWatchlistTags();
-
-  // Build stream checkboxes
-  buildStreamChecks(c?c.streams||['geographic']:['geographic']);
-  // Build region checkboxes
-  buildRegionChecks(c?c.regions||[]:[], c?c.countries||[]:[]);
-  // Update tier limits
-  onTierChange();
-}
-
-// ── TIER CHANGE ───────────────────────────────────────────────────────────
-function onTierChange(){
-  var tier = document.getElementById('cm-tier').value;
-  var limits = TIER_LIMITS[tier]||TIER_LIMITS.analyst;
-  var isAdmin = tier==='admin'||tier==='enterprise';
-
-  document.getElementById('stream-limit-note').textContent = isAdmin?'(all included)':'(max '+limits.streams+')';
-  document.getElementById('region-limit-note').textContent = isAdmin?'(all regions)':'(max '+limits.regions+')';
-  document.getElementById('wl-limit-note').textContent = isAdmin?'(unlimited)':'(max '+limits.watchlist+')';
-  document.getElementById('cm-briefs').value = limits.briefs<0?-1:limits.briefs;
-
-  // Auto-check all for admin/enterprise
-  if(isAdmin){
-    document.querySelectorAll('#stream-checks .cm-check-item').forEach(function(el){
-      el.classList.add('checked');
-      el.querySelector('input').checked=true;
+function renderCmForm(c,isNew){
+  var area=document.getElementById('cm-form-area');if(!area)return;
+  cmWatchlistTerms=c?(c.watchlist||[]):[];
+  var tier=c?(c.tier||'analyst'):'operator';
+  var lim=TIER_LIMITS_CM[tier]||TIER_LIMITS_CM.analyst;
+  var inp='padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);outline:none;width:100%';
+  var lbl='font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:5px;display:block';
+  var chk=function(id,label,checked,cls){return'<label style="display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border:1px solid '+(checked?'var(--blue)':'var(--border2)')+';border-radius:4px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px;color:'+(checked?'var(--blue)':'var(--text2)')+';background:'+(checked?'var(--blue-pale)':'transparent')+';" class="'+cls+'" data-id="'+id+'" onclick="toggleCmCheck(this)"><input type="checkbox" value="'+id+'" '+(checked?'checked':'')+' style="display:none">'+label+'</label>';};
+  var streamsHtml=ALL_STREAMS_CM.map(function(s){return chk(s.id,s.label,(c&&c.streams&&c.streams.indexOf(s.id)>=0)||(!c&&s.id==='geographic'),'cm-s');}).join('');
+  var regionsHtml=Object.keys(ALL_REGIONS_CM).map(function(r){return chk(r,ALL_REGIONS_CM[r],c&&c.regions&&c.regions.indexOf(r)>=0,'cm-r');}).join('');
+  area.innerHTML='<div style="display:flex;flex-direction:column;gap:14px">'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    +'<div><span style="'+lbl+'">Username</span><input id="cf-u" style="'+inp+'"'+(isNew?'':' readonly style="'+inp+';opacity:.6"')+' value="'+(c?c.username:'')+'"></div>'
+    +'<div><span style="'+lbl+'">Password</span><input id="cf-p" style="'+inp+'" value="'+(c?c.password:'')+'"></div>'
+    +'<div><span style="'+lbl+'">Display Label</span><input id="cf-l" style="'+inp+'" placeholder="Company Name" value="'+(c?c.label||'':'')+'"></div>'
+    +'<div><span style="'+lbl+'">Tier</span><select id="cf-t" style="'+inp+'" onchange="onCmTier()">'
+    +['monitor','analyst','operator','enterprise','admin'].map(function(t){return'<option value="'+t+'"'+(tier===t?' selected':'')+'>'+t[0].toUpperCase()+t.slice(1)+'</option>';}).join('')
+    +'</select></div>'
+    +'<div><span style="'+lbl+'">Briefs/Month</span><input id="cf-b" style="'+inp+'" type="number" value="'+(c?c.brief_allowance:5)+'"></div>'
+    +'</div>'
+    +'<div><span style="'+lbl+'">Streams <span id="cf-sl" style="color:var(--blue);font-weight:400">(max '+lim.streams+')</span></span><div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px" id="cf-streams">'+streamsHtml+'</div></div>'
+    +'<div><span style="'+lbl+'">Regions <span id="cf-rl" style="color:var(--blue);font-weight:400">(max '+lim.regions+')</span></span><div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px" id="cf-regions">'+regionsHtml+'</div></div>'
+    +'<div id="cf-cw"></div>'
+    +'<div><span style="'+lbl+'">Watchlist — type and press Enter</span>'
+    +'<div id="cf-ww" style="display:flex;flex-wrap:wrap;gap:5px;padding:8px;background:rgba(255,255,255,.03);border:1px solid var(--border2);border-radius:5px;min-height:44px;cursor:text" onclick="document.getElementById('cf-wi').focus()">'
+    +'<input id="cf-wi" style="border:none;background:transparent;outline:none;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);min-width:120px;flex:1;padding:2px 4px" placeholder="Gaza, Sudan, RSF…" autocorrect="off">'
+    +'</div></div>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button onclick="saveCm()" style="flex:1;padding:10px;background:var(--blue-dim);color:#fff;border:none;border-radius:5px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Save Client</button>'
+    +(isNew?'':'<button onclick="deleteCm()" style="padding:10px 14px;background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border);border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer">Delete</button>')
+    +'</div>'
+    +'<div id="cf-msg" style="display:none;font-family:'JetBrains Mono',monospace;font-size:10px;padding:8px 12px;border-radius:4px"></div>'
+    +'</div>';
+  renderCmTags();
+  renderCmCountries(c?c.regions||[]:[], c?c.countries||[]:[]);
+  var wi=document.getElementById('cf-wi');
+  if(wi){
+    wi.addEventListener('keydown',function(e){
+      if(e.key==='Enter'||e.key===','){e.preventDefault();var v=this.value.trim().replace(/,/g,'');if(v&&cmWatchlistTerms.indexOf(v)<0)cmWatchlistTerms.push(v);renderCmTags();this.value='';}
+      if(e.key==='Backspace'&&!this.value&&cmWatchlistTerms.length>0){cmWatchlistTerms.pop();renderCmTags();}
     });
-    document.querySelectorAll('#region-checks .cm-check-item').forEach(function(el){
-      el.classList.add('checked');
-      el.querySelector('input').checked=true;
-    });
-    updateCountryGroups();
   }
 }
 
-// ── STREAM CHECKBOXES ─────────────────────────────────────────────────────
-function buildStreamChecks(selected){
-  var wrap = document.getElementById('stream-checks');
-  wrap.innerHTML = ALL_STREAMS.map(function(s){
-    var checked = selected.indexOf(s.id)>=0;
-    return '<label class="cm-check-item'+(checked?' checked':'')+'" onclick="toggleCheck(this,'stream-checks')">'
-      +'<input type="checkbox" value="'+s.id+'"'+(checked?' checked':'')+' style="display:none">'
-      +'<span class="cm-check-label">'+s.label+'</span>'
-      +'</label>';
-  }).join('');
+function toggleCmCheck(el){
+  var on=el.querySelector('input').checked;
+  if(on){el.style.borderColor='var(--border2)';el.style.background='transparent';el.style.color='var(--text2)';el.querySelector('input').checked=false;}
+  else{el.style.borderColor='var(--blue)';el.style.background='var(--blue-pale)';el.style.color='var(--blue)';el.querySelector('input').checked=true;}
+  if(el.classList.contains('cm-r')){
+    var sr=[...document.querySelectorAll('#cf-regions .cm-r')].filter(function(e){return e.querySelector('input').checked;}).map(function(e){return e.dataset.id;});
+    var sc=[...document.querySelectorAll('[id^="cg-"] input:checked')].map(function(e){return e.value;});
+    renderCmCountries(sr,sc);
+  }
 }
 
-// ── REGION CHECKBOXES ─────────────────────────────────────────────────────
-function buildRegionChecks(selectedRegions, selectedCountries){
-  var wrap = document.getElementById('region-checks');
-  wrap.innerHTML = Object.keys(ALL_REGIONS).map(function(r){
-    var checked = selectedRegions.indexOf(r)>=0;
-    return '<label class="cm-check-item'+(checked?' checked':'')+'" onclick="toggleRegion(this,''+r+'')">'
-      +'<input type="checkbox" value="'+r+'"'+(checked?' checked':'')+' style="display:none">'
-      +'<span class="cm-check-label">'+ALL_REGIONS[r]+'</span>'
-      +'</label>';
-  }).join('');
-
-  // Build country sub-groups for all regions
-  var countryWrap = document.getElementById('country-groups');
-  countryWrap.innerHTML = Object.keys(REGION_COUNTRIES).map(function(r){
-    var countries = REGION_COUNTRIES[r];
-    var isVisible = selectedRegions.indexOf(r)>=0;
-    return '<div class="cm-country-group'+(isVisible?' show':'')+'" id="cg-'+r+'">'
-      +'<div class="cm-country-group-label">'+ALL_REGIONS[r]+' countries</div>'
-      +'<div class="cm-check-group">'
-      +Object.keys(countries).map(function(code){
-        var checked = selectedCountries.indexOf(code)>=0;
-        return '<label class="cm-check-item'+(checked?' checked':'')+'" onclick="toggleCheck(this,'cg-'+r+'-inner')">'
-          +'<input type="checkbox" value="'+code+'"'+(checked?' checked':'')+' style="display:none">'
-          +'<span class="cm-check-label">'+countries[code]+'</span>'
-          +'</label>';
-      }).join('')
-      +'</div></div>';
-  }).join('');
-}
-
-function toggleRegion(el, region){
-  toggleCheck(el, 'region-checks');
-  updateCountryGroups();
-}
-
-function updateCountryGroups(){
-  Object.keys(REGION_COUNTRIES).forEach(function(r){
-    var regionChecked = false;
-    document.querySelectorAll('#region-checks .cm-check-item').forEach(function(item){
-      if(item.querySelector('input').value===r && item.classList.contains('checked')){
-        regionChecked=true;
-      }
+function renderCmCountries(sr,sc){
+  var w=document.getElementById('cf-cw');if(!w)return;
+  var html='';
+  sr.forEach(function(r){
+    var cs=REGION_COUNTRIES_CM[r];if(!cs)return;
+    html+='<div style="margin-bottom:10px"><span style="font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:5px">'+ALL_REGIONS_CM[r]+' countries</span>';
+    html+='<div style="display:flex;flex-wrap:wrap;gap:4px" id="cg-'+r+'">';
+    Object.keys(cs).forEach(function(code){
+      var sel=sc.indexOf(code)>=0;
+      html+='<label style="display:inline-flex;align-items:center;padding:3px 8px;border:1px solid '+(sel?'var(--blue)':'var(--border2)')+';border-radius:3px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:9px;color:'+(sel?'var(--blue)':'var(--text2)')+';background:'+(sel?'var(--blue-pale)':'transparent')+';" onclick="toggleCmCheck(this)"><input type="checkbox" value="'+code+'" '+(sel?'checked':'')+' style="display:none">'+cs[code]+'</label>';
     });
-    var cg = document.getElementById('cg-'+r);
-    if(cg){ regionChecked?cg.classList.add('show'):cg.classList.remove('show'); }
+    html+='</div></div>';
+  });
+  w.innerHTML=html?'<div style="margin-top:4px"><span style="font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:6px">Country Filter</span>'+html+'</div>':'';
+}
+
+function renderCmTags(){
+  var w=document.getElementById('cf-ww');var i=document.getElementById('cf-wi');
+  if(!w||!i)return;
+  w.querySelectorAll('.cmtag').forEach(function(t){t.remove();});
+  cmWatchlistTerms.forEach(function(term,idx){
+    var t=document.createElement('div');t.className='cmtag';
+    t.style.cssText='display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue)';
+    t.innerHTML=term+'<span style="cursor:pointer;color:var(--text3)" onclick="cmWatchlistTerms.splice('+idx+',1);renderCmTags()">×</span>';
+    w.insertBefore(t,i);
   });
 }
 
-// ── TOGGLE CHECK ──────────────────────────────────────────────────────────
-function toggleCheck(el, groupId){
-  el.classList.toggle('checked');
-  el.querySelector('input').checked = el.classList.contains('checked');
-}
-
-// ── WATCHLIST TAGS ────────────────────────────────────────────────────────
-function renderWatchlistTags(){
-  var wrap = document.getElementById('wl-tag-wrap');
-  var input = document.getElementById('wl-input');
-  // Remove existing tags
-  wrap.querySelectorAll('.cm-tag').forEach(function(t){t.remove();});
-  watchlistTerms.forEach(function(term, i){
-    var tag = document.createElement('div');
-    tag.className = 'cm-tag';
-    tag.innerHTML = term+'<span class="cm-tag-x" onclick="removeTag('+i+')">×</span>';
-    wrap.insertBefore(tag, input);
-  });
-}
-
-function removeTag(i){
-  watchlistTerms.splice(i,1);
-  renderWatchlistTags();
-}
-
-document.getElementById('wl-input').addEventListener('keydown', function(e){
-  if(e.key==='Enter'||e.key===','||e.key===';'){
-    e.preventDefault();
-    var val=this.value.trim().replace(/,/g,'');
-    if(val&&watchlistTerms.indexOf(val)<0){
-      watchlistTerms.push(val);
-      renderWatchlistTags();
-    }
-    this.value='';
-  }
-  if(e.key==='Backspace'&&!this.value&&watchlistTerms.length>0){
-    watchlistTerms.pop();
-    renderWatchlistTags();
-  }
-});
-
-// ── COLLECT FORM VALUES ───────────────────────────────────────────────────
-function getCheckedValues(selector){
-  var vals=[];
-  document.querySelectorAll(selector+' .cm-check-item.checked').forEach(function(el){
-    vals.push(el.querySelector('input').value);
-  });
-  return vals;
-}
-
-function getCountries(){
-  var countries=[];
-  Object.keys(REGION_COUNTRIES).forEach(function(r){
-    document.querySelectorAll('#cg-'+r+' .cm-check-item.checked').forEach(function(el){
-      var v=el.querySelector('input').value;
-      if(v&&countries.indexOf(v)<0) countries.push(v);
+function onCmTier(){
+  var t=document.getElementById('cf-t').value;var lim=TIER_LIMITS_CM[t]||TIER_LIMITS_CM.analyst;
+  var sl=document.getElementById('cf-sl');var rl=document.getElementById('cf-rl');
+  if(sl)sl.textContent='(max '+lim.streams+')';if(rl)rl.textContent='(max '+lim.regions+')';
+  var bf=document.getElementById('cf-b');if(bf)bf.value=lim.briefs<0?-1:lim.briefs;
+  if(t==='admin'||t==='enterprise'){
+    document.querySelectorAll('.cm-s,.cm-r').forEach(function(el){
+      el.style.borderColor='var(--blue)';el.style.background='var(--blue-pale)';
+      el.style.color='var(--blue)';el.querySelector('input').checked=true;
     });
-  });
-  return countries;
-}
-
-// ── SAVE CLIENT ───────────────────────────────────────────────────────────
-function saveClient(){
-  var username = document.getElementById('cm-username').value.trim().toLowerCase().replace(/\s/g,'_');
-  var password = document.getElementById('cm-password').value.trim();
-  var label    = document.getElementById('cm-label').value.trim();
-  var tier     = document.getElementById('cm-tier').value;
-  var briefs   = parseInt(document.getElementById('cm-briefs').value)||0;
-  var streams  = getCheckedValues('#stream-checks');
-  var regions  = getCheckedValues('#region-checks');
-  var countries= getCountries();
-  var limits   = TIER_LIMITS[tier]||TIER_LIMITS.analyst;
-
-  if(!username){ showMsg('Username is required.','err'); return; }
-  if(!password){ showMsg('Password is required.','err'); return; }
-  if(streams.length===0) streams=['geographic'];
-
-  // Enforce tier limits (not for admin/enterprise)
-  if(tier!=='admin'&&tier!=='enterprise'){
-    if(regions.length>limits.regions){ showMsg('Max '+limits.regions+' regions for '+tier+' tier.','err'); return; }
-    if(streams.length>limits.streams){ showMsg('Max '+limits.streams+' streams for '+tier+' tier.','err'); return; }
-    if(watchlistTerms.length>limits.watchlist){ showMsg('Max '+limits.watchlist+' watchlist terms for '+tier+' tier.','err'); return; }
   }
-
-  var payload = {
-    username:username, password:password, tier:tier,
-    regions:regions, countries:countries, streams:streams,
-    watchlist:watchlistTerms, brief_allowance:briefs, label:label
-  };
-
-  fetch(API+'/admin/clients',{
-    method:'POST', credentials:'include',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(payload)
-  })
-  .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d};});})
-  .then(function(res){
-    if(res.ok){
-      showMsg('Client saved. Active immediately — no redeploy needed.','ok');
-      loadClients();
-      currentUsername=username;
-    } else {
-      showMsg(res.d.detail||'Save failed.','err');
-    }
-  })
-  .catch(function(e){ showMsg('Error: '+e.message,'err'); });
 }
 
-// ── DELETE CLIENT ─────────────────────────────────────────────────────────
-function deleteClient(){
-  if(!currentUsername) return;
-  if(!confirm('Delete client @'+currentUsername+'? They will lose access immediately.')) return;
-  fetch(API+'/admin/clients/'+currentUsername,{method:'DELETE',credentials:'include'})
-  .then(function(r){return r.json();})
-  .then(function(){
-    showMsg('Client deleted.','ok');
-    currentUsername=null;
-    document.getElementById('cm-empty').style.display='flex';
-    document.getElementById('cm-fields').style.display='none';
-    document.getElementById('cm-actions').style.display='none';
-    loadClients();
-  })
-  .catch(function(e){showMsg('Error: '+e.message,'err');});
+async function saveCm(){
+  var u=(document.getElementById('cf-u').value||'').trim().toLowerCase().replace(/\s/g,'_');
+  var p=(document.getElementById('cf-p').value||'').trim();
+  var l=(document.getElementById('cf-l').value||'').trim();
+  var t=document.getElementById('cf-t').value;
+  var b=parseInt(document.getElementById('cf-b').value)||0;
+  var streams=[...document.querySelectorAll('#cf-streams .cm-s input:checked')].map(function(e){return e.value;});
+  var regions=[...document.querySelectorAll('#cf-regions .cm-r input:checked')].map(function(e){return e.value;});
+  var countries=[...document.querySelectorAll('[id^="cg-"] input:checked')].map(function(e){return e.value;});
+  if(!streams.length)streams=['geographic'];
+  if(!u){showCfMsg('Username required','err');return;}
+  if(!p){showCfMsg('Password required','err');return;}
+  try{
+    var r=await fetch(API+'/admin/clients',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:u,password:p,tier:t,regions:regions,countries:countries,streams:streams,watchlist:cmWatchlistTerms,brief_allowance:b,label:l})});
+    var d=await r.json();
+    if(r.ok){showCfMsg('Saved. Client can log in immediately.','ok');cmCurrentUser=u;loadCmClients();}
+    else showCfMsg(d.detail||'Save failed','err');
+  }catch(e){showCfMsg('Error: '+e.message,'err');}
 }
 
-function showMsg(msg,type){
-  var el=document.getElementById('cm-msg');
-  el.textContent=msg; el.className='cm-msg '+type; el.style.display='block';
-  if(type==='ok') setTimeout(function(){el.style.display='none';},4000);
+async function deleteCm(){
+  if(!cmCurrentUser)return;
+  if(!confirm('Delete @'+cmCurrentUser+'?'))return;
+  await fetch(API+'/admin/clients/'+cmCurrentUser,{method:'DELETE',credentials:'include'});
+  cmCurrentUser=null;loadCmClients();
+  var area=document.getElementById('cm-form-area');
+  if(area)area.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--low)">Client deleted.</div>';
 }
+
+function showCfMsg(msg,type){
+  var el=document.getElementById('cf-msg');if(!el)return;
+  el.textContent=msg;el.style.display='block';
+  el.style.background=type==='ok'?'var(--low-bg)':'var(--critical-bg)';
+  el.style.color=type==='ok'?'var(--low)':'var(--critical)';
+  el.style.border='1px solid '+(type==='ok'?'var(--low-border)':'var(--critical-border)');
+  if(type==='ok')setTimeout(function(){el.style.display='none';},4000);
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────
+loadDashboard();
+setInterval(loadDashboard, 120000);
 </script>
+
+<!-- CLIENT MANAGER SCRIPTS -->
+<script src="/static/client-manager.js" onerror="console.log('CM script optional')"></script>
+
 </body>
 </html>
