@@ -22,7 +22,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 .topbar{background:var(--bg2);height:56px;display:flex;align-items:center;padding:0 28px;gap:20px;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
 .topbar-brand{display:flex;align-items:center;gap:10px;margin-right:auto;text-decoration:none}
-.brand-text{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--text);letter-spacing:2px}
+.brand-text{font-family:sans-serif;font-size:17px;font-weight:800;color:var(--text);letter-spacing:2px}
 .brand-sub{font-size:9px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--text3);display:block;margin-top:-3px}
 .nav-link{font-size:12px;font-weight:500;color:var(--text3);text-decoration:none;padding:5px 12px;border-radius:4px;transition:all 0.15s}
 .nav-link:hover{color:var(--text);background:var(--bg3)}
@@ -33,7 +33,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 /* INPUT PANEL */
 .input-panel{width:300px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
 .ip-header{padding:20px;border-bottom:1px solid var(--border)}
-.ip-header h2{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:0.5px}
+.ip-header h2{font-family:sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:0.5px}
 .ip-header p{font-size:12px;color:var(--text3);line-height:1.6}
 .ip-section{padding:14px 20px;border-bottom:1px solid var(--border)}
 .ip-section label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:8px}
@@ -56,26 +56,26 @@ select.ip-input{cursor:pointer}
 .report-panel{flex:1;overflow-y:auto;background:var(--bg)}
 .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:var(--text3);text-align:center;padding:40px}
 .empty-icon{font-size:48px;opacity:0.2}
-.empty-state h3{font-family:'Syne',sans-serif;font-size:20px;color:var(--text2);font-weight:600}
+.empty-state h3{font-family:sans-serif;font-size:20px;color:var(--text2);font-weight:600}
 .empty-state p{font-size:13px;max-width:380px;line-height:1.7;color:var(--text3)}
 
 /* REPORT — white surface inside dark UI */
 #report-output{display:none}
 .report-wrap{max-width:860px;margin:0 auto;padding:0 28px 80px}
 .report-topbar{padding:14px 0;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);margin-bottom:28px;position:sticky;top:0;background:var(--bg);z-index:50}
-.report-topbar h3{font-size:14px;font-weight:600;color:var(--text);margin-right:auto;font-family:'Syne',sans-serif;letter-spacing:0.5px}
+.report-topbar h3{font-size:14px;font-weight:600;color:var(--text);margin-right:auto;font-family:sans-serif;letter-spacing:0.5px}
 
 .digest-header{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:36px 40px 30px;margin-bottom:24px;position:relative;overflow:hidden}
 .dh-accent{position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--blue-dim),var(--blue),var(--blue-dim))}
-.dh-over{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;font-family:'JetBrains Mono',monospace}
-.digest-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--text);line-height:1.2;margin-bottom:8px}
-.dh-period{font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.dh-over{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;font-family:monospace}
+.digest-title{font-family:sans-serif;font-size:26px;font-weight:800;color:var(--text);line-height:1.2;margin-bottom:8px}
+.dh-period{font-size:12px;color:var(--text3);font-family:monospace}
 .dh-stats{display:flex;gap:24px;flex-wrap:wrap;margin-top:20px;padding-top:18px;border-top:1px solid var(--border)}
-.dh-stat .s-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);font-family:'JetBrains Mono',monospace}
-.dh-stat .s-val{font-size:18px;font-weight:700;color:var(--text);font-family:'Syne',sans-serif;margin-top:2px}
+.dh-stat .s-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);font-family:monospace}
+.dh-stat .s-val{font-size:18px;font-weight:700;color:var(--text);font-family:sans-serif;margin-top:2px}
 
 .dsection{margin-bottom:24px}
-.ds-head{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);letter-spacing:0.5px}
+.ds-head{font-family:sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);letter-spacing:0.5px}
 
 .review-box{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:18px 22px}
 .review-box p{font-size:14px;line-height:1.85;color:var(--text2);margin-bottom:12px}
@@ -84,15 +84,15 @@ select.ip-input{cursor:pointer}
 .top-stories{display:flex;flex-direction:column;gap:8px}
 .story-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 18px;display:flex;gap:14px;align-items:flex-start;transition:border-color 0.15s}
 .story-card:hover{border-color:var(--border2)}
-.story-num{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--border2);flex-shrink:0;line-height:1;margin-top:2px}
+.story-num{font-family:sans-serif;font-size:22px;font-weight:800;color:var(--border2);flex-shrink:0;line-height:1;margin-top:2px}
 .story-content .s-hl{font-size:13px;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:4px}
 .story-content .s-sig{font-size:12px;color:var(--text2);line-height:1.6}
-.story-content .s-region{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:5px;font-family:'JetBrains Mono',monospace}
+.story-content .s-region{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:5px;font-family:monospace}
 
 .region-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
 .region-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;transition:border-color 0.15s}
 .region-card:hover{border-color:var(--border2)}
-.rc-region{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;font-family:'JetBrains Mono',monospace}
+.rc-region{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;font-family:monospace}
 .rc-summary{font-size:12px;color:var(--text2);line-height:1.6}
 .traj-pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:3px}
 .traj-IMPROVING{background:rgba(34,197,94,0.1);color:var(--low)}
@@ -103,25 +103,25 @@ select.ip-input{cursor:pointer}
 .watch-item{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--high);border-radius:0 8px 8px 0;padding:12px 16px;font-size:13px;color:var(--text2);line-height:1.6}
 
 .stat-callout{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:20px 24px;display:flex;align-items:center;gap:16px}
-.sc-num{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--blue);line-height:1;flex-shrink:0}
+.sc-num{font-family:sans-serif;font-size:36px;font-weight:800;color:var(--blue);line-height:1;flex-shrink:0}
 .sc-text{font-size:14px;color:var(--text2);line-height:1.6}
 
 .li-box{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:20px 24px}
-.li-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;font-family:'JetBrains Mono',monospace}
+.li-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;font-family:monospace}
 .li-text{font-size:13px;line-height:1.75;color:var(--text2);white-space:pre-wrap;margin-bottom:14px}
 .li-actions{display:flex;gap:8px}
 .btn-outline{background:transparent;color:var(--text2);border:1px solid var(--border2);font-size:12px;font-weight:600;padding:7px 14px;border-radius:5px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s}
 .btn-outline:hover{border-color:var(--blue);color:var(--blue)}
 
 .digest-footer{margin-top:32px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
-.df-brand{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--text3);letter-spacing:2px}
-.df-disc{font-size:10px;color:var(--text3);text-align:right;line-height:1.5;max-width:380px;font-family:'JetBrains Mono',monospace}
+.df-brand{font-family:sans-serif;font-size:14px;font-weight:800;color:var(--text3);letter-spacing:2px}
+.df-disc{font-size:10px;color:var(--text3);text-align:right;line-height:1.5;max-width:380px;font-family:monospace}
 
 .overlay{position:fixed;inset:0;background:rgba(10,15,30,0.85);z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;backdrop-filter:blur(6px)}
 .overlay.show{display:flex}
 .ov-spin{width:44px;height:44px;border:3px solid rgba(59,130,246,0.2);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite}
-.ov-msg{color:var(--text);font-size:15px;font-weight:700;font-family:'Syne',sans-serif;letter-spacing:0.5px}
-.ov-sub{color:var(--text3);font-size:12px;text-align:center;max-width:280px;line-height:1.5;font-family:'JetBrains Mono',monospace}
+.ov-msg{color:var(--text);font-size:15px;font-weight:700;font-family:sans-serif;letter-spacing:0.5px}
+.ov-sub{color:var(--text3);font-size:12px;text-align:center;max-width:280px;line-height:1.5;font-family:monospace}
 
 /* ── PUBLISH PANEL ── */
 .pub-panel{position:fixed;right:24px;bottom:24px;background:#0e1420;
@@ -130,7 +130,7 @@ select.ip-input{cursor:pointer}
 .pub-panel.show{display:block}
 .pub-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
   background:linear-gradient(90deg,#1d4ed8,#3b82f6);border-radius:10px 10px 0 0}
-.pub-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+.pub-title{font-family:sans-serif;font-size:13px;font-weight:700;
   letter-spacing:1px;color:#e2e8f0;margin-bottom:14px}
 .pub-client-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;
   max-height:200px;overflow-y:auto}
@@ -141,7 +141,7 @@ select.ip-input{cursor:pointer}
 .pub-client-item.selected{border-color:#3b82f6;background:rgba(59,130,246,0.1)}
 .pub-client-name{font-size:12px;font-weight:500;color:#e2e8f0;flex:1}
 .pub-actions{display:flex;gap:8px}
-.pub-btn{flex:1;padding:9px;border-radius:5px;font-family:'Syne',sans-serif;
+.pub-btn{flex:1;padding:9px;border-radius:5px;font-family:sans-serif;
   font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s}
 .pub-btn-blue{background:#1d4ed8;color:#fff}
 .pub-btn-blue:hover{background:#3b82f6}
@@ -150,11 +150,11 @@ select.ip-input{cursor:pointer}
 .pub-link-box{background:rgba(255,255,255,0.03);border:1px solid #1e2d4a;
   border-radius:5px;padding:8px 10px;margin-top:10px;display:none}
 .pub-link-box.show{display:block}
-.pub-link-label{font-family:'JetBrains Mono',monospace;font-size:8px;
+.pub-link-label{font-family:monospace;font-size:8px;
   color:#64748b;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px}
-.pub-link-url{font-family:'JetBrains Mono',monospace;font-size:10px;
+.pub-link-url{font-family:monospace;font-size:10px;
   color:#3b82f6;word-break:break-all;cursor:pointer}
-.pub-msg{font-family:'JetBrains Mono',monospace;font-size:10px;margin-top:8px;
+.pub-msg{font-family:monospace;font-size:10px;margin-top:8px;
   padding:6px 10px;border-radius:4px;display:none}
 .pub-msg.ok{background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2)}
 .pub-msg.err{background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2)}
@@ -190,7 +190,7 @@ select.ip-input{cursor:pointer}
     </svg>
     <div><span class="brand-text">VIGINOTE</span><span class="brand-sub">Intelligence Platform</span></div>
   </a>
-    <a href="/hub" class="nav-link" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.15);padding:4px 10px;border-radius:4px;text-decoration:none;font-family:'JetBrains Mono',monospace;letter-spacing:1px">← Hub</a>
+    <a href="/hub" class="nav-link" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.15);padding:4px 10px;border-radius:4px;text-decoration:none;font-family:monospace;letter-spacing:1px">← Hub</a>
   <a href="/dashboard" class="nav-link">News Studio</a>
   <a href="/assessment" class="nav-link">Location</a>
   <a href="/digest" class="nav-link active">Weekly Digest</a>
@@ -297,7 +297,7 @@ function buildDigest(d,alertCount){
   <div class="region-card">
     <div class="rc-region"><span>${(r.region||'').replace(/_/g,' ')}</span><span class="traj-pill traj-${r.trend||'STABLE'}">${trajIcons[r.trend]||'→'} ${r.trend||'STABLE'}</span></div>
     <div class="rc-summary">${r.summary||''}</div>
-    ${r.alert_count?`<div style="font-size:10px;color:var(--text3);margin-top:6px;font-family:'JetBrains Mono',monospace">${r.alert_count} alerts this period</div>`:''}
+    ${r.alert_count?`<div style="font-size:10px;color:var(--text3);margin-top:6px;font-family:monospace">${r.alert_count} alerts this period</div>`:''}
   </div>`).join('');
   const watchHTML=(d.watch_next_week||[]).map(w=>`<div class="watch-item">${w}</div>`).join('');
   const reviewParas=(d.week_in_review||'').split('\n\n').filter(Boolean).map(p=>`<p>${p}</p>`).join('');
@@ -318,7 +318,7 @@ function buildDigest(d,alertCount){
   ${roundupHTML?`<div class="dsection"><div class="ds-head">Regional Roundup</div><div class="region-grid">${roundupHTML}</div></div>`:''}
   ${watchHTML?`<div class="dsection"><div class="ds-head">Watch Next Week</div><div class="watch-list">${watchHTML}</div></div>`:''}
   ${d.stat_headline?`<div class="dsection"><div class="stat-callout"><div class="sc-num">📈</div><div class="sc-text">${d.stat_headline}</div></div></div>`:''}
-  ${d.source_note?`<div style="font-size:11px;color:var(--text3);font-style:italic;margin-bottom:20px;font-family:'JetBrains Mono',monospace">${d.source_note}</div>`:''}
+  ${d.source_note?`<div style="font-size:11px;color:var(--text3);font-style:italic;margin-bottom:20px;font-family:monospace">${d.source_note}</div>`:''}
   ${d.linkedin_post?`<div class="dsection no-print"><div class="ds-head">LinkedIn Post</div><div class="li-box"><div class="li-label">Ready to post — edit as needed</div><div class="li-text" id="li-text">${d.linkedin_post}</div><div class="li-actions"><button type="button" class="btn-outline" onclick="copyLinkedIn()">📋 Copy post</button><a href="https://www.linkedin.com" target="_blank" rel="noopener" class="btn-outline" style="text-decoration:none">Open LinkedIn →</a></div></div></div>`:''}
   <div class="digest-footer"><div class="df-brand">VIGINOTE</div><div class="df-disc">Weekly Intelligence Digest. Generated from open-source intelligence. For professional use only.</div></div>`;
 }
@@ -346,7 +346,7 @@ window.addEventListener('afterprint',function(){
 <div class="pub-panel" id="pub-panel">
   <div class="pub-title">⬆ Publish Digest</div>
   <div class="pub-client-list" id="pub-client-list">
-    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#64748b;text-align:center;padding:10px">Loading clients…</div>
+    <div style="font-family:monospace;font-size:10px;color:#64748b;text-align:center;padding:10px">Loading clients…</div>
   </div>
   <div class="pub-actions">
     <button class="pub-btn pub-btn-blue" onclick="publishDigest()">Publish</button>
@@ -355,7 +355,7 @@ window.addEventListener('afterprint',function(){
   <div class="pub-link-box" id="pub-link-box">
     <div class="pub-link-label">Share Link</div>
     <div class="pub-link-url" id="pub-link-url" onclick="copyLink()">—</div>
-    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#64748b;margin-top:4px">Click to copy · Valid 30 days</div>
+    <div style="font-family:monospace;font-size:9px;color:#64748b;margin-top:4px">Click to copy · Valid 30 days</div>
   </div>
   <div class="pub-msg" id="pub-msg"></div>
 </div>
@@ -398,9 +398,9 @@ async function openPublish(){
     var r=await fetch(window.location.origin+'/admin/clients',{credentials:'include',headers:{'X-Feed-Token':sessionStorage.getItem('vgn_t')||''}});
     var d=await r.json();
     var clients=(d.clients||[]).filter(c=>c.username!=='viginote_admin');
-    if(!clients.length){list.innerHTML='<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#64748b;text-align:center;padding:10px">No clients yet.</div>';return;}
-    list.innerHTML=clients.map(c=>`<div class="pub-client-item" id="pci-${c.username}" onclick="this.classList.toggle('selected')"><div class="pub-client-name">${c.label||c.username}</div><span style="font-family:'JetBrains Mono',monospace;font-size:8px;background:rgba(59,130,246,0.1);color:#3b82f6;padding:1px 6px;border-radius:2px">${(c.tier||'analyst').toUpperCase()}</span></div>`).join('');
-  }catch(e){list.innerHTML=`<div style="color:#ef4444;font-family:'JetBrains Mono',monospace;font-size:10px;padding:10px">Error: ${e.message}</div>`;}
+    if(!clients.length){list.innerHTML='<div style="font-family:monospace;font-size:10px;color:#64748b;text-align:center;padding:10px">No clients yet.</div>';return;}
+    list.innerHTML=clients.map(c=>`<div class="pub-client-item" id="pci-${c.username}" onclick="this.classList.toggle('selected')"><div class="pub-client-name">${c.label||c.username}</div><span style="font-family:monospace;font-size:8px;background:rgba(59,130,246,0.1);color:#3b82f6;padding:1px 6px;border-radius:2px">${(c.tier||'analyst').toUpperCase()}</span></div>`).join('');
+  }catch(e){list.innerHTML=`<div style="color:#ef4444;font-family:monospace;font-size:10px;padding:10px">Error: ${e.message}</div>`;}
 }
 
 function closePublish(){document.getElementById('pub-panel').classList.remove('show');}
