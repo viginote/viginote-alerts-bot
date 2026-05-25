@@ -168,6 +168,46 @@ select.lp-input{cursor:pointer}
 /* ════════════════════════════════════════
    PRINT / PDF
 ════════════════════════════════════════ */
+/* ── PUBLISH PANEL ── */
+.pub-panel{position:fixed;right:24px;bottom:24px;background:var(--bg2);
+  border:1px solid var(--border2);border-radius:10px;padding:20px 24px;
+  width:320px;z-index:300;box-shadow:0 8px 40px rgba(0,0,0,0.5);display:none}
+.pub-panel.show{display:block}
+.pub-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--blue-dim),var(--blue));border-radius:10px 10px 0 0}
+.pub-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  letter-spacing:1px;color:var(--text);margin-bottom:14px}
+.pub-client-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;
+  max-height:200px;overflow-y:auto}
+.pub-client-item{display:flex;align-items:center;gap:8px;padding:8px 10px;
+  background:rgba(255,255,255,0.03);border:1px solid var(--border);
+  border-radius:5px;cursor:pointer;transition:all .15s}
+.pub-client-item:hover{border-color:var(--border2)}
+.pub-client-item.selected{border-color:var(--blue);background:var(--blue-pale)}
+.pub-client-name{font-size:12px;font-weight:500;color:var(--text);flex:1}
+.pub-client-tier{font-family:'JetBrains Mono',monospace;font-size:8px;
+  padding:1px 6px;border-radius:2px}
+.pub-actions{display:flex;gap:8px}
+.pub-btn{flex:1;padding:9px;border-radius:5px;font-family:'Syne',sans-serif;
+  font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;
+  border:none;transition:all .15s}
+.pub-btn-blue{background:var(--blue-dim);color:#fff}
+.pub-btn-blue:hover{background:var(--blue)}
+.pub-btn-ghost{background:transparent;color:var(--text3);border:1px solid var(--border2)}
+.pub-btn-ghost:hover{border-color:var(--blue);color:var(--blue)}
+.pub-link-box{background:rgba(255,255,255,0.03);border:1px solid var(--border);
+  border-radius:5px;padding:8px 10px;margin-top:10px;display:none}
+.pub-link-box.show{display:block}
+.pub-link-label{font-family:'JetBrains Mono',monospace;font-size:8px;
+  color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px}
+.pub-link-url{font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:var(--blue);word-break:break-all;cursor:pointer}
+.pub-link-url:hover{text-decoration:underline}
+.pub-msg{font-family:'JetBrains Mono',monospace;font-size:10px;margin-top:8px;
+  padding:6px 10px;border-radius:4px;display:none}
+.pub-msg.ok{background:var(--low-bg);color:var(--low);border:1px solid var(--low-border)}
+.pub-msg.err{background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border)}
+
 @media print{
   @page{size:A4;margin:0}
   .topnav,.lp,.rp-bar,.rp-empty,#print-instructions{display:none!important}
@@ -323,7 +363,9 @@ select.lp-input{cursor:pointer}
     <div class="rp-bar" id="rp-bar" style="display:none">
       <h3 id="rp-title">Client Brief</h3>
       <button type="button" class="btn" onclick="regenerate()">↺ Regenerate</button>
-      <button type="button" class="btn btn-blue" onclick="window.print()">⬇ Save PDF</button>
+      <button type="button" class="btn" onclick="saveBrief()" id="save-btn">☁ Save</button>
+      <button type="button" class="btn btn-blue" onclick="openPublish()" id="publish-btn">⬆ Publish to Client</button>
+      <button type="button" class="btn" onclick="window.print()">⬇ PDF</button>
     </div>
 
     <!-- THE BRIEF DOCUMENT -->
@@ -855,6 +897,138 @@ loadAlerts();
     window.renderBrief = function(...args){ origRender(...args); updateWatermark(); };
   }
 })();
+</script>
+
+<!-- PUBLISH PANEL -->
+<div class="pub-panel" id="pub-panel">
+  <div class="pub-title">⬆ Publish to Client</div>
+  <div class="pub-client-list" id="pub-client-list">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);text-align:center;padding:10px">Loading clients…</div>
+  </div>
+  <div class="pub-actions">
+    <button class="pub-btn pub-btn-blue" onclick="publishBrief()">Publish</button>
+    <button class="pub-btn pub-btn-ghost" onclick="closePublish()">Cancel</button>
+  </div>
+  <div class="pub-link-box" id="pub-link-box">
+    <div class="pub-link-label">Share Link</div>
+    <div class="pub-link-url" id="pub-link-url" onclick="copyLink()">—</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);margin-top:4px">Click to copy · Valid 30 days</div>
+  </div>
+  <div class="pub-msg" id="pub-msg"></div>
+</div>
+
+<script>
+// ── DELIVERABLES SYSTEM ────────────────────────────────────────────────────
+var _savedDeliverableId = null;
+var _savedToken = null;
+var _lastGenerated = null;
+
+// Hook into generateBrief completion
+var _origRenderBrief = window.renderBrief;
+window.renderBrief = function(g, selected, refInput, dateStr, regionStr, clientName, typeLabelStr, briefType){
+  _origRenderBrief.apply(this, arguments);
+  _lastGenerated = {g, selected, refInput, dateStr, regionStr, clientName, typeLabelStr, briefType};
+  // Auto-save
+  saveBrief();
+};
+
+async function saveBrief(){
+  if(!_lastGenerated) return;
+  var {g, refInput, clientName, typeLabelStr} = _lastGenerated;
+  var saveBtn = document.getElementById('save-btn');
+  if(saveBtn){ saveBtn.textContent='☁ Saving…'; saveBtn.disabled=true; }
+  try{
+    var r = await fetch(window.location.origin+'/deliverables/save',{
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        type:'brief',
+        title: g.headline || typeLabelStr || 'Intelligence Brief',
+        content: Object.assign({}, g, {
+          ref: refInput,
+          date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}).toUpperCase(),
+          classification: 'CLIENT CONFIDENTIAL · '+clientName.toUpperCase()+' · AUTHORISED DISTRIBUTION',
+        }),
+        clients:[],
+        one_off:false,
+      })
+    });
+    var d = await r.json();
+    if(d.id){
+      _savedDeliverableId = d.id;
+      _savedToken = d.token;
+      if(saveBtn){ saveBtn.textContent='☁ Saved'; }
+      document.getElementById('pub-link-url').textContent = window.location.origin+'/view/'+d.token;
+      document.getElementById('pub-link-box').classList.add('show');
+      document.getElementById('publish-btn').style.display='inline-flex';
+    }
+  }catch(e){
+    if(saveBtn){ saveBtn.textContent='☁ Save'; saveBtn.disabled=false; }
+  }
+}
+
+async function openPublish(){
+  if(!_savedDeliverableId){ await saveBrief(); }
+  document.getElementById('pub-panel').classList.add('show');
+  loadPubClients();
+}
+
+function closePublish(){
+  document.getElementById('pub-panel').classList.remove('show');
+}
+
+async function loadPubClients(){
+  var list = document.getElementById('pub-client-list');
+  try{
+    var r = await fetch(window.location.origin+'/admin/clients',{credentials:'include'});
+    var d = await r.json();
+    var clients = (d.clients||[]).filter(c => c.username !== 'viginote_admin');
+    if(!clients.length){ list.innerHTML='<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);text-align:center;padding:10px">No clients yet. Add via Client Manager.</div>'; return; }
+    list.innerHTML = clients.map(c=>`
+      <div class="pub-client-item" id="pci-${c.username}" onclick="togglePubClient('${c.username}')">
+        <div class="pub-client-name">${c.label||c.username}</div>
+        <span class="pub-client-tier" style="background:rgba(59,130,246,0.1);color:var(--blue)">${(c.tier||'analyst').toUpperCase()}</span>
+      </div>`).join('');
+  }catch(e){
+    list.innerHTML=`<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--critical);padding:10px">Error loading clients: ${e.message}</div>`;
+  }
+}
+
+function togglePubClient(username){
+  var el = document.getElementById('pci-'+username);
+  if(el) el.classList.toggle('selected');
+}
+
+async function publishBrief(){
+  if(!_savedDeliverableId){ showPubMsg('Save the brief first.','err'); return; }
+  var selected = [...document.querySelectorAll('.pub-client-item.selected')]
+    .map(el => el.id.replace('pci-',''));
+  if(!selected.length){ showPubMsg('Select at least one client.','err'); return; }
+  try{
+    var r = await fetch(window.location.origin+'/deliverables/'+_savedDeliverableId+'/publish',{
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({clients: selected})
+    });
+    var d = await r.json();
+    showPubMsg('Published to '+selected.length+' client'+(selected.length>1?'s':'')+'. Active immediately.','ok');
+    setTimeout(closePublish, 3000);
+  }catch(e){ showPubMsg('Error: '+e.message,'err'); }
+}
+
+function copyLink(){
+  var url = window.location.origin+'/view/'+(_savedToken||'');
+  navigator.clipboard.writeText(url).then(()=>{
+    var el = document.getElementById('pub-link-url');
+    el.textContent='✓ Copied!';
+    setTimeout(()=>{ el.textContent=url; },2000);
+  });
+}
+
+function showPubMsg(msg,type){
+  var el=document.getElementById('pub-msg');
+  el.textContent=msg; el.className='pub-msg '+type; el.style.display='block';
+}
 </script>
 </body>
 </html>
