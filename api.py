@@ -46,6 +46,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse, Response
 from pydantic import BaseModel
 
+from viginote.deliverables import (
+    save_deliverable, get_deliverable, get_by_token,
+    list_deliverables, publish_to_clients, remove_client,
+    mark_viewed, delete_deliverable, is_expired, time_remaining,
+)
 from viginote.db import (
     init_db, query_alerts, query_clusters, unhealthy_feeds,
     kv_get, kv_set,
@@ -336,6 +341,145 @@ async def page_intelligence(): return RedirectResponse(url="/client", status_cod
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+class SaveDeliverableRequest(BaseModel):
+    type:     str
+    title:    str
+    content:  dict
+    clients:  list[str] = []
+    one_off:  bool = False
+
+class PublishRequest(BaseModel):
+    clients: list[str]
+
+# ── DELIVERABLES ENDPOINTS ───────────────────────────────────────────────────
+
+@app.post("/deliverables/save")
+async def deliverable_save(req: SaveDeliverableRequest, request: Request):
+    """Admin — save a generated deliverable and optionally publish to clients."""
+    if not _verify_admin(request):
+        raise HTTPException(status_code=403, detail="Admin only.")
+    if req.type not in ("brief", "assessment", "digest"):
+        raise HTTPException(status_code=400, detail="Invalid type.")
+    rec = save_deliverable(
+        dtype=req.type,
+        title=req.title,
+        content=req.content,
+        clients=req.clients,
+        one_off=req.one_off,
+    )
+    return {
+        "id":      rec["id"],
+        "token":   rec["token"],
+        "view_url": f"/view/{rec['token']}",
+        "expires": time_remaining(rec),
+    }
+
+@app.get("/deliverables")
+async def deliverables_list(
+    request: Request,
+    dtype:  Optional[str] = Query(None),
+    limit:  int           = Query(50),
+):
+    """Admin — list all deliverables."""
+    if not _verify_admin(request):
+        raise HTTPException(status_code=403, detail="Admin only.")
+    items = list_deliverables(dtype=dtype, limit=limit)
+    for item in items:
+        item["time_remaining"] = time_remaining(item)
+        item["expired"] = is_expired(item)
+    return {"deliverables": items, "count": len(items)}
+
+@app.get("/deliverables/client")
+async def deliverables_for_client(request: Request):
+    """Client — list deliverables published to them."""
+    tok = _token_from_request(request)
+    uname = _verify_token(tok) if tok else None
+    if not uname:
+        raise HTTPException(status_code=401, detail="Not authenticated.")
+    items = list_deliverables(client=uname)
+    for item in items:
+        item["time_remaining"] = time_remaining(item)
+        item["expired"] = is_expired(item)
+        item["viewed"] = uname in item.get("viewed_by", {})
+    return {"deliverables": items, "count": len(items)}
+
+@app.get("/deliverables/{del_id}")
+async def deliverable_get(del_id: str, request: Request):
+    """Get a single deliverable with full content — requires admin or client auth."""
+    rec = get_deliverable(del_id)
+    if not rec:
+        raise HTTPException(status_code=404, detail="Deliverable not found.")
+    if is_expired(rec):
+        raise HTTPException(status_code=410, detail="Deliverable has expired.")
+    # Check access
+    if _verify_admin(request):
+        mark_viewed(del_id)
+        return rec
+    tok = _token_from_request(request)
+    uname = _verify_token(tok) if tok else None
+    if uname and uname in rec.get("clients", []):
+        mark_viewed(del_id, uname)
+        return rec
+    raise HTTPException(status_code=403, detail="Access denied.")
+
+@app.post("/deliverables/{del_id}/publish")
+async def deliverable_publish(del_id: str, req: PublishRequest, request: Request):
+    """Admin — publish a deliverable to one or more clients."""
+    if not _verify_admin(request):
+        raise HTTPException(status_code=403, detail="Admin only.")
+    rec = publish_to_clients(del_id, req.clients)
+    if not rec:
+        raise HTTPException(status_code=404, detail="Deliverable not found.")
+    return {"id": del_id, "clients": rec["clients"], "view_url": f"/view/{rec['token']}"}
+
+@app.delete("/deliverables/{del_id}")
+async def deliverable_delete(del_id: str, request: Request):
+    """Admin — delete a deliverable."""
+    if not _verify_admin(request):
+        raise HTTPException(status_code=403, detail="Admin only.")
+    if delete_deliverable(del_id):
+        return {"status": "deleted"}
+    raise HTTPException(status_code=404, detail="Deliverable not found.")
+
+@app.get("/view/{token}", response_class=HTMLResponse)
+async def view_deliverable(token: str, request: Request):
+    """Public view — render a deliverable by its unguessable token."""
+    rec = get_by_token(token)
+    if not rec:
+        return HTMLResponse("<html><body style='background:#080c14;color:#ef4444;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;font-size:16px'>Deliverable not found or link has expired.</body></html>", status_code=404)
+    if is_expired(rec):
+        return HTMLResponse("<html><body style='background:#080c14;color:#ef4444;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;font-size:16px'>This link has expired.</body></html>", status_code=410)
+    # For subscriber deliverables, require login (check cookie)
+    if not rec.get("one_off"):
+        tok = _token_from_request(request)
+        uname = _verify_token(tok) if tok else None
+        if not uname and not _verify_admin(request):
+            # Redirect to client login with return URL
+            return RedirectResponse(url=f"/client?view={token}", status_code=302)
+        if uname:
+            mark_viewed(rec["id"], uname)
+        else:
+            mark_viewed(rec["id"])
+    else:
+        mark_viewed(rec["id"])
+    # Serve the view page with data embedded
+    view_html = _serve("view.html")
+    # Inject the deliverable data
+    injected = view_html.body.decode().replace(
+        "__DELIVERABLE_DATA__",
+        json.dumps(rec).replace("</", "<\\/")
+    )
+    return HTMLResponse(content=injected)
+
+@app.get("/view/{token}/data")
+async def view_deliverable_data(token: str, request: Request):
+    """JSON data endpoint for the view page."""
+    rec = get_by_token(token)
+    if not rec or is_expired(rec):
+        raise HTTPException(status_code=404, detail="Not found or expired.")
+    mark_viewed(rec["id"])
+    return rec
 
 @app.post("/auth/login")
 async def auth_login(req: LoginRequest):
