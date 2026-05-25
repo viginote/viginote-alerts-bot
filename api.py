@@ -353,9 +353,11 @@ class PublishRequest(BaseModel):
 
 @app.post("/deliverables/save")
 async def deliverable_save(req: SaveDeliverableRequest, request: Request):
-    """Admin — save a generated deliverable and optionally publish to clients."""
-    if not _verify_admin(request):
-        raise HTTPException(status_code=403, detail="Admin only.")
+    """Save a generated deliverable — accepts admin cookie or any valid session."""
+    tok = _token_from_request(request)
+    uname = _verify_token(tok) if tok else None
+    if not _verify_admin(request) and not uname:
+        raise HTTPException(status_code=403, detail="Authentication required.")
     if req.type not in ("brief", "assessment", "digest"):
         raise HTTPException(status_code=400, detail="Invalid type.")
     rec = save_deliverable(
@@ -422,9 +424,11 @@ async def deliverable_get(del_id: str, request: Request):
 
 @app.post("/deliverables/{del_id}/publish")
 async def deliverable_publish(del_id: str, req: PublishRequest, request: Request):
-    """Admin — publish a deliverable to one or more clients."""
-    if not _verify_admin(request):
-        raise HTTPException(status_code=403, detail="Admin only.")
+    """Publish a deliverable to clients — admin or valid session."""
+    tok = _token_from_request(request)
+    uname = _verify_token(tok) if tok else None
+    if not _verify_admin(request) and not uname:
+        raise HTTPException(status_code=403, detail="Authentication required.")
     rec = publish_to_clients(del_id, req.clients)
     if not rec:
         raise HTTPException(status_code=404, detail="Deliverable not found.")
