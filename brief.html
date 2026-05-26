@@ -47,8 +47,8 @@ body{font-family:var(--body);background:var(--ui-bg);color:var(--ui-text);min-he
 .app{display:flex;height:calc(100vh - 52px)}
 
 /* LEFT PANEL */
-.lp{width:300px;flex-shrink:0;background:var(--ui-surface);border-right:1px solid var(--ui-border);overflow-y:auto;display:flex;flex-direction:column}
-.lp-section{padding:14px 16px;border-bottom:1px solid var(--ui-border)}
+.lp{width:300px;flex-shrink:0;background:var(--ui-surface);border-right:1px solid var(--ui-border);overflow:hidden;display:flex;flex-direction:column}
+.lp-section{padding:14px 16px;border-bottom:1px solid var(--ui-border);flex-shrink:0}
 .lp-section label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ui-text3);display:block;margin-bottom:7px;font-family:var(--mono)}
 .lp-input{width:100%;padding:7px 10px;border:1px solid var(--ui-border2);border-radius:5px;font-size:12px;color:var(--ui-text);background:rgba(255,255,255,0.04);font-family:var(--sans);transition:border-color 0.15s}
 .lp-input:focus{outline:none;border-color:var(--blue)}
@@ -58,7 +58,7 @@ select.lp-input{cursor:pointer}
 .lp-header p{font-size:11px;color:var(--ui-text3);line-height:1.5;font-family:var(--mono)}
 
 /* ALERT LIST */
-.alert-scroll{flex:1;overflow-y:auto}
+.alert-scroll{flex:1;overflow-y:auto;min-height:0}
 .alert-list-head{padding:9px 16px;background:rgba(0,0,0,0.2);border-bottom:1px solid var(--ui-border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
 .alert-list-head span{font-size:10px;color:var(--ui-text3);font-family:var(--mono)}
 .alert-list-head button{font-size:10px;color:var(--blue2);background:none;border:none;cursor:pointer;font-family:var(--mono)}
@@ -282,7 +282,7 @@ select.lp-input{cursor:pointer}
     </div>
 
     <!-- MODE TABS -->
-    <div style="display:flex;gap:4px;padding:0 2px 12px">
+    <div style="display:flex;gap:4px;padding:0 2px 12px;flex-shrink:0">
       <button id="mode-tab-alerts" onclick="setMode('alerts')"
         style="flex:1;padding:7px;border-radius:5px;font-family:'JetBrains Mono',monospace;
         font-size:9px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .15s;
@@ -298,7 +298,7 @@ select.lp-input{cursor:pointer}
     </div>
 
     <!-- ALERTS MODE -->
-    <div id="mode-alerts-section">
+    <div id="mode-alerts-section" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden">
     <div class="lp-section">
       <label>Time window</label>
       <select class="lp-input" id="fi-hours">
@@ -931,29 +931,28 @@ function setMode(mode){
   var tabAlerts       = document.getElementById('mode-tab-alerts');
   var tabLocation     = document.getElementById('mode-tab-location');
   var selCount        = document.getElementById('sel-count');
+  var genLabel        = document.getElementById('gen-label');
+
+  // Use actual colours — CSS vars don't work via JS style property
+  var BLUE        = '#3b82f6';
+  var BLUE_BG     = 'rgba(59,130,246,0.1)';
+  var MUTED       = '#243558';
+  var MUTED_TEXT  = '#64748b';
 
   if(mode === 'alerts'){
-    alertsSection.style.display   = 'block';
-    locationSection.style.display = 'none';
-    tabAlerts.style.borderColor   = 'var(--blue)';
-    tabAlerts.style.background    = 'var(--blue-pale)';
-    tabAlerts.style.color         = 'var(--blue)';
-    tabLocation.style.borderColor = 'var(--ui-border2)';
-    tabLocation.style.background  = 'transparent';
-    tabLocation.style.color       = 'var(--ui-text3)';
-    if(selCount) selCount.style.display = 'block';
-    document.getElementById('gen-label').textContent = 'Generate Client Brief';
+    if(alertsSection)   { alertsSection.style.display = 'flex'; alertsSection.style.flexDirection = 'column'; alertsSection.style.flex = '1'; alertsSection.style.minHeight = '0'; alertsSection.style.overflow = 'hidden'; }
+    if(locationSection) { locationSection.style.display = 'none'; }
+    if(tabAlerts)   { tabAlerts.style.borderColor = BLUE; tabAlerts.style.background = BLUE_BG; tabAlerts.style.color = BLUE; }
+    if(tabLocation) { tabLocation.style.borderColor = MUTED; tabLocation.style.background = 'transparent'; tabLocation.style.color = MUTED_TEXT; }
+    if(selCount)    { selCount.style.display = 'block'; }
+    if(genLabel)    { genLabel.textContent = 'Generate Client Brief'; }
   } else {
-    alertsSection.style.display   = 'none';
-    locationSection.style.display = 'block';
-    tabLocation.style.borderColor = 'var(--blue)';
-    tabLocation.style.background  = 'var(--blue-pale)';
-    tabLocation.style.color       = 'var(--blue)';
-    tabAlerts.style.borderColor   = 'var(--ui-border2)';
-    tabAlerts.style.background    = 'transparent';
-    tabAlerts.style.color         = 'var(--ui-text3)';
-    if(selCount) selCount.style.display = 'none';
-    document.getElementById('gen-label').textContent = 'Generate Location Brief';
+    if(alertsSection)   { alertsSection.style.display = 'none'; }
+    if(locationSection) { locationSection.style.display = 'block'; }
+    if(tabLocation) { tabLocation.style.borderColor = BLUE; tabLocation.style.background = BLUE_BG; tabLocation.style.color = BLUE; }
+    if(tabAlerts)   { tabAlerts.style.borderColor = MUTED; tabAlerts.style.background = 'transparent'; tabAlerts.style.color = MUTED_TEXT; }
+    if(selCount)    { selCount.style.display = 'none'; }
+    if(genLabel)    { genLabel.textContent = 'Generate Location Brief'; }
   }
 }
 
