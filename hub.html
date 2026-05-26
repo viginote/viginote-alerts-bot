@@ -526,30 +526,20 @@ function switchPanel(name){
 
   currentPanel = name;
 
-  // External studios — open in new tab, show placeholder
+  // External studios — open in new tab
   if(EXTERNAL_PANELS.indexOf(name) >= 0){
+    window.open(PANEL_SRCS[name], '_blank');
     var extPanel = document.getElementById('panel-'+name);
     if(extPanel){
       extPanel.style.display='flex';
       extPanel.style.flexDirection='column';
       extPanel.style.height='100%';
       extPanel.classList.add('active');
-      var icons = {linkedin:'📰',brief:'📋',assessment:'🗺',digest:'📊'};
-      var studioUrl = PANEL_SRCS[name] || '/';
-      extPanel.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:#64748b;text-align:center;padding:40px">'
-        + '<div style="font-size:36px">'+(icons[name]||'📄')+'</div>'
-        + '<div style="font-size:14px;color:#e2e8f0;font-weight:700;letter-spacing:1px">'
-          + name.charAt(0).toUpperCase()+name.slice(1).replace(/([A-Z])/g,' $1')+' Studio</div>'
-        + '<div style="font-size:12px;line-height:1.8;max-width:280px">Opens in a new tab.<br>Generate your deliverable there,<br>then come back here to publish.</div>'
-        + '<button onclick="window.open(''+studioUrl+'','_blank')" '
-          + 'style="margin-top:8px;padding:10px 24px;background:#1d4ed8;color:#fff;border:none;'
-          + 'border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px">'
-          + 'Open ↗</button>'
-        + '</div>';
+      showStudioPlaceholder(name);
     }
-    window.open(PANEL_SRCS[name], '_blank');
     return;
   }
+
 
   // Show internal panel
   var showPanel = document.getElementById('panel-'+name);
