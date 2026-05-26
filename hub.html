@@ -25,23 +25,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
 .topbar{height:52px;background:var(--bg2);border-bottom:1px solid var(--border);
   display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0;z-index:100}
 .tb-brand{display:flex;align-items:center;gap:10px;margin-right:auto}
-.tb-wordmark{font-family:sans-serif;font-size:16px;font-weight:800;
+.tb-wordmark{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;
   letter-spacing:3px;color:var(--text)}
 .tb-sub{font-size:8px;letter-spacing:2px;text-transform:uppercase;
-  color:var(--text3);display:block;font-family:monospace}
+  color:var(--text3);display:block;font-family:'JetBrains Mono',monospace}
 .pulse{width:6px;height:6px;border-radius:50%;background:var(--low);
   animation:pulse 2s infinite;flex-shrink:0}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}
   50%{box-shadow:0 0 0 4px rgba(34,197,94,0)}}
-.pill{font-family:monospace;font-size:9px;padding:3px 9px;
+.pill{font-family:'JetBrains Mono',monospace;font-size:9px;padding:3px 9px;
   border-radius:3px;letter-spacing:1px}
 .pill-live{color:var(--low);background:var(--low-bg);border:1px solid var(--low-border);
   display:flex;align-items:center;gap:5px}
 .pill-admin{color:var(--medium);background:var(--medium-bg);border:1px solid var(--medium-border)}
-.tb-time{font-family:monospace;font-size:10px;color:var(--text3)}
+.tb-time{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3)}
 .tb-btn{padding:5px 11px;border-radius:4px;font-size:10px;font-weight:600;
   cursor:pointer;border:1px solid var(--border2);background:transparent;
-  color:var(--text3);font-family:monospace;
+  color:var(--text3);font-family:'JetBrains Mono',monospace;
   transition:all .15s;letter-spacing:.5px;text-decoration:none;white-space:nowrap}
 .tb-btn:hover{border-color:var(--blue);color:var(--blue)}
 
@@ -53,7 +53,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
   border-right:1px solid var(--border);display:flex;flex-direction:column;
   overflow:hidden}
 .sb-section{padding:8px}
-.sb-label{font-family:monospace;font-size:7px;font-weight:700;
+.sb-label{font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:700;
   letter-spacing:2.5px;text-transform:uppercase;color:var(--text4);
   padding:10px 8px 6px;display:block}
 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;
@@ -64,9 +64,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
 .nav-item.active .nav-icon{color:var(--blue)}
 .nav-item.active .nav-label{color:var(--blue)}
 .nav-icon{font-size:16px;flex-shrink:0;width:20px;text-align:center}
-.nav-label{font-family:monospace;font-size:10px;font-weight:600;
+.nav-label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;
   letter-spacing:.5px;color:var(--text2);flex:1}
-.nav-badge{font-family:monospace;font-size:8px;font-weight:700;
+.nav-badge{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;
   background:var(--critical);color:#fff;border-radius:10px;
   padding:1px 6px;min-width:18px;text-align:center}
 .nav-badge.blue{background:var(--blue-dim)}
@@ -77,9 +77,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
 .sb-stats{padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:5px}
 .sb-stat{background:var(--bg3);border:1px solid var(--border);border-radius:5px;
   padding:8px 10px}
-.sbs-l{font-family:monospace;font-size:7px;color:var(--text3);
+.sbs-l{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--text3);
   letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
-.sbs-v{font-family:sans-serif;font-size:20px;font-weight:800;color:var(--text);line-height:1}
+.sbs-v{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--text);line-height:1}
 .sbs-v.crit{color:var(--critical)}.sbs-v.high{color:var(--high)}.sbs-v.grn{color:var(--low)}
 
 /* ── WORKSPACE AREA ── */
@@ -88,9 +88,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
 /* Welcome / Dashboard panel */
 #panel-dashboard{display:flex;flex-direction:column;height:100%;overflow-y:auto}
 .dash-hero{padding:40px 48px 32px;border-bottom:1px solid var(--border);flex-shrink:0}
-.dh-greeting{font-family:monospace;font-size:10px;color:var(--text3);
+.dh-greeting{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);
   letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
-.dh-title{font-family:sans-serif;font-size:28px;font-weight:800;
+.dh-title{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;
   color:var(--text);line-height:1.1;margin-bottom:6px}
 .dh-title span{color:var(--blue)}
 .dh-desc{font-size:13px;color:var(--text2);line-height:1.7}
@@ -108,34 +108,34 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
 .dc-green::before{background:linear-gradient(90deg,#15803d,var(--low))}
 .dc-red::before{background:linear-gradient(90deg,#991b1b,var(--critical))}
 .dc-icon{font-size:22px;margin-bottom:12px}
-.dc-name{font-family:sans-serif;font-size:14px;font-weight:700;
+.dc-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;
   color:var(--text);margin-bottom:4px}
 .dc-desc{font-size:11px;color:var(--text3);line-height:1.5}
 .recent-alerts{padding:0 48px 40px}
-.ra-head{font-family:monospace;font-size:9px;font-weight:700;
+.ra-head{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;
   letter-spacing:2px;text-transform:uppercase;color:var(--text3);
   margin-bottom:12px;display:flex;align-items:center;gap:12px}
 .ra-head::after{content:'';flex:1;height:1px;background:var(--border)}
 .ra-row{display:flex;align-items:center;gap:10px;padding:9px 12px;
   background:var(--bg2);border:1px solid var(--border);border-radius:5px;
   margin-bottom:5px;text-decoration:none}
-.ra-sev{font-family:monospace;font-size:7px;font-weight:700;
+.ra-sev{font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:700;
   letter-spacing:1.5px;padding:2px 7px;border-radius:2px;flex-shrink:0}
 .ra-sev.crit{background:#7f1d1d;color:#fca5a5}
 .ra-sev.high{background:#7c2d12;color:#fdba74}
 .ra-sev.med{background:#1e3a8a;color:#93c5fd}
 .ra-title{font-size:12px;font-weight:500;color:var(--text);flex:1;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ra-meta{font-family:monospace;font-size:9px;color:var(--text3);flex-shrink:0}
+.ra-meta{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);flex-shrink:0}
 
 /* Iframe workspace panels */
 .ws-frame-panel{flex:1;display:none;flex-direction:column;overflow:hidden}
 .ws-frame-panel.active{display:flex}
 .ws-frame-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;
   background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
-.ws-frame-title{font-family:monospace;font-size:10px;
+.ws-frame-title{font-family:'JetBrains Mono',monospace;font-size:10px;
   font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text2)}
-.ws-frame-path{font-family:monospace;font-size:9px;
+.ws-frame-path{font-family:'JetBrains Mono',monospace;font-size:9px;
   color:var(--text4);margin-left:auto}
 .ws-iframe{flex:1;border:none;background:var(--bg)}
 
@@ -144,9 +144,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
 #panel-deliverables.active{display:flex}
 .del-head{padding:20px 28px;border-bottom:1px solid var(--border);
   display:flex;align-items:center;gap:12px;flex-shrink:0}
-.del-head h2{font-family:sans-serif;font-size:16px;font-weight:700;color:var(--text);flex:1}
+.del-head h2{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);flex:1}
 .del-filters{display:flex;gap:8px}
-.del-filter-btn{font-family:monospace;font-size:9px;font-weight:600;
+.del-filter-btn{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;
   letter-spacing:1px;padding:5px 12px;border-radius:3px;cursor:pointer;
   border:1px solid var(--border2);background:transparent;color:var(--text3);transition:all .15s}
 .del-filter-btn:hover,.del-filter-btn.on{border-color:var(--blue);color:var(--blue);background:var(--blue-pale)}
@@ -154,16 +154,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
 .del-row{background:var(--bg2);border:1px solid var(--border);border-radius:8px;
   padding:14px 18px;display:flex;align-items:center;gap:14px;transition:all .15s}
 .del-row:hover{border-color:var(--border2)}
-.del-type-badge{font-family:monospace;font-size:8px;font-weight:700;
+.del-type-badge{font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;
   letter-spacing:1.5px;padding:3px 9px;border-radius:3px;flex-shrink:0;text-transform:uppercase}
 .dtb-brief{background:rgba(168,85,247,.12);color:#a855f7;border:1px solid rgba(168,85,247,.25)}
 .dtb-assessment{background:rgba(20,184,166,.1);color:#14b8a6;border:1px solid rgba(20,184,166,.2)}
 .dtb-digest{background:rgba(245,158,11,.1);color:var(--medium);border:1px solid rgba(245,158,11,.2)}
 .del-title{font-size:13px;font-weight:500;color:var(--text);flex:1}
-.del-meta{font-family:monospace;font-size:9px;color:var(--text3);
+.del-meta{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);
   display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex-shrink:0}
 .del-actions{display:flex;gap:6px;flex-shrink:0}
-.del-btn{font-family:monospace;font-size:9px;font-weight:600;
+.del-btn{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;
   letter-spacing:1px;padding:5px 10px;border-radius:3px;cursor:pointer;
   border:1px solid;transition:all .15s;white-space:nowrap;text-decoration:none}
 .del-btn-view{color:var(--blue);border-color:rgba(59,130,246,.3);background:rgba(59,130,246,.08)}
@@ -173,7 +173,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
 .del-btn-delete{color:var(--text3);border-color:var(--border2);background:transparent}
 .del-btn-delete:hover{color:var(--critical);border-color:var(--critical)}
 .del-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;
-  height:100%;gap:12px;color:var(--text3);font-family:monospace;
+  height:100%;gap:12px;color:var(--text3);font-family:'JetBrains Mono',monospace;
   font-size:11px;text-align:center}
 
 /* Clients panel */
@@ -189,9 +189,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
   width:100%;max-width:420px;padding:24px;position:relative}
 .pub-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
   background:linear-gradient(90deg,var(--blue-dim),var(--blue));border-radius:10px 10px 0 0}
-.pm-title{font-family:sans-serif;font-size:15px;font-weight:700;
+.pm-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
   color:var(--text);margin-bottom:16px}
-.pm-sub{font-family:monospace;font-size:10px;color:var(--text3);
+.pm-sub{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);
   margin-bottom:12px;padding:8px 12px;background:rgba(59,130,246,.06);
   border:1px solid rgba(59,130,246,.15);border-radius:4px}
 .pm-client-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;
@@ -202,20 +202,20 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
 .pm-client-item:hover{border-color:var(--border2)}
 .pm-client-item.on{border-color:var(--blue);background:var(--blue-pale)}
 .pm-client-name{font-size:12px;font-weight:500;color:var(--text);flex:1}
-.pm-client-tier{font-family:monospace;font-size:8px;
+.pm-client-tier{font-family:'JetBrains Mono',monospace;font-size:8px;
   padding:1px 6px;border-radius:2px;background:rgba(59,130,246,.1);color:var(--blue)}
-.pm-link{font-family:monospace;font-size:10px;color:var(--blue);
+.pm-link{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue);
   padding:8px 12px;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);
   border-radius:4px;margin-bottom:14px;word-break:break-all;cursor:pointer;display:none}
 .pm-link.show{display:block}
 .pm-actions{display:flex;gap:8px}
-.pm-btn{flex:1;padding:10px;border-radius:5px;font-family:sans-serif;
+.pm-btn{flex:1;padding:10px;border-radius:5px;font-family:'Syne',sans-serif;
   font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s}
 .pm-btn-blue{background:var(--blue-dim);color:#fff}
 .pm-btn-blue:hover{background:var(--blue)}
 .pm-btn-ghost{background:transparent;color:var(--text3);border:1px solid var(--border2)}
 .pm-btn-ghost:hover{border-color:var(--blue);color:var(--blue)}
-.pm-msg{font-family:monospace;font-size:10px;margin-top:10px;
+.pm-msg{font-family:'JetBrains Mono',monospace;font-size:10px;margin-top:10px;
   padding:7px 10px;border-radius:4px;display:none}
 .pm-msg.ok{background:var(--low-bg);color:var(--low);border:1px solid var(--low-border)}
 .pm-msg.err{background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border)}
@@ -242,7 +242,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
   <div class="pill pill-live"><div class="pulse"></div>LIVE</div>
   <div class="pill pill-admin">ADMIN</div>
   <div class="tb-time" id="tb-time"></div>
-  <a href="/client" target="_blank" class="tb-btn">↗ Client View</a>
+  <a href="/client" target="_blank" class="tb-btn">&#x2197; Client View</a>
   <form action="/admin/logout" method="post" style="margin:0">
     <button type="submit" class="tb-btn">Sign Out</button>
   </form>
@@ -254,9 +254,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sb-stats" id="sb-stats">
-      <div class="sb-stat"><div class="sbs-l">Alerts</div><div class="sbs-v" id="st-tot">—</div></div>
-      <div class="sb-stat"><div class="sbs-l">Critical</div><div class="sbs-v crit" id="st-crit">—</div></div>
-      <div class="sb-stat"><div class="sbs-l">High</div><div class="sbs-v high" id="st-high">—</div></div>
+      <div class="sb-stat"><div class="sbs-l">Alerts</div><div class="sbs-v" id="st-tot">&#x2014;</div></div>
+      <div class="sb-stat"><div class="sbs-l">Critical</div><div class="sbs-v crit" id="st-crit">&#x2014;</div></div>
+      <div class="sb-stat"><div class="sbs-l">High</div><div class="sbs-v high" id="st-high">&#x2014;</div></div>
       <div class="sb-stat"><div class="sbs-l">Sources</div><div class="sbs-v grn">162</div></div>
     </div>
     <div class="sb-divider"></div>
@@ -264,32 +264,32 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
     <span class="sb-label">Overview</span>
     <div class="sb-section">
       <button class="nav-item active" id="nav-dashboard" onclick="switchPanel('dashboard')">
-        <span class="nav-icon">🏠</span>
+        <span class="nav-icon">&#x1F3E0;</span>
         <span class="nav-label">Dashboard</span>
       </button>
       <button class="nav-item" id="nav-feed" onclick="switchPanel('feed')">
-        <span class="nav-icon">⚡</span>
+        <span class="nav-icon">&#x26A1;</span>
         <span class="nav-label">Live Feed</span>
-        <span class="nav-badge blue" id="feed-badge">—</span>
+        <span class="nav-badge blue" id="feed-badge">&#x2014;</span>
       </button>
     </div>
 
     <span class="sb-label">Intelligence Studios</span>
     <div class="sb-section">
       <button class="nav-item" id="nav-linkedin" onclick="switchPanel('linkedin')">
-        <span class="nav-icon">📰</span>
+        <span class="nav-icon">&#x1F4F0;</span>
         <span class="nav-label">LinkedIn Studio</span>
       </button>
       <button class="nav-item" id="nav-brief" onclick="switchPanel('brief')">
-        <span class="nav-icon">📋</span>
+        <span class="nav-icon">&#x1F4CB;</span>
         <span class="nav-label">Brief Studio</span>
       </button>
       <button class="nav-item" id="nav-assessment" onclick="switchPanel('assessment')">
-        <span class="nav-icon">🗺</span>
+        <span class="nav-icon">&#x1F5FA;</span>
         <span class="nav-label">Assessment</span>
       </button>
       <button class="nav-item" id="nav-digest" onclick="switchPanel('digest')">
-        <span class="nav-icon">📊</span>
+        <span class="nav-icon">&#x1F4CA;</span>
         <span class="nav-label">Weekly Digest</span>
       </button>
     </div>
@@ -297,12 +297,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
     <span class="sb-label">Distribution</span>
     <div class="sb-section">
       <button class="nav-item" id="nav-deliverables" onclick="switchPanel('deliverables')">
-        <span class="nav-icon">📬</span>
+        <span class="nav-icon">&#x1F4EC;</span>
         <span class="nav-label">Deliverables</span>
         <span class="nav-badge" id="del-badge" style="display:none"></span>
       </button>
       <button class="nav-item" id="nav-clients" onclick="switchPanel('clients')">
-        <span class="nav-icon">👥</span>
+        <span class="nav-icon">&#x1F465;</span>
         <span class="nav-label">Client Manager</span>
       </button>
     </div>
@@ -320,32 +320,32 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
       </div>
       <div class="dash-grid">
         <div class="dash-card dc-blue" onclick="switchPanel('feed')">
-          <div class="dc-icon">⚡</div>
+          <div class="dc-icon">&#x26A1;</div>
           <div class="dc-name">Live Feed</div>
           <div class="dc-desc">Monitor all incoming intelligence alerts across regions and streams</div>
         </div>
         <div class="dash-card dc-purple" onclick="window.open('/brief','_blank')">
-          <div class="dc-icon">📋</div>
+          <div class="dc-icon">&#x1F4CB;</div>
           <div class="dc-name">Brief Studio</div>
           <div class="dc-desc">Select alerts and generate a formatted client intelligence brief</div>
         </div>
         <div class="dash-card dc-teal" onclick="window.open('/assessment','_blank')">
-          <div class="dc-icon">🗺</div>
+          <div class="dc-icon">&#x1F5FA;</div>
           <div class="dc-name">Assessment</div>
           <div class="dc-desc">Generate a full location risk assessment with geospatial map</div>
         </div>
         <div class="dash-card dc-amber" onclick="window.open('/digest','_blank')">
-          <div class="dc-icon">📊</div>
+          <div class="dc-icon">&#x1F4CA;</div>
           <div class="dc-name">Weekly Digest</div>
           <div class="dc-desc">Compile a weekly intelligence digest across all regions</div>
         </div>
         <div class="dash-card dc-green" onclick="switchPanel('deliverables')">
-          <div class="dc-icon">📬</div>
+          <div class="dc-icon">&#x1F4EC;</div>
           <div class="dc-name">Deliverables</div>
           <div class="dc-desc">Manage and publish saved briefs, assessments and digests to clients</div>
         </div>
         <div class="dash-card dc-red" onclick="switchPanel('clients')">
-          <div class="dc-icon">👥</div>
+          <div class="dc-icon">&#x1F465;</div>
           <div class="dc-name">Client Manager</div>
           <div class="dc-desc">Onboard clients, set tiers, regions, streams and watchlist terms</div>
         </div>
@@ -353,107 +353,81 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
       <div class="recent-alerts">
         <div class="ra-head">Recent Intelligence</div>
         <div id="recent-list">
-          <div style="font-family:monospace;font-size:11px;color:var(--text3);padding:12px 0">Loading…</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);padding:12px 0">Loading&#x2026;</div>
         </div>
       </div>
     </div>
 
     <!-- LIVE FEED — inline admin feed -->
-    <div class="ws-frame-panel" id="panel-feed" style="flex-direction:column">
+    <div class="ws-frame-panel" id="panel-feed">
       <div class="ws-frame-bar">
-        <span class="ws-frame-title">⚡ Live Intelligence Feed</span>
+        <span class="ws-frame-title">&#x26A1; Live Intelligence Feed</span>
         <div style="display:flex;gap:8px;margin-left:auto;align-items:center">
-          <select id="feed-sev" onchange="renderAdminFeed()" style="padding:4px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;font-family:monospace;font-size:10px;color:var(--text)">
+          <select id="feed-sev" onchange="renderAdminFeed()" style="padding:4px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text)">
             <option value="all">All Severity</option>
             <option value="critical">Critical</option>
             <option value="high">High+</option>
           </select>
-          <select id="feed-hrs" onchange="loadAdminFeed()" style="padding:4px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;font-family:monospace;font-size:10px;color:var(--text)">
+          <select id="feed-hrs" onchange="loadAdminFeed()" style="padding:4px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text)">
             <option value="24">24h</option>
             <option value="168" selected>7 days</option>
             <option value="336">14 days</option>
           </select>
-          <button onclick="loadAdminFeed()" style="padding:4px 10px;background:transparent;border:1px solid var(--border2);border-radius:4px;font-family:monospace;font-size:10px;color:var(--text3);cursor:pointer">↺</button>
+          <button onclick="loadAdminFeed()" style="padding:4px 10px;background:transparent;border:1px solid var(--border2);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);cursor:pointer">&#x21BA;</button>
         </div>
       </div>
       <div id="admin-feed-list" style="flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:5px">
-        <div style="font-family:monospace;font-size:11px;color:var(--text3);padding:20px;text-align:center">Loading…</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);padding:20px;text-align:center">Loading&#x2026;</div>
       </div>
     </div>
 
-    <!-- LINKEDIN STUDIO iframe -->
-    <div class="ws-frame-panel" id="panel-linkedin">
-      <div class="ws-frame-bar">
-        <span class="ws-frame-title">📰 LinkedIn Briefing Studio</span>
-        <span class="ws-frame-path">/dashboard</span>
-      </div>
-      <iframe class="ws-iframe" id="frame-linkedin" src="" title="LinkedIn Studio"></iframe>
-    </div>
+    <!-- LINKEDIN STUDIO — opens in new tab, placeholder shown -->
+    <div class="ws-frame-panel" id="panel-linkedin"></div>
 
-    <!-- BRIEF STUDIO iframe -->
-    <div class="ws-frame-panel" id="panel-brief">
-      <div class="ws-frame-bar">
-        <span class="ws-frame-title">📋 Client Brief Studio</span>
-        <span class="ws-frame-path">/brief</span>
-      </div>
-      <iframe class="ws-iframe" id="frame-brief" src="" title="Brief Studio"></iframe>
-    </div>
+    <!-- BRIEF STUDIO — opens in new tab, placeholder shown -->
+    <div class="ws-frame-panel" id="panel-brief"></div>
 
-    <!-- ASSESSMENT iframe -->
-    <div class="ws-frame-panel" id="panel-assessment">
-      <div class="ws-frame-bar">
-        <span class="ws-frame-title">🗺 Location Assessment</span>
-        <span class="ws-frame-path">/assessment</span>
-      </div>
-      <iframe class="ws-iframe" id="frame-assessment" src="" title="Location Assessment"></iframe>
-    </div>
+    <!-- ASSESSMENT — opens in new tab, placeholder shown -->
+    <div class="ws-frame-panel" id="panel-assessment"></div>
 
-    <!-- DIGEST iframe -->
-    <div class="ws-frame-panel" id="panel-digest">
-      <div class="ws-frame-bar">
-        <span class="ws-frame-title">📊 Weekly Intelligence Digest</span>
-        <span class="ws-frame-path">/digest</span>
-      </div>
-      <iframe class="ws-iframe" id="frame-digest" src="" title="Weekly Digest"></iframe>
-    </div>
+    <!-- DIGEST — opens in new tab, placeholder shown -->
+    <div class="ws-frame-panel" id="panel-digest"></div>
 
     <!-- DELIVERABLES PANEL -->
     <div id="panel-deliverables">
       <div class="del-head">
-        <h2>📬 Deliverables</h2>
+        <h2>&#x1F4EC; Deliverables</h2>
         <div class="del-filters">
           <button class="del-filter-btn on" onclick="filterDel('all',this)">All</button>
           <button class="del-filter-btn" onclick="filterDel('brief',this)">Briefs</button>
           <button class="del-filter-btn" onclick="filterDel('assessment',this)">Assessments</button>
           <button class="del-filter-btn" onclick="filterDel('digest',this)">Digests</button>
         </div>
-        <button class="tb-btn" onclick="loadDeliverables()" style="margin-left:8px">↺ Refresh</button>
+        <button class="tb-btn" onclick="loadDeliverables()" style="margin-left:8px">&#x21BA; Refresh</button>
       </div>
       <div class="del-list" id="del-list">
         <div class="del-empty">
-          <span style="font-size:28px">📬</span>
-          <span>Loading deliverables…</span>
+          <span style="font-size:28px">&#x1F4EC;</span>
+          <span>Loading deliverables&#x2026;</span>
         </div>
       </div>
     </div>
 
     <!-- CLIENTS PANEL — inline client manager -->
-    <div id="panel-clients" style="flex-direction:column">
-      <div style="padding:20px 28px 0;border-bottom:1px solid var(--border);
+    <div id="panel-clients">
+      <div style="padding:20px 28px 12px;border-bottom:1px solid var(--border);
         display:flex;align-items:center;gap:12px;flex-shrink:0">
-        <h2 style="font-family:sans-serif;font-size:16px;font-weight:700;
-          color:var(--text);flex:1">👥 Client Manager</h2>
+        <h2 style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;
+          color:var(--text);flex:1">&#x1F465; Client Manager</h2>
         <button onclick="newClientInline()" class="tb-btn"
           style="border-color:var(--blue);color:var(--blue)">+ New Client</button>
       </div>
       <div style="flex:1;display:flex;overflow:hidden">
-        <!-- Client list -->
         <div style="width:260px;border-right:1px solid var(--border);
           overflow-y:auto;flex-shrink:0" id="cm-list"></div>
-        <!-- Form area -->
         <div style="flex:1;overflow-y:auto;padding:20px 24px" id="cm-form-area">
           <div style="display:flex;align-items:center;justify-content:center;
-            height:100%;font-family:monospace;font-size:11px;
+            height:100%;font-family:'JetBrains Mono',monospace;font-size:11px;
             color:var(--text3);text-align:center">
             Select a client to edit<br>or click + New Client
           </div>
@@ -467,9 +441,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
 <!-- PUBLISH MODAL -->
 <div class="pub-modal-overlay" id="pub-overlay">
   <div class="pub-modal">
-    <div class="pm-title">⬆ Publish to Clients</div>
-    <div class="pm-sub" id="pm-del-info">—</div>
-    <div class="pm-client-list" id="pm-client-list">Loading…</div>
+    <div class="pm-title">&#x2B06; Publish to Clients</div>
+    <div class="pm-sub" id="pm-del-info">&#x2014;</div>
+    <div class="pm-client-list" id="pm-client-list">Loading&#x2026;</div>
     <div class="pm-link" id="pm-link" onclick="copyPmLink()"></div>
     <div class="pm-actions">
       <button class="pm-btn pm-btn-blue" onclick="confirmPublish()">Publish</button>
@@ -486,14 +460,12 @@ var allDeliverables = [];
 var currentDelFilter = 'all';
 var publishingId = null;
 
-// ── IFRAME ROUTES ─────────────────────────────────────────────────────────
-// Studios open in new tab — avoids iframe cookie issues
+// Studios that open in a new tab (avoids iframe cookie issues)
 var PANEL_SRCS = {
-  feed:       '/intelligence',
-  linkedin:   '/dashboard',
-  brief:      '/brief',
+  linkedin: '/dashboard',
+  brief:    '/brief',
   assessment: '/assessment',
-  digest:     '/digest',
+  digest:   '/digest'
 };
 var EXTERNAL_PANELS = ['linkedin','brief','assessment','digest'];
 
@@ -508,27 +480,42 @@ function updateTime(){
 }
 updateTime(); setInterval(updateTime, 30000);
 
+// ── STUDIO PLACEHOLDER ────────────────────────────────────────────────────
+function showStudioPlaceholder(name){
+  var p = document.getElementById('panel-'+name);
+  if(!p) return;
+  var icons = {linkedin:'📰',brief:'📋',assessment:'🗺',digest:'📊'};
+  var icon = icons[name] || '📄';
+  var label = name.charAt(0).toUpperCase()+name.slice(1);
+  var src = PANEL_SRCS[name] || '/'+name;
+  p.innerHTML =
+    '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;'
+    +'height:100%;gap:16px;color:var(--text3);text-align:center;padding:40px">'
+    +'<div style="font-size:36px">'+icon+'</div>'
+    +'<div style="font-size:13px;color:var(--text2);font-family:\'Syne\',sans-serif;font-weight:700">'+label+' Studio</div>'
+    +'<div style="font-size:11px;line-height:1.7">Opened in a new tab.<br>'
+    +'Generate your deliverable there,<br>then return here to publish it.</div>'
+    +'<button onclick="window.open(\''+src+'\',\'_blank\')" '
+    +'style="margin-top:8px;padding:10px 20px;background:var(--blue-dim);color:#fff;'
+    +'border:none;border-radius:5px;font-family:\'Syne\',sans-serif;font-size:12px;'
+    +'font-weight:700;cursor:pointer;letter-spacing:1px">Open Studio &#x2192;</button>'
+    +'</div>';
+}
+
 // ── SWITCH PANEL ──────────────────────────────────────────────────────────
 function switchPanel(name){
   // Hide all panels
-  document.querySelectorAll('.ws-frame-panel, #panel-dashboard, #panel-deliverables, #panel-clients, #panel-feed')
-    .forEach(function(el){
-      el.style.display='none';
-      el.style.flexDirection='';
-      el.classList.remove('active');
-    });
+  document.querySelectorAll(
+    '.ws-frame-panel, #panel-dashboard, #panel-deliverables, #panel-clients, #panel-feed'
+  ).forEach(function(el){
+    el.style.display = 'none';
+    el.classList.remove('active');
+  });
 
   // Deactivate all nav items
-  document.querySelectorAll('.nav-item').forEach(function(el){el.classList.remove('active');});
-
-  // Show selected panel
-  var panel = document.getElementById('panel-'+name);
-  if(panel){
-    panel.style.display = 'flex';
-    panel.style.flexDirection = 'column';
-    panel.style.height = '100%';
-    panel.classList.add('active');
-  }
+  document.querySelectorAll('.nav-item').forEach(function(el){
+    el.classList.remove('active');
+  });
 
   // Activate nav item
   var navItem = document.getElementById('nav-'+name);
@@ -536,76 +523,74 @@ function switchPanel(name){
 
   currentPanel = name;
 
-  // External panels open in new tab (avoids iframe cookie issues)
+  // External studios open in new tab
   if(EXTERNAL_PANELS.indexOf(name) >= 0){
     window.open(PANEL_SRCS[name], '_blank');
-    // Show placeholder in the panel
-    var panel = document.getElementById('panel-'+name);
-    if(panel){
-            var icons = {linkedin:'📰',brief:'📋',assessment:'🗺',digest:'📊'};
-      var studioUrl = PANEL_SRCS[name] || '/';
-      panel.innerHTML = [
-        '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:var(--text3);font-family:monospace;text-align:center;padding:40px">',
-        '<div style="font-size:36px">' + (icons[name]||'📄') + '</div>',
-        '<div style="font-size:13px;color:var(--text2);font-weight:700">' + name.charAt(0).toUpperCase() + name.slice(1) + ' Studio</div>',
-        '<div style="font-size:11px;line-height:1.7">Opened in a new tab.<br>Generate your deliverable there,<br>then return here to publish it.</div>',
-        '<button onclick="window.open(\'' + studioUrl + '\', \'_blank\')" style="margin-top:8px;padding:10px 20px;background:var(--blue-dim);color:#fff;border:none;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer">Open Studio ↗</button>',
-        '</div>'
-      ].join('');    }
+    var p = document.getElementById('panel-'+name);
+    if(p){
+      p.style.display = 'flex';
+      p.classList.add('active');
+      showStudioPlaceholder(name);
+    }
     return;
   }
-  // Feed loads inline via loadAdminFeed()
 
-  // Load deliverables when switching to that panel
-  if(name==='deliverables') loadDeliverables();
-  // Load client manager
-  if(name==='clients') renderClientsPanel();
-  // Load feed
-  if(name==='feed') loadAdminFeed();
+  // Show selected panel
+  var panel = document.getElementById('panel-'+name);
+  if(panel){
+    panel.style.display = 'flex';
+    panel.classList.add('active');
+  }
+
+  // Panel-specific loaders
+  if(name === 'deliverables') loadDeliverables();
+  if(name === 'clients')      renderClientsPanel();
+  if(name === 'feed')         loadAdminFeed();
 }
 
 // ── LOAD STATS + RECENT ───────────────────────────────────────────────────
 function loadDashboard(){
-  fetch(API+'/alerts?hours=168&min_score=4&limit=100')
+  fetch(API+'/alerts?hours=24&min_score=4&limit=100')
   .then(function(r){return r.json();})
   .then(function(d){
     var alerts = d.alerts||[];
     var crit = alerts.filter(function(a){return a.is_critical||a.score>=9;}).length;
     var high = alerts.filter(function(a){return a.score>=7&&a.score<9&&!a.is_critical;}).length;
-    document.getElementById('st-tot').textContent = alerts.length;
+    document.getElementById('st-tot').textContent  = alerts.length;
     document.getElementById('st-crit').textContent = crit;
     document.getElementById('st-high').textContent = high;
     document.getElementById('feed-badge').textContent = alerts.length;
 
-    // Recent alerts
     var top = alerts.slice(0,6);
     if(!top.length){
       document.getElementById('recent-list').innerHTML =
-        '<div style="font-family:monospace;font-size:11px;color:var(--text3);padding:12px 0">No alerts in the last 24 hours.</div>';
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3);padding:12px 0">No alerts in the last 24 hours.</div>';
       return;
     }
-    function sevInfo(s,c){return c||s>=9?{cl:'crit',l:'CRITICAL'}:s>=7?{cl:'high',l:'HIGH'}:{cl:'med',l:'MEDIUM'};}
+    function sevInfo(s,c){
+      return (c||s>=9)?{cl:'crit',l:'CRITICAL'}:s>=7?{cl:'high',l:'HIGH'}:{cl:'med',l:'MEDIUM'};
+    }
     function fmtTs(ts){
-      try{var d=typeof ts==='number'?new Date(ts*1000):new Date(ts);
+      try{
+        var d=typeof ts==='number'?new Date(ts*1000):new Date(ts);
         return d.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC';
       }catch(e){return '';}
     }
     document.getElementById('recent-list').innerHTML = top.map(function(a){
-      var s=sevInfo(a.score,a.is_critical);
+      var s = sevInfo(a.score, a.is_critical);
       return '<a href="#" class="ra-row" onclick="switchPanel(\'feed\');return false">'
         +'<span class="ra-sev '+s.cl+'">'+s.l+'</span>'
         +'<span class="ra-title">'+(a.title||'')+'</span>'
-        +'<span class="ra-meta">'+(a.region||'').replace(/_/g,' ')+' · '+fmtTs(a.ts_iso||a.ts)+'</span>'
+        +'<span class="ra-meta">'+(a.region||'').replace(/_/g,' ')+' &middot; '+fmtTs(a.ts_iso||a.ts)+'</span>'
         +'</a>';
     }).join('');
   }).catch(function(){});
 
-  // Load deliverables count
   fetch(API+'/deliverables',{credentials:'include'})
   .then(function(r){return r.json();})
   .then(function(d){
-    var count=(d.deliverables||[]).length;
-    var badge=document.getElementById('del-badge');
+    var count = (d.deliverables||[]).length;
+    var badge = document.getElementById('del-badge');
     if(count>0){badge.textContent=count;badge.style.display='block';}
   }).catch(function(){});
 }
@@ -613,7 +598,7 @@ function loadDashboard(){
 // ── DELIVERABLES ──────────────────────────────────────────────────────────
 function loadDeliverables(){
   var list = document.getElementById('del-list');
-  list.innerHTML = '<div class="del-empty"><span style="font-size:22px">⏳</span><span>Loading…</span></div>';
+  list.innerHTML = '<div class="del-empty"><span style="font-size:22px">&#x23F3;</span><span>Loading&#x2026;</span></div>';
   fetch(API+'/deliverables?limit=100',{credentials:'include'})
   .then(function(r){return r.json();})
   .then(function(d){
@@ -621,11 +606,11 @@ function loadDeliverables(){
     renderDeliverables();
   })
   .catch(function(e){
-    list.innerHTML='<div class="del-empty" style="color:var(--critical)">Error: '+e.message+'</div>';
+    list.innerHTML = '<div class="del-empty" style="color:var(--critical)">Error: '+e.message+'</div>';
   });
 }
 
-function filterDel(type, el){
+function filterDel(type,el){
   currentDelFilter = type;
   document.querySelectorAll('.del-filter-btn').forEach(function(b){b.classList.remove('on');});
   if(el) el.classList.add('on');
@@ -637,33 +622,30 @@ function renderDeliverables(){
   var items = currentDelFilter==='all'
     ? allDeliverables
     : allDeliverables.filter(function(d){return d.type===currentDelFilter;});
-
   if(!items.length){
-    list.innerHTML='<div class="del-empty"><span style="font-size:28px">📭</span>'
+    list.innerHTML = '<div class="del-empty"><span style="font-size:28px">&#x1F4ED;</span>'
       +'<span>No '+currentDelFilter+' deliverables yet.<br>Generate one from the studios.</span></div>';
     return;
   }
-
-  var typeCls={brief:'dtb-brief',assessment:'dtb-assessment',digest:'dtb-digest'};
-  var typeIcon={brief:'📋',assessment:'🗺',digest:'📊'};
-  var typeLabel={brief:'Brief',assessment:'Assessment',digest:'Digest'};
-
+  var typeCls   = {brief:'dtb-brief',assessment:'dtb-assessment',digest:'dtb-digest'};
+  var typeIcon  = {brief:'📋',assessment:'🗺',digest:'📊'};
+  var typeLabel = {brief:'Brief',assessment:'Assessment',digest:'Digest'};
   list.innerHTML = items.map(function(d){
-    var created=new Date(d.created_at*1000).toLocaleDateString('en-GB',
+    var created = new Date(d.created_at*1000).toLocaleDateString('en-GB',
       {day:'2-digit',month:'short',year:'numeric'});
-    var clients=(d.clients||[]).length;
+    var clients = (d.clients||[]).length;
     return '<div class="del-row">'
-      +'<span class="del-type-badge '+typeCls[d.type]+'">'+typeIcon[d.type]+' '+(typeLabel[d.type]||d.type)+'</span>'
+      +'<span class="del-type-badge '+(typeCls[d.type]||'')+'">'+(typeIcon[d.type]||'')+' '+(typeLabel[d.type]||d.type)+'</span>'
       +'<div class="del-title">'+(d.title||'Untitled')+'</div>'
       +'<div class="del-meta">'
         +'<span>'+created+'</span>'
-        +'<span>'+(d.time_remaining||'—')+'</span>'
-        +'<span>'+(clients>0?'📤 '+clients+' client'+(clients!==1?'s':''):'Not published')+'</span>'
+        +'<span>'+(d.time_remaining||'&#x2014;')+'</span>'
+        +'<span>'+(clients>0?'&#x1F4E4; '+clients+' client'+(clients!==1?'s':''):'Not published')+'</span>'
       +'</div>'
       +'<div class="del-actions">'
         +'<a class="del-btn del-btn-view" href="'+API+'/view/'+d.token+'" target="_blank">View</a>'
-        +'<button class="del-btn del-btn-publish" onclick="openPubModal(\''+d.id+'\','+JSON.stringify(d.title||'').replace(/'/g,"\\'")+')">Publish</button>'
-        +'<button class="del-btn del-btn-delete" onclick="deleteDeliverable(\''+d.id+'\')">✕</button>'
+        +'<button class="del-btn del-btn-publish" onclick="openPubModal(\''+d.id+'\',\''+encodeURIComponent(d.title||'').replace(/'/g,"\\'")+'\')"  >Publish</button>'
+        +'<button class="del-btn del-btn-delete" onclick="deleteDeliverable(\''+d.id+'\')">&#x2715;</button>'
       +'</div>'
       +'</div>';
   }).join('');
@@ -678,50 +660,44 @@ async function deleteDeliverable(id){
 }
 
 // ── PUBLISH MODAL ─────────────────────────────────────────────────────────
-async function openPubModal(delId, title){
+async function openPubModal(delId, titleEncoded){
+  var title = decodeURIComponent(titleEncoded||'');
   publishingId = delId;
   document.getElementById('pm-del-info').textContent = title || 'Deliverable';
-  document.getElementById('pm-msg').style.display='none';
+  document.getElementById('pm-msg').style.display = 'none';
   document.getElementById('pm-link').classList.remove('show');
   document.getElementById('pub-overlay').classList.add('show');
-
-  // Load clients
   var list = document.getElementById('pm-client-list');
-  list.innerHTML='<div style="font-family:monospace;font-size:10px;color:var(--text3);text-align:center;padding:10px">Loading…</div>';
+  list.innerHTML = '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--text3);text-align:center;padding:10px">Loading&#x2026;</div>';
   try{
-    var r = await fetch(API+'/admin/clients',{credentials:'include'});
-    var d = await r.json();
-    var clients=(d.clients||[]).filter(function(c){return c.username!=='viginote_admin';});
-
-    // Load current deliverable to pre-check already published clients
+    var r  = await fetch(API+'/admin/clients',{credentials:'include'});
+    var d  = await r.json();
+    var clients = (d.clients||[]).filter(function(c){return c.username!=='viginote_admin';});
     var dr = await fetch(API+'/deliverables/'+delId,{credentials:'include'});
     var dd = await dr.json();
     var existingClients = dd.clients||[];
-
-    // Show view link
-    var linkEl=document.getElementById('pm-link');
-    linkEl.textContent=API+'/view/'+(dd.token||'');
+    var linkEl = document.getElementById('pm-link');
+    linkEl.textContent = API+'/view/'+(dd.token||'');
     linkEl.classList.add('show');
-
     if(!clients.length){
-      list.innerHTML='<div style="font-family:monospace;font-size:10px;color:var(--text3);text-align:center;padding:10px">No clients yet. Add via Client Manager.</div>';
+      list.innerHTML = '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--text3);text-align:center;padding:10px">No clients yet. Add via Client Manager.</div>';
       return;
     }
-    list.innerHTML=clients.map(function(c){
-      var alreadyPublished=existingClients.indexOf(c.username)>=0;
-      return '<div class="pm-client-item'+(alreadyPublished?' on':'')+'" id="pm-ci-'+c.username+'" onclick="this.classList.toggle(\'on\')">'
-        +'<div class="pm-client-name">'+(c.label||c.username)+(alreadyPublished?' ✓':'')+'</div>'
+    list.innerHTML = clients.map(function(c){
+      var already = existingClients.indexOf(c.username)>=0;
+      return '<div class="pm-client-item'+(already?' on':'')+'" id="pm-ci-'+c.username+'" onclick="this.classList.toggle(\'on\')">'
+        +'<div class="pm-client-name">'+(c.label||c.username)+(already?' &#x2713;':'')+'</div>'
         +'<span class="pm-client-tier">'+(c.tier||'analyst').toUpperCase()+'</span>'
         +'</div>';
     }).join('');
   }catch(e){
-    list.innerHTML='<div style="color:var(--critical);font-family:monospace;font-size:10px;padding:10px">Error: '+e.message+'</div>';
+    list.innerHTML = '<div style="color:var(--critical);font-family:\'JetBrains Mono\',monospace;font-size:10px;padding:10px">Error: '+e.message+'</div>';
   }
 }
 
 function closePubModal(){
   document.getElementById('pub-overlay').classList.remove('show');
-  publishingId=null;
+  publishingId = null;
 }
 
 document.getElementById('pub-overlay').addEventListener('click',function(e){
@@ -730,7 +706,7 @@ document.getElementById('pub-overlay').addEventListener('click',function(e){
 
 async function confirmPublish(){
   if(!publishingId) return;
-  var selected=[...document.querySelectorAll('.pm-client-item.on')]
+  var selected = [...document.querySelectorAll('.pm-client-item.on')]
     .map(function(el){return el.id.replace('pm-ci-','');});
   if(!selected.length){showPmMsg('Select at least one client.','err');return;}
   try{
@@ -745,31 +721,29 @@ async function confirmPublish(){
 }
 
 function copyPmLink(){
-  var el=document.getElementById('pm-link');
+  var el = document.getElementById('pm-link');
   navigator.clipboard.writeText(el.textContent).then(function(){
-    var orig=el.textContent;
-    el.textContent='✓ Copied!';
+    var orig = el.textContent;
+    el.textContent = '✓ Copied!';
     setTimeout(function(){el.textContent=orig;},2000);
   });
 }
 
 function showPmMsg(msg,type){
-  var el=document.getElementById('pm-msg');
-  el.textContent=msg;el.className='pm-msg '+type;el.style.display='block';
+  var el = document.getElementById('pm-msg');
+  el.textContent = msg;
+  el.className = 'pm-msg '+type;
+  el.style.display = 'block';
 }
 
-// ── CLIENTS PANEL (inline) ─────────────────────────────────────────────────
-function renderClientsPanel(){
-  loadCmClients();
-}
 // ── ADMIN FEED ────────────────────────────────────────────────────────────
 var _adminAlerts = [];
 
 function loadAdminFeed(){
   var list = document.getElementById('admin-feed-list');
   if(!list) return;
-  list.innerHTML = '<div style="font-family:monospace;font-size:11px;color:var(--text3);padding:20px;text-align:center">Loading…</div>';
-  var hrs = document.getElementById('feed-hrs') ? document.getElementById('feed-hrs').value : '168';
+  list.innerHTML = '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3);padding:20px;text-align:center">Loading&#x2026;</div>';
+  var hrs = (document.getElementById('feed-hrs')||{value:'168'}).value;
   fetch(API+'/alerts?hours='+hrs+'&min_score=4&limit=300')
   .then(function(r){return r.json();})
   .then(function(d){
@@ -777,64 +751,73 @@ function loadAdminFeed(){
     renderAdminFeed();
   })
   .catch(function(e){
-    list.innerHTML='<div style="font-family:monospace;font-size:11px;color:var(--critical);padding:20px;text-align:center">Error: '+e.message+'</div>';
+    list.innerHTML = '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--critical);padding:20px;text-align:center">Error loading feed: '+e.message+'</div>';
   });
 }
 
 function renderAdminFeed(){
   var list = document.getElementById('admin-feed-list');
   if(!list) return;
-  var sev = document.getElementById('feed-sev') ? document.getElementById('feed-sev').value : 'all';
+  var sev = (document.getElementById('feed-sev')||{value:'all'}).value;
   var filtered = _adminAlerts.filter(function(a){
     if(sev==='critical') return a.is_critical||a.score>=9;
-    if(sev==='high') return a.score>=7;
+    if(sev==='high')     return a.score>=7;
     return true;
   });
   if(!filtered.length){
-    list.innerHTML='<div style="font-family:monospace;font-size:11px;color:var(--text3);padding:20px;text-align:center">No alerts found.</div>';
+    list.innerHTML = '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3);padding:20px;text-align:center">No alerts found for this filter.</div>';
     return;
   }
-  function sevInfo(s,c){return c||s>=9?{cl:'crit',l:'CRITICAL'}:s>=7?{cl:'high',l:'HIGH'}:s>=5?{cl:'med',l:'MEDIUM'}:{cl:'low',l:'LOW'};}
+  function sevInfo(s,c){
+    return (c||s>=9)?{cl:'crit',l:'CRITICAL'}:s>=7?{cl:'high',l:'HIGH'}:s>=5?{cl:'med',l:'MEDIUM'}:{cl:'low',l:'LOW'};
+  }
   function fmtTs(ts){
-    try{var d=typeof ts==='number'?new Date(ts*1000):new Date(ts);
+    try{
+      var d=typeof ts==='number'?new Date(ts*1000):new Date(ts);
       return d.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC';
     }catch(e){return '';}
   }
+  var sevCols = {
+    crit:'background:#7f1d1d;color:#fca5a5',
+    high:'background:#7c2d12;color:#fdba74',
+    med: 'background:#1e3a8a;color:#93c5fd',
+    low: 'background:#14532d;color:#86efac'
+  };
+  var streamColors = {maritime:'#06b6d4',cyber:'#a855f7',economic:'#f59e0b',political:'#f97316',executive:'#22c55e'};
   list.innerHTML = filtered.map(function(a){
-    var s=sevInfo(a.score,a.is_critical);
-    var sevCols={crit:'background:#7f1d1d;color:#fca5a5',high:'background:#7c2d12;color:#fdba74',med:'background:#1e3a8a;color:#93c5fd',low:'background:#14532d;color:#86efac'};
-    var streamDot = a.stream && a.stream!=='geographic'
-      ? '<span style="width:6px;height:6px;border-radius:50%;background:'+({'maritime':'#06b6d4','cyber':'#a855f7','economic':'#f59e0b','political':'#f97316','executive':'#22c55e'}[a.stream]||'#3b82f6')+';display:inline-block;margin-right:4px"></span>'
+    var s = sevInfo(a.score, a.is_critical);
+    var streamDot = (a.stream && a.stream!=='geographic' && streamColors[a.stream])
+      ? '<span style="width:6px;height:6px;border-radius:50%;background:'+streamColors[a.stream]+';display:inline-block;margin-right:4px;flex-shrink:0"></span>'
       : '';
-    var sevBg={crit:'#7f1d1d',high:'#7c2d12',med:'#1e3a8a',low:'#14532d'};
-    var sevFg={crit:'#fca5a5',high:'#fdba74',med:'#93c5fd',low:'#86efac'};
-    return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:6px">'
-      +'<div style="display:flex;align-items:stretch;min-height:24px">'
-      +'<div style="padding:0 10px;display:flex;align-items:center;font-family:monospace;font-size:8px;font-weight:700;letter-spacing:1px;flex-shrink:0;background:'+sevBg[s.cl]+';color:'+sevFg[s.cl]+'">'+s.l+'</div>'
-      +'<div style="padding:0 10px;display:flex;align-items:center;font-family:monospace;font-size:8px;color:var(--text3);flex:1">'+(a.region||'').replace(/_/g,' ')+'</div>'
-      +'<div style="padding:0 10px;display:flex;align-items:center;font-family:monospace;font-size:8px;color:var(--text4)">SCR '+(a.score||'')+'</div>'
+    return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;overflow:hidden">'
+      +'<div style="display:flex;height:20px">'
+        +'<div style="padding:0 8px;display:flex;align-items:center;font-family:\'JetBrains Mono\',monospace;font-size:7px;font-weight:700;letter-spacing:1.5px;min-width:66px;flex-shrink:0;'+sevCols[s.cl]+'">'+s.l+'</div>'
+        +'<div style="padding:0 8px;display:flex;align-items:center;font-family:\'JetBrains Mono\',monospace;font-size:7px;color:var(--text4);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(a.region||'').replace(/_/g,' ')+'</div>'
+        +'<div style="padding:0 8px;display:flex;align-items:center;font-family:\'JetBrains Mono\',monospace;font-size:7px;color:var(--text4);white-space:nowrap;flex-shrink:0">'+fmtTs(a.ts_iso||a.ts)+'</div>'
       +'</div>'
-      +'<div style="padding:10px 12px">'
-      +'<div style="font-size:13px;font-weight:500;color:var(--text);line-height:1.4;margin-bottom:6px">'+(a.title||'')+'</div>'
-      +(a.precis?'<div style="font-family:monospace;font-size:10px;color:var(--text3);line-height:1.6;margin-bottom:6px">'+(a.precis.substring(0,200)+(a.precis.length>200?'…':''))+'</div>':'')
-      +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
-      +streamDot
-      +'<span style="font-family:monospace;font-size:9px;color:var(--text4)">'+(a.source_domain||a.source_dom||'')+'</span>'
-      +'<span style="font-family:monospace;font-size:9px;color:var(--text4)">'+fmtTs(a.ts_iso||a.ts)+'</span>'
-      +(a.url?'<a href="'+a.url+'" target="_blank" style="font-family:monospace;font-size:9px;font-weight:700;color:var(--blue);margin-left:auto;text-decoration:none;padding:4px 10px;border:1px solid rgba(59,130,246,.3);border-radius:3px">Read →</a>':'')
+      +'<div style="padding:7px 10px">'
+        +'<div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:4px">'+(a.title||'')+'</div>'
+        +'<div style="display:flex;align-items:center;gap:6px">'
+          +streamDot
+          +'<span style="font-family:\'JetBrains Mono\',monospace;font-size:8px;color:var(--text4)">'+(a.source_domain||a.source_dom||'')+'</span>'
+          +(a.url?'<a href="'+a.url+'" target="_blank" style="font-family:\'JetBrains Mono\',monospace;font-size:8px;color:var(--blue);margin-left:auto;text-decoration:none">Source &#x2192;</a>':'')
+        +'</div>'
       +'</div>'
-      +'</div></div>';
+      +'</div>';
   }).join('');
 }
 
 // ── CLIENT MANAGER ────────────────────────────────────────────────────────
-var ALL_REGIONS_CM={'GLOBAL':'Global','MIDDLE_EAST':'Middle East','EUROPE':'Europe',
-  'ASIA':'Asia','WEST_EAST_AFRICA':'W/E Africa','SOUTHERN_AFRICA':'S Africa','SOUTH_AMERICA':'S America'};
-var ALL_STREAMS_CM=[
+var ALL_REGIONS_CM = {
+  'GLOBAL':'Global','MIDDLE_EAST':'Middle East','EUROPE':'Europe',
+  'ASIA':'Asia','WEST_EAST_AFRICA':'W/E Africa','SOUTHERN_AFRICA':'S Africa','SOUTH_AMERICA':'S America'
+};
+var ALL_STREAMS_CM = [
   {id:'geographic',label:'🌍 Geographic'},{id:'maritime',label:'⚓ Maritime'},
   {id:'cyber',label:'💻 Cyber'},{id:'economic',label:'📊 Economic'},
-  {id:'political',label:'🗳 Political'},{id:'executive',label:'🛡 Executive'}];
-var REGION_COUNTRIES_CM={
+  {id:'political',label:'🗳 Political'},{id:'executive',label:'🛡 Executive'}
+];
+var REGION_COUNTRIES_CM = {
   'MIDDLE_EAST':{'IL':'Israel','PS':'Palestine','SY':'Syria','IQ':'Iraq','IR':'Iran','YE':'Yemen','LB':'Lebanon','SA':'Saudi Arabia','AE':'UAE','TR':'Turkey'},
   'EUROPE':{'UA':'Ukraine','RU':'Russia','BY':'Belarus','GE':'Georgia','AM':'Armenia','AZ':'Azerbaijan','RS':'Serbia','PL':'Poland','RO':'Romania','GR':'Greece'},
   'ASIA':{'CN':'China','TW':'Taiwan','KP':'N Korea','MM':'Myanmar','AF':'Afghanistan','PK':'Pakistan','IN':'India','PH':'Philippines','VN':'Vietnam','ID':'Indonesia'},
@@ -842,87 +825,130 @@ var REGION_COUNTRIES_CM={
   'SOUTHERN_AFRICA':{'ZA':'South Africa','ZW':'Zimbabwe','MZ':'Mozambique','ZM':'Zambia','MW':'Malawi','NA':'Namibia','BW':'Botswana','AO':'Angola'},
   'SOUTH_AMERICA':{'VE':'Venezuela','CO':'Colombia','BR':'Brazil','MX':'Mexico','HT':'Haiti','PE':'Peru','EC':'Ecuador','AR':'Argentina','CL':'Chile','CU':'Cuba'}
 };
-var TIER_LIMITS_CM={
-  monitor:{regions:1,streams:1,watchlist:3,briefs:0},
-  analyst:{regions:2,streams:2,watchlist:5,briefs:2},
-  operator:{regions:4,streams:4,watchlist:15,briefs:5},
+var TIER_LIMITS_CM = {
+  monitor:   {regions:1,streams:1,watchlist:3,briefs:0},
+  analyst:   {regions:2,streams:2,watchlist:5,briefs:2},
+  operator:  {regions:4,streams:4,watchlist:15,briefs:5},
   enterprise:{regions:7,streams:6,watchlist:50,briefs:20},
-  admin:{regions:7,streams:6,watchlist:999,briefs:-1}
+  admin:     {regions:7,streams:6,watchlist:999,briefs:-1}
 };
-var cmWatchlistTerms=[],cmCurrentUser=null,cmClients={};
+var cmWatchlistTerms = [], cmCurrentUser = null, cmClients = {};
+
+function renderClientsPanel(){ loadCmClients(); }
 
 function loadCmClients(){
   fetch(API+'/admin/clients',{credentials:'include'})
   .then(function(r){return r.json();})
   .then(function(d){
-    cmClients={};
+    cmClients = {};
     (d.clients||[]).forEach(function(c){cmClients[c.username]=c;});
-    var list=document.getElementById('cm-list');
-    if(!list)return;
-    var html='';
+    var list = document.getElementById('cm-list');
+    if(!list) return;
+    var html = '';
     (d.clients||[]).forEach(function(c){
-      var isActive=cmCurrentUser===c.username;
-      html+='<div onclick="selectCmClient(\''+c.username+'\')" style="padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;'+(isActive?'background:var(--blue-pale);border-left:3px solid var(--blue)':'')+'">'
+      var isActive = cmCurrentUser===c.username;
+      html += '<div onclick="selectCmClient(\''+c.username+'\')" style="padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;'
+        +(isActive?'background:var(--blue-pale);border-left:3px solid var(--blue)':'')
+        +'">'
         +'<div style="font-size:12px;font-weight:500;color:var(--text)">'+(c.label||c.username)+'</div>'
-        +'<div style="font-family:monospace;font-size:9px;color:var(--text3);margin-top:2px">@'+c.username+' · '+(c.tier||'analyst').toUpperCase()+'</div>'
+        +'<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;color:var(--text3);margin-top:2px">@'+c.username+' &middot; '+(c.tier||'analyst').toUpperCase()+'</div>'
         +'</div>';
     });
-    if(!html)html='<div style="padding:20px;font-family:monospace;font-size:10px;color:var(--text3);text-align:center">No clients yet</div>';
-    list.innerHTML=html;
+    if(!html) html = '<div style="padding:20px;font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--text3);text-align:center">No clients yet</div>';
+    list.innerHTML = html;
   });
 }
 
-function selectCmClient(u){cmCurrentUser=u;var c=cmClients[u];if(c)renderCmForm(c,false);loadCmClients();}
-function newClientInline(){cmCurrentUser=null;renderCmForm(null,true);}
+function selectCmClient(u){ cmCurrentUser=u; var c=cmClients[u]; if(c) renderCmForm(c,false); loadCmClients(); }
+function newClientInline(){ cmCurrentUser=null; renderCmForm(null,true); }
 
 function renderCmForm(c,isNew){
-  var area=document.getElementById('cm-form-area');if(!area)return;
-  cmWatchlistTerms=c?(c.watchlist||[]):[];
-  var tier=c?(c.tier||'analyst'):'operator';
-  var lim=TIER_LIMITS_CM[tier]||TIER_LIMITS_CM.analyst;
-  var inp='padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:5px;font-family:monospace;font-size:12px;color:var(--text);outline:none;width:100%';
-  var lbl='font-family:monospace;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:5px;display:block';
-  var chk=function(id,label,checked,cls){return'<label style="display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border:1px solid '+(checked?'var(--blue)':'var(--border2)')+';border-radius:4px;cursor:pointer;font-family:monospace;font-size:10px;color:'+(checked?'var(--blue)':'var(--text2)')+';background:'+(checked?'var(--blue-pale)':'transparent')+';" class="'+cls+'" data-id="'+id+'" onclick="toggleCmCheck(this)"><input type="checkbox" value="'+id+'" '+(checked?'checked':'')+' style="display:none">'+label+'</label>';};
-  var streamsHtml=ALL_STREAMS_CM.map(function(s){return chk(s.id,s.label,(c&&c.streams&&c.streams.indexOf(s.id)>=0)||(!c&&s.id==='geographic'),'cm-s');}).join('');
-  var regionsHtml=Object.keys(ALL_REGIONS_CM).map(function(r){return chk(r,ALL_REGIONS_CM[r],c&&c.regions&&c.regions.indexOf(r)>=0,'cm-r');}).join('');
-  area.innerHTML='<div style="display:flex;flex-direction:column;gap:14px">'
+  var area = document.getElementById('cm-form-area');
+  if(!area) return;
+  cmWatchlistTerms = c ? (c.watchlist||[]) : [];
+  var tier = c ? (c.tier||'analyst') : 'operator';
+  var lim  = TIER_LIMITS_CM[tier] || TIER_LIMITS_CM.analyst;
+
+  var inp = 'padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:5px;font-family:\'JetBrains Mono\',monospace;font-size:12px;color:var(--text);outline:none;width:100%';
+  var lbl = 'font-family:\'JetBrains Mono\',monospace;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:5px;display:block';
+
+  function chk(id,label,checked,cls){
+    return '<label style="display:inline-flex;align-items:center;gap:5px;padding:5px 9px;'
+      +'border:1px solid '+(checked?'var(--blue)':'var(--border2)')+';border-radius:4px;cursor:pointer;'
+      +'font-family:\'JetBrains Mono\',monospace;font-size:10px;color:'+(checked?'var(--blue)':'var(--text2)')+';'
+      +'background:'+(checked?'var(--blue-pale)':'transparent')+';" class="'+cls+'" data-id="'+id+'" onclick="toggleCmCheck(this)">'
+      +'<input type="checkbox" value="'+id+'" '+(checked?'checked':'')+' style="display:none">'+label+'</label>';
+  }
+
+  var streamsHtml = ALL_STREAMS_CM.map(function(s){
+    return chk(s.id, s.label, (c&&c.streams&&c.streams.indexOf(s.id)>=0)||(!c&&s.id==='geographic'), 'cm-s');
+  }).join('');
+
+  var regionsHtml = Object.keys(ALL_REGIONS_CM).map(function(r){
+    return chk(r, ALL_REGIONS_CM[r], c&&c.regions&&c.regions.indexOf(r)>=0, 'cm-r');
+  }).join('');
+
+  area.innerHTML = '<div style="display:flex;flex-direction:column;gap:14px">'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-    +'<div><span style="'+lbl+'">Username</span><input id="cf-u" style="'+inp+(isNew?'':';opacity:.6')+'"'+(isNew?'':' readonly')+' value="'+(c?c.username:'')+'"></div>'
-    +'<div><span style="'+lbl+'">Password</span><input id="cf-p" style="'+inp+'" value="'+(c?c.password:'')+'"></div>'
-    +'<div><span style="'+lbl+'">Display Label</span><input id="cf-l" style="'+inp+'" placeholder="Company Name" value="'+(c?c.label||'':'')+'"></div>'
-    +'<div><span style="'+lbl+'">Tier</span><select id="cf-t" style="'+inp+'" onchange="onCmTier()">'
-    +['monitor','analyst','operator','enterprise','admin'].map(function(t){return'<option value="'+t+'"'+(tier===t?' selected':'')+'>'+t[0].toUpperCase()+t.slice(1)+'</option>';}).join('')
-    +'</select></div>'
-    +'<div><span style="'+lbl+'">Briefs/Month</span><input id="cf-b" style="'+inp+'" type="number" value="'+(c?c.brief_allowance:5)+'"></div>'
+      +'<div><span style="'+lbl+'">Username</span>'
+        +'<input id="cf-u" style="'+inp+(isNew?'':';opacity:.6')+'" '+(isNew?'':'readonly')+' value="'+(c?c.username:'')+'"></div>'
+      +'<div><span style="'+lbl+'">Password</span>'
+        +'<input id="cf-p" style="'+inp+'" value="'+(c?c.password:'')+'"></div>'
+      +'<div><span style="'+lbl+'">Display Label</span>'
+        +'<input id="cf-l" style="'+inp+'" placeholder="Company Name" value="'+(c?c.label||'':'')+'"></div>'
+      +'<div><span style="'+lbl+'">Tier</span>'
+        +'<select id="cf-t" style="'+inp+'" onchange="onCmTier()">'
+        +['monitor','analyst','operator','enterprise','admin'].map(function(t){
+          return '<option value="'+t+'"'+(tier===t?' selected':'')+'>'+t[0].toUpperCase()+t.slice(1)+'</option>';
+        }).join('')
+        +'</select></div>'
+      +'<div><span style="'+lbl+'">Briefs/Month</span>'
+        +'<input id="cf-b" style="'+inp+'" type="number" value="'+(c?c.brief_allowance:5)+'"></div>'
     +'</div>'
-    +'<div><span style="'+lbl+'">Streams <span id="cf-sl" style="color:var(--blue);font-weight:400">(max '+lim.streams+')</span></span><div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px" id="cf-streams">'+streamsHtml+'</div></div>'
-    +'<div><span style="'+lbl+'">Regions <span id="cf-rl" style="color:var(--blue);font-weight:400">(max '+lim.regions+')</span></span><div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px" id="cf-regions">'+regionsHtml+'</div></div>'
+    +'<div><span style="'+lbl+'">Streams <span id="cf-sl" style="color:var(--blue);font-weight:400">(max '+lim.streams+')</span></span>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px" id="cf-streams">'+streamsHtml+'</div></div>'
+    +'<div><span style="'+lbl+'">Regions <span id="cf-rl" style="color:var(--blue);font-weight:400">(max '+lim.regions+')</span></span>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px" id="cf-regions">'+regionsHtml+'</div></div>'
     +'<div id="cf-cw"></div>'
-    +'<div><span style="'+lbl+'">Watchlist — type and press Enter</span>'
-    +'<div id="cf-ww" style="display:flex;flex-wrap:wrap;gap:5px;padding:8px;background:rgba(255,255,255,.03);border:1px solid var(--border2);border-radius:5px;min-height:44px;cursor:text" onclick="document.getElementById('cf-wi').focus()">'
-    +'<input id="cf-wi" style="border:none;background:transparent;outline:none;font-family:monospace;font-size:11px;color:var(--text);min-width:120px;flex:1;padding:2px 4px" placeholder="Gaza, Sudan, RSF…" autocorrect="off">'
-    +'</div></div>'
+    +'<div><span style="'+lbl+'">Watchlist &mdash; type and press Enter</span>'
+      +'<div id="cf-ww" style="display:flex;flex-wrap:wrap;gap:5px;padding:8px;background:rgba(255,255,255,.03);border:1px solid var(--border2);border-radius:5px;min-height:44px;cursor:text" onclick="document.getElementById(\'cf-wi\').focus()">'
+        +'<input id="cf-wi" style="border:none;background:transparent;outline:none;font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text);min-width:120px;flex:1;padding:2px 4px" placeholder="Gaza, Sudan, RSF…" autocorrect="off">'
+      +'</div></div>'
     +'<div style="display:flex;gap:8px">'
-    +'<button onclick="saveCm()" style="flex:1;padding:10px;background:var(--blue-dim);color:#fff;border:none;border-radius:5px;font-family:sans-serif;font-size:13px;font-weight:700;cursor:pointer">Save Client</button>'
-    +(isNew?'':'<button onclick="deleteCm()" style="padding:10px 14px;background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border);border-radius:5px;font-family:monospace;font-size:11px;cursor:pointer">Delete</button>')
+      +'<button onclick="saveCm()" style="flex:1;padding:10px;background:var(--blue-dim);color:#fff;border:none;border-radius:5px;font-family:\'Syne\',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Save Client</button>'
+      +(isNew?'':'<button onclick="deleteCm()" style="padding:10px 14px;background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border);border-radius:5px;font-family:\'JetBrains Mono\',monospace;font-size:11px;cursor:pointer">Delete</button>')
     +'</div>'
-    +'<div id="cf-msg" style="display:none;font-family:monospace;font-size:10px;padding:8px 12px;border-radius:4px"></div>'
+    +'<div id="cf-msg" style="display:none;font-family:\'JetBrains Mono\',monospace;font-size:10px;padding:8px 12px;border-radius:4px"></div>'
     +'</div>';
+
   renderCmTags();
   renderCmCountries(c?c.regions||[]:[], c?c.countries||[]:[]);
-  var wi=document.getElementById('cf-wi');
+
+  var wi = document.getElementById('cf-wi');
   if(wi){
     wi.addEventListener('keydown',function(e){
-      if(e.key==='Enter'||e.key===','){e.preventDefault();var v=this.value.trim().replace(/,/g,'');if(v&&cmWatchlistTerms.indexOf(v)<0)cmWatchlistTerms.push(v);renderCmTags();this.value='';}
-      if(e.key==='Backspace'&&!this.value&&cmWatchlistTerms.length>0){cmWatchlistTerms.pop();renderCmTags();}
+      if(e.key==='Enter'||e.key===','){
+        e.preventDefault();
+        var v=this.value.trim().replace(/,/g,'');
+        if(v&&cmWatchlistTerms.indexOf(v)<0) cmWatchlistTerms.push(v);
+        renderCmTags(); this.value='';
+      }
+      if(e.key==='Backspace'&&!this.value&&cmWatchlistTerms.length>0){
+        cmWatchlistTerms.pop(); renderCmTags();
+      }
     });
   }
 }
 
 function toggleCmCheck(el){
-  var on=el.querySelector('input').checked;
-  if(on){el.style.borderColor='var(--border2)';el.style.background='transparent';el.style.color='var(--text2)';el.querySelector('input').checked=false;}
-  else{el.style.borderColor='var(--blue)';el.style.background='var(--blue-pale)';el.style.color='var(--blue)';el.querySelector('input').checked=true;}
+  var on = el.querySelector('input').checked;
+  if(on){
+    el.style.borderColor='var(--border2)';el.style.background='transparent';
+    el.style.color='var(--text2)';el.querySelector('input').checked=false;
+  }else{
+    el.style.borderColor='var(--blue)';el.style.background='var(--blue-pale)';
+    el.style.color='var(--blue)';el.querySelector('input').checked=true;
+  }
   if(el.classList.contains('cm-r')){
     var sr=[...document.querySelectorAll('#cf-regions .cm-r')].filter(function(e){return e.querySelector('input').checked;}).map(function(e){return e.dataset.id;});
     var sc=[...document.querySelectorAll('[id^="cg-"] input:checked')].map(function(e){return e.value;});
@@ -931,38 +957,53 @@ function toggleCmCheck(el){
 }
 
 function renderCmCountries(sr,sc){
-  var w=document.getElementById('cf-cw');if(!w)return;
-  var html='';
+  var w = document.getElementById('cf-cw');
+  if(!w) return;
+  var html = '';
   sr.forEach(function(r){
-    var cs=REGION_COUNTRIES_CM[r];if(!cs)return;
-    html+='<div style="margin-bottom:10px"><span style="font-family:monospace;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:5px">'+ALL_REGIONS_CM[r]+' countries</span>';
-    html+='<div style="display:flex;flex-wrap:wrap;gap:4px" id="cg-'+r+'">';
+    var cs = REGION_COUNTRIES_CM[r];
+    if(!cs) return;
+    html += '<div style="margin-bottom:10px">'
+      +'<span style="font-family:\'JetBrains Mono\',monospace;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:5px">'+ALL_REGIONS_CM[r]+' countries</span>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:4px" id="cg-'+r+'">';
     Object.keys(cs).forEach(function(code){
-      var sel=sc.indexOf(code)>=0;
-      html+='<label style="display:inline-flex;align-items:center;padding:3px 8px;border:1px solid '+(sel?'var(--blue)':'var(--border2)')+';border-radius:3px;cursor:pointer;font-family:monospace;font-size:9px;color:'+(sel?'var(--blue)':'var(--text2)')+';background:'+(sel?'var(--blue-pale)':'transparent')+';" onclick="toggleCmCheck(this)"><input type="checkbox" value="'+code+'" '+(sel?'checked':'')+' style="display:none">'+cs[code]+'</label>';
+      var sel = sc.indexOf(code)>=0;
+      html += '<label style="display:inline-flex;align-items:center;padding:3px 8px;'
+        +'border:1px solid '+(sel?'var(--blue)':'var(--border2)')+';border-radius:3px;cursor:pointer;'
+        +'font-family:\'JetBrains Mono\',monospace;font-size:9px;color:'+(sel?'var(--blue)':'var(--text2)')+';'
+        +'background:'+(sel?'var(--blue-pale)':'transparent')+';" onclick="toggleCmCheck(this)">'
+        +'<input type="checkbox" value="'+code+'" '+(sel?'checked':'')+' style="display:none">'+cs[code]+'</label>';
     });
-    html+='</div></div>';
+    html += '</div></div>';
   });
-  w.innerHTML=html?'<div style="margin-top:4px"><span style="font-family:monospace;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:6px">Country Filter</span>'+html+'</div>':'';
+  w.innerHTML = html
+    ? '<div style="margin-top:4px"><span style="font-family:\'JetBrains Mono\',monospace;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:6px">Country Filter</span>'+html+'</div>'
+    : '';
 }
 
 function renderCmTags(){
-  var w=document.getElementById('cf-ww');var i=document.getElementById('cf-wi');
-  if(!w||!i)return;
+  var w = document.getElementById('cf-ww');
+  var i = document.getElementById('cf-wi');
+  if(!w||!i) return;
   w.querySelectorAll('.cmtag').forEach(function(t){t.remove();});
   cmWatchlistTerms.forEach(function(term,idx){
-    var t=document.createElement('div');t.className='cmtag';
-    t.style.cssText='display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);border-radius:3px;font-family:monospace;font-size:10px;color:var(--blue)';
-    t.innerHTML=term+'<span style="cursor:pointer;color:var(--text3)" onclick="cmWatchlistTerms.splice('+idx+',1);renderCmTags()">×</span>';
+    var t = document.createElement('div');
+    t.className = 'cmtag';
+    t.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);border-radius:3px;font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--blue)';
+    t.innerHTML = term+'<span style="cursor:pointer;color:var(--text3)" onclick="cmWatchlistTerms.splice('+idx+',1);renderCmTags()">&#x00D7;</span>';
     w.insertBefore(t,i);
   });
 }
 
 function onCmTier(){
-  var t=document.getElementById('cf-t').value;var lim=TIER_LIMITS_CM[t]||TIER_LIMITS_CM.analyst;
-  var sl=document.getElementById('cf-sl');var rl=document.getElementById('cf-rl');
-  if(sl)sl.textContent='(max '+lim.streams+')';if(rl)rl.textContent='(max '+lim.regions+')';
-  var bf=document.getElementById('cf-b');if(bf)bf.value=lim.briefs<0?-1:lim.briefs;
+  var t   = document.getElementById('cf-t').value;
+  var lim = TIER_LIMITS_CM[t] || TIER_LIMITS_CM.analyst;
+  var sl  = document.getElementById('cf-sl');
+  var rl  = document.getElementById('cf-rl');
+  if(sl) sl.textContent='(max '+lim.streams+')';
+  if(rl) rl.textContent='(max '+lim.regions+')';
+  var bf = document.getElementById('cf-b');
+  if(bf) bf.value = lim.briefs<0 ? -1 : lim.briefs;
   if(t==='admin'||t==='enterprise'){
     document.querySelectorAll('.cm-s,.cm-r').forEach(function(el){
       el.style.borderColor='var(--blue)';el.style.background='var(--blue-pale)';
@@ -972,51 +1013,55 @@ function onCmTier(){
 }
 
 async function saveCm(){
-  var u=(document.getElementById('cf-u').value||'').trim().toLowerCase().replace(/\s/g,'_');
-  var p=(document.getElementById('cf-p').value||'').trim();
-  var l=(document.getElementById('cf-l').value||'').trim();
-  var t=document.getElementById('cf-t').value;
-  var b=parseInt(document.getElementById('cf-b').value)||0;
-  var streams=[...document.querySelectorAll('#cf-streams .cm-s input:checked')].map(function(e){return e.value;});
-  var regions=[...document.querySelectorAll('#cf-regions .cm-r input:checked')].map(function(e){return e.value;});
-  var countries=[...document.querySelectorAll('[id^="cg-"] input:checked')].map(function(e){return e.value;});
-  if(!streams.length)streams=['geographic'];
+  var u = (document.getElementById('cf-u').value||'').trim().toLowerCase().replace(/\s/g,'_');
+  var p = (document.getElementById('cf-p').value||'').trim();
+  var l = (document.getElementById('cf-l').value||'').trim();
+  var t = document.getElementById('cf-t').value;
+  var b = parseInt(document.getElementById('cf-b').value)||0;
+  var streams  = [...document.querySelectorAll('#cf-streams .cm-s input:checked')].map(function(e){return e.value;});
+  var regions  = [...document.querySelectorAll('#cf-regions .cm-r input:checked')].map(function(e){return e.value;});
+  var countries= [...document.querySelectorAll('[id^="cg-"] input:checked')].map(function(e){return e.value;});
+  if(!streams.length) streams=['geographic'];
   if(!u){showCfMsg('Username required','err');return;}
   if(!p){showCfMsg('Password required','err');return;}
   try{
-    var r=await fetch(API+'/admin/clients',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({username:u,password:p,tier:t,regions:regions,countries:countries,streams:streams,watchlist:cmWatchlistTerms,brief_allowance:b,label:l})});
-    var d=await r.json();
+    var r = await fetch(API+'/admin/clients',{
+      method:'POST',credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:u,password:p,tier:t,regions:regions,
+        countries:countries,streams:streams,watchlist:cmWatchlistTerms,
+        brief_allowance:b,label:l})
+    });
+    var d = await r.json();
     if(r.ok){showCfMsg('Saved. Client can log in immediately.','ok');cmCurrentUser=u;loadCmClients();}
     else showCfMsg(d.detail||'Save failed','err');
   }catch(e){showCfMsg('Error: '+e.message,'err');}
 }
 
 async function deleteCm(){
-  if(!cmCurrentUser)return;
-  if(!confirm('Delete @'+cmCurrentUser+'?'))return;
+  if(!cmCurrentUser) return;
+  if(!confirm('Delete @'+cmCurrentUser+'?')) return;
   await fetch(API+'/admin/clients/'+cmCurrentUser,{method:'DELETE',credentials:'include'});
-  cmCurrentUser=null;loadCmClients();
-  var area=document.getElementById('cm-form-area');
-  if(area)area.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:monospace;font-size:11px;color:var(--low)">Client deleted.</div>';
+  cmCurrentUser = null;
+  loadCmClients();
+  var area = document.getElementById('cm-form-area');
+  if(area) area.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--low)">Client deleted.</div>';
 }
 
 function showCfMsg(msg,type){
-  var el=document.getElementById('cf-msg');if(!el)return;
-  el.textContent=msg;el.style.display='block';
-  el.style.background=type==='ok'?'var(--low-bg)':'var(--critical-bg)';
-  el.style.color=type==='ok'?'var(--low)':'var(--critical)';
-  el.style.border='1px solid '+(type==='ok'?'var(--low-border)':'var(--critical-border)');
-  if(type==='ok')setTimeout(function(){el.style.display='none';},4000);
+  var el = document.getElementById('cf-msg');
+  if(!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.background = type==='ok'?'var(--low-bg)':'var(--critical-bg)';
+  el.style.color      = type==='ok'?'var(--low)':'var(--critical)';
+  el.style.border     = '1px solid '+(type==='ok'?'var(--low-border)':'var(--critical-border)');
+  if(type==='ok') setTimeout(function(){el.style.display='none';},4000);
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────
 loadDashboard();
 setInterval(loadDashboard, 120000);
 </script>
-
-<!-- CLIENT MANAGER SCRIPTS -->
-<script src="/static/client-manager.js" onerror="console.log('CM script optional')"></script>
-
 </body>
 </html>
