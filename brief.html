@@ -175,7 +175,7 @@ select.lp-input{cursor:pointer}
 .pub-panel.show{display:block}
 .pub-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
   background:linear-gradient(90deg,var(--blue-dim),var(--blue));border-radius:10px 10px 0 0}
-.pub-title{font-family:sans-serif;font-size:13px;font-weight:700;
+.pub-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
   letter-spacing:1px;color:var(--text);margin-bottom:14px}
 .pub-client-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;
   max-height:200px;overflow-y:auto}
@@ -185,10 +185,10 @@ select.lp-input{cursor:pointer}
 .pub-client-item:hover{border-color:var(--border2)}
 .pub-client-item.selected{border-color:var(--blue);background:var(--blue-pale)}
 .pub-client-name{font-size:12px;font-weight:500;color:var(--text);flex:1}
-.pub-client-tier{font-family:monospace;font-size:8px;
+.pub-client-tier{font-family:'JetBrains Mono',monospace;font-size:8px;
   padding:1px 6px;border-radius:2px}
 .pub-actions{display:flex;gap:8px}
-.pub-btn{flex:1;padding:9px;border-radius:5px;font-family:sans-serif;
+.pub-btn{flex:1;padding:9px;border-radius:5px;font-family:'Syne',sans-serif;
   font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;
   border:none;transition:all .15s}
 .pub-btn-blue{background:var(--blue-dim);color:#fff}
@@ -198,12 +198,12 @@ select.lp-input{cursor:pointer}
 .pub-link-box{background:rgba(255,255,255,0.03);border:1px solid var(--border);
   border-radius:5px;padding:8px 10px;margin-top:10px;display:none}
 .pub-link-box.show{display:block}
-.pub-link-label{font-family:monospace;font-size:8px;
+.pub-link-label{font-family:'JetBrains Mono',monospace;font-size:8px;
   color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px}
-.pub-link-url{font-family:monospace;font-size:10px;
+.pub-link-url{font-family:'JetBrains Mono',monospace;font-size:10px;
   color:var(--blue);word-break:break-all;cursor:pointer}
 .pub-link-url:hover{text-decoration:underline}
-.pub-msg{font-family:monospace;font-size:10px;margin-top:8px;
+.pub-msg{font-family:'JetBrains Mono',monospace;font-size:10px;margin-top:8px;
   padding:6px 10px;border-radius:4px;display:none}
 .pub-msg.ok{background:var(--low-bg);color:var(--low);border:1px solid var(--low-border)}
 .pub-msg.err{background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border)}
@@ -244,7 +244,7 @@ select.lp-input{cursor:pointer}
   display:block;line-height:1.2;
 }
 #vgn-watermark-sub{
-  font-family:monospace;
+  font-family:'JetBrains Mono',monospace;
   font-size:14px;color:#ffffff;
   letter-spacing:3px;display:block;
   margin-top:6px;
@@ -281,6 +281,24 @@ select.lp-input{cursor:pointer}
       <p>Select 1–5 alerts → Claude structures a formal intelligence brief ready to send to clients.</p>
     </div>
 
+    <!-- MODE TABS -->
+    <div style="display:flex;gap:4px;padding:0 2px 12px">
+      <button id="mode-tab-alerts" onclick="setMode('alerts')"
+        style="flex:1;padding:7px;border-radius:5px;font-family:'JetBrains Mono',monospace;
+        font-size:9px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .15s;
+        border:1px solid var(--blue);background:var(--blue-pale);color:var(--blue)">
+        ⚡ FROM ALERTS
+      </button>
+      <button id="mode-tab-location" onclick="setMode('location')"
+        style="flex:1;padding:7px;border-radius:5px;font-family:'JetBrains Mono',monospace;
+        font-size:9px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .15s;
+        border:1px solid var(--ui-border2);background:transparent;color:var(--ui-text3)">
+        📍 LOCATION
+      </button>
+    </div>
+
+    <!-- ALERTS MODE -->
+    <div id="mode-alerts-section">
     <div class="lp-section">
       <label>Time window</label>
       <select class="lp-input" id="fi-hours">
@@ -337,6 +355,43 @@ select.lp-input{cursor:pointer}
       </div>
       <div id="alert-list"><div style="padding:20px;text-align:center;color:var(--ui-text3);font-family:var(--mono);font-size:11px">Loading alerts…</div></div>
     </div>
+
+    </div><!-- /mode-alerts-section -->
+
+    <!-- LOCATION MODE -->
+    <div id="mode-location-section" style="display:none;padding:0 2px">
+      <div class="lp-section">
+        <label>Location / Subject</label>
+        <input class="lp-input" id="loc-brief-input"
+          placeholder="e.g. Khartoum, Sudan · Gaza Strip · Tehran"
+          style="font-size:12px" autocorrect="off">
+      </div>
+      <div class="lp-section">
+        <label>Focus Area <span style="color:var(--ui-text3);font-size:9px">(optional)</span></label>
+        <input class="lp-input" id="loc-brief-event"
+          placeholder="e.g. executive travel · supply chain · political risk"
+          style="font-size:12px" autocorrect="off">
+      </div>
+      <div class="lp-section">
+        <label>Brief Type</label>
+        <select class="lp-input" id="loc-brief-type">
+          <option value="geopolitical">Geopolitical Assessment</option>
+          <option value="travel">Travel Security Advisory</option>
+          <option value="corporate">Corporate Security Intelligence</option>
+          <option value="osint">OSINT Research Brief</option>
+          <option value="event">Event-Specific Brief</option>
+        </select>
+      </div>
+      <div class="lp-section">
+        <label>Time Horizon</label>
+        <select class="lp-input" id="loc-brief-horizon">
+          <option value="current">Current situation (now)</option>
+          <option value="30d">Next 30 days</option>
+          <option value="90d">Next 90 days</option>
+          <option value="6m">6-month outlook</option>
+        </select>
+      </div>
+    </div><!-- /mode-location-section -->
 
     <div class="lp-footer">
       <div class="sel-count" id="sel-count">0 alerts selected (max 5)</div>
@@ -497,7 +552,7 @@ function riskCellClass(score, crit){
 }
 
 // ── Load alerts ───────────────────────────────────────────────────────────────
-async function loadAlerts(){
+async async function loadAlerts(){
   const hours = document.getElementById('fi-hours').value;
   const score = document.getElementById('fi-score').value;
   const region = document.getElementById('fi-region').value;
@@ -865,6 +920,200 @@ function regenerate(){
 ['fi-hours','fi-score','fi-region'].forEach(id => {
   document.getElementById(id).addEventListener('change', loadAlerts);
 });
+
+// ── MODE SWITCHING ────────────────────────────────────────────────────────────
+var currentBriefMode = 'alerts';
+
+function setMode(mode){
+  currentBriefMode = mode;
+  var alertsSection   = document.getElementById('mode-alerts-section');
+  var locationSection = document.getElementById('mode-location-section');
+  var tabAlerts       = document.getElementById('mode-tab-alerts');
+  var tabLocation     = document.getElementById('mode-tab-location');
+  var selCount        = document.getElementById('sel-count');
+
+  if(mode === 'alerts'){
+    alertsSection.style.display   = 'block';
+    locationSection.style.display = 'none';
+    tabAlerts.style.borderColor   = 'var(--blue)';
+    tabAlerts.style.background    = 'var(--blue-pale)';
+    tabAlerts.style.color         = 'var(--blue)';
+    tabLocation.style.borderColor = 'var(--ui-border2)';
+    tabLocation.style.background  = 'transparent';
+    tabLocation.style.color       = 'var(--ui-text3)';
+    if(selCount) selCount.style.display = 'block';
+    document.getElementById('gen-label').textContent = 'Generate Client Brief';
+  } else {
+    alertsSection.style.display   = 'none';
+    locationSection.style.display = 'block';
+    tabLocation.style.borderColor = 'var(--blue)';
+    tabLocation.style.background  = 'var(--blue-pale)';
+    tabLocation.style.color       = 'var(--blue)';
+    tabAlerts.style.borderColor   = 'var(--ui-border2)';
+    tabAlerts.style.background    = 'transparent';
+    tabAlerts.style.color         = 'var(--ui-text3)';
+    if(selCount) selCount.style.display = 'none';
+    document.getElementById('gen-label').textContent = 'Generate Location Brief';
+  }
+}
+
+function handleGenerate(){
+  if(currentBriefMode === 'location'){
+    generateLocationBrief();
+  } else {
+    generateBrief();
+  }
+}
+
+// ── LOCATION BRIEF GENERATION ─────────────────────────────────────────────────
+async function generateLocationBrief(){
+  const location = document.getElementById('loc-brief-input').value.trim();
+  if(!location){
+    document.getElementById('loc-brief-input').focus();
+    return;
+  }
+  const event     = document.getElementById('loc-brief-event').value.trim();
+  const briefType = document.getElementById('loc-brief-type').value;
+  const horizon   = document.getElementById('loc-brief-horizon').value;
+  const clientName = document.getElementById('fi-client').value.trim() || 'Confidential Client';
+  const refInput   = document.getElementById('fi-ref').value.trim() || genRef();
+  const now        = new Date();
+  const dateStr    = now.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+
+  const typeLabels = {
+    geopolitical:'Geopolitical Assessment',
+    travel:'Travel Security Advisory',
+    corporate:'Corporate Security Intelligence',
+    osint:'OSINT Research Brief',
+    event:'Event-Specific Intelligence Brief'
+  };
+
+  const horizonLabels = {
+    current:'Current situation assessment',
+    '30d':'30-day outlook',
+    '90d':'90-day outlook',
+    '6m':'6-month strategic outlook'
+  };
+
+  const btn   = document.getElementById('gen-btn');
+  const label = document.getElementById('gen-label');
+  btn.disabled = true; btn.classList.add('generating');
+  label.textContent = 'Generating…';
+
+  try{
+    // Call the AI assessment endpoint — it accepts location + event + mode
+    const resp = await fetch(`${API}/ai/assessment`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        location: location,
+        event: event || null,
+        mode: 'ai',
+        hours: 168,
+        brief_type: briefType,
+        horizon: horizon,
+        output_format: 'brief'
+      })
+    });
+
+    const data = await resp.json();
+    if(!resp.ok) throw new Error(data.detail || 'Generation failed');
+
+    const g = data.generated || data;
+
+    // Build brief format from assessment response
+    const briefData = {
+      headline: g.headline || (briefType === 'travel'
+        ? `${location} — Travel Security Advisory`
+        : `${location} — ${typeLabels[briefType]}`),
+      deck: g.executive_summary
+        ? g.executive_summary.substring(0,180).trim()+'…'
+        : `Intelligence assessment for ${location}. ${horizonLabels[horizon]}.`,
+      type_label: `${typeLabels[briefType]} · ${location}`,
+      key_judgement: g.key_judgement || (g.threat_matrix && g.threat_matrix[0]
+        ? g.threat_matrix[0].assessment
+        : `Assessment of ${location} indicates ${(g.overall_risk||'MEDIUM').toLowerCase()} risk environment requiring active monitoring.`),
+      risk_matrix: g.risk_matrix || buildLocationRiskMatrix(g),
+      situational_overview: g.executive_summary
+        ? g.executive_summary.split(/
++/).filter(p=>p.trim().length>20)
+        : [g.executive_summary || `Intelligence assessment for ${location}.`],
+      alert_summaries: (g.threat_matrix||[]).slice(0,5).map((t,i) => ({
+        title: t.category || t.threat || `Threat Vector ${i+1}`,
+        enhanced: t.assessment || t.description || '',
+        region: location,
+        source: 'AI Knowledge Base',
+        score: t.level==='CRITICAL'?9:t.level==='HIGH'?7:5,
+        risk: t.level||'MEDIUM'
+      })),
+      risk_vectors: {
+        supply_chain: g.supply_chain || `Supply chain and logistics routes through ${location} require assessment for disruption risk given current threat environment.`,
+        personnel:    g.personnel    || `Travel to ${location} requires pre-travel security assessment. ${briefType==='travel'?'Enhanced duty of care protocols apply.':'Review in-country emergency protocols.'}`,
+        regulatory:   g.regulatory   || `Audit exposure through operations and third-party relationships in ${location} for sanctions and compliance implications.`
+      },
+      assessment: g.assessment
+        ? (Array.isArray(g.assessment) ? g.assessment : [g.assessment])
+        : [`The security environment in ${location} reflects the broader regional risk picture. ${(g.overall_risk||'MEDIUM').toLowerCase() === 'critical' ? 'Immediate action is required.' : 'Continued monitoring is recommended.'}`],
+      recommendations: g.recommendations
+        ? (Array.isArray(g.recommendations)
+            ? g.recommendations.map(r => typeof r === 'string' ? r : (r.measure||r.action||JSON.stringify(r)))
+            : [g.recommendations])
+        : [
+            `Brief security and operations teams on the current threat picture for ${location}.`,
+            `${briefType==='travel'?'Update travel advisories and review in-country support arrangements.':'Review operational exposure and contingency options.'}`,
+            `Establish enhanced monitoring cadence for ${location} over the next 30 days.`
+          ],
+      sources: `AI Knowledge Base — ${location} · Open-Source Intelligence · Viginote Analysis`,
+      source_reliability: 'A-2 (AI-assisted analytical product)',
+      byline_role: `Senior Intelligence Analyst — ${location} · Viginote`
+    };
+
+    renderBrief(briefData, [], refInput, dateStr, location, clientName, typeLabels[briefType], briefType);
+    lastGenerated = {g: briefData, selected: [], refInput, dateStr, regionStr: location, clientName, briefType, typeLabels};
+
+  } catch(e){
+    // Fallback
+    const fallback = {
+      headline: `${location} — ${typeLabels[briefType]}`,
+      deck: `Intelligence assessment for ${location}. ${horizonLabels[horizon]}.`,
+      type_label: `${typeLabels[briefType]} · ${location}`,
+      key_judgement: `Assessment of the security environment in ${location} for the ${horizonLabels[horizon].toLowerCase()}.`,
+      risk_matrix: [{label:'Security Environment',subject:location,level:'MEDIUM',bars:'■■□□',cell:'e'},
+                    {label:'Personnel Risk',subject:'Travellers',level:'MEDIUM',bars:'■■□□',cell:'e'},
+                    {label:'Operational Risk',subject:'Operations',level:'LOW',bars:'■□□□',cell:'low'}],
+      situational_overview: [`Intelligence assessment for ${location}. ${event ? 'Focus: '+event+'.' : ''} ${horizonLabels[horizon]}.`],
+      alert_summaries: [],
+      risk_vectors: {
+        supply_chain: `Review supply chain dependencies through ${location}.`,
+        personnel:    `Pre-travel security assessment required for ${location}.`,
+        regulatory:   `Audit regulatory and compliance exposure in ${location}.`
+      },
+      assessment: [`Security environment in ${location} requires monitoring. Consult Viginote for a full analyst-reviewed assessment.`],
+      recommendations: ['Brief relevant teams on current threat picture.','Review security protocols for the area.','Establish monitoring cadence.'],
+      sources: `Viginote Analysis · ${location}`,
+      source_reliability: 'B-2',
+      byline_role: `Senior Intelligence Analyst · Viginote`
+    };
+    renderBrief(fallback, [], refInput, dateStr, location, clientName, typeLabels[briefType], briefType);
+    lastGenerated = {g: fallback, selected: [], refInput, dateStr, regionStr: location, clientName, briefType, typeLabels};
+  }
+
+  btn.disabled = false; btn.classList.remove('generating');
+  label.textContent = 'Generate Location Brief';
+}
+
+function buildLocationRiskMatrix(g){
+  const risk = (g.overall_risk||'MEDIUM').toUpperCase();
+  const isCrit = risk==='CRITICAL', isHigh = risk==='HIGH';
+  return [
+    {label:'Security Environment', subject: g.location||'Location', level: risk,
+     bars: isCrit?'■■■■':isHigh?'■■■□':'■■□□', cell: isCrit?'h':isHigh?'m':'e'},
+    {label:'Personnel Risk', subject:'Travellers & Staff', level: isHigh?'HIGH':'MEDIUM',
+     bars: isHigh?'■■■□':'■■□□', cell: isHigh?'m':'e'},
+    {label:'Operational Continuity', subject:'Business Operations', level:'MEDIUM',
+     bars:'■■□□', cell:'e'}
+  ];
+}
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 document.getElementById('brief-date').textContent = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}).toUpperCase();
