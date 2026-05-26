@@ -353,31 +353,31 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
       <div class="recent-alerts">
         <div class="ra-head">Recent Intelligence</div>
         <div id="recent-list">
-          <div style="font-family:monospace;font-size:11px;color:var(--text3);padding:12px 0">Loading…</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);padding:12px 0">Loading…</div>
         </div>
       </div>
     </div>
 
     <!-- LIVE FEED — inline admin feed -->
-    <div class="ws-frame-panel" id="panel-feed" style="flex-direction:column;height:100%;overflow:hidden">
+    <div class="ws-frame-panel" id="panel-feed" style="flex-direction:column">
       <div class="ws-frame-bar">
         <span class="ws-frame-title">⚡ Live Intelligence Feed</span>
         <div style="display:flex;gap:8px;margin-left:auto;align-items:center">
-          <select id="feed-sev" onchange="renderAdminFeed()" style="padding:4px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;font-family:monospace;font-size:10px;color:var(--text)">
+          <select id="feed-sev" onchange="renderAdminFeed()" style="padding:4px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text)">
             <option value="all">All Severity</option>
             <option value="critical">Critical</option>
             <option value="high">High+</option>
           </select>
-          <select id="feed-hrs" onchange="loadAdminFeed()" style="padding:4px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;font-family:monospace;font-size:10px;color:var(--text)">
+          <select id="feed-hrs" onchange="loadAdminFeed()" style="padding:4px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text)">
             <option value="24">24h</option>
             <option value="168" selected>7 days</option>
             <option value="336">14 days</option>
           </select>
-          <button onclick="loadAdminFeed()" style="padding:4px 10px;background:transparent;border:1px solid var(--border2);border-radius:4px;font-family:monospace;font-size:10px;color:var(--text3);cursor:pointer">↺</button>
+          <button onclick="loadAdminFeed()" style="padding:4px 10px;background:transparent;border:1px solid var(--border2);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);cursor:pointer">↺</button>
         </div>
       </div>
-      <div id="admin-feed-list" style="flex:1;overflow-y:auto;padding:10px;">
-        <div style="font-family:monospace;font-size:11px;color:var(--text3);padding:20px;text-align:center">Loading…</div>
+      <div id="admin-feed-list" style="flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:5px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);padding:20px;text-align:center">Loading…</div>
       </div>
     </div>
 
@@ -441,7 +441,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
     <div id="panel-clients" style="flex-direction:column">
       <div style="padding:20px 28px 0;border-bottom:1px solid var(--border);
         display:flex;align-items:center;gap:12px;flex-shrink:0">
-        <h2 style="font-family:sans-serif;font-size:16px;font-weight:700;
+        <h2 style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;
           color:var(--text);flex:1">👥 Client Manager</h2>
         <button onclick="newClientInline()" class="tb-btn"
           style="border-color:var(--blue);color:var(--blue)">+ New Client</button>
@@ -453,7 +453,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
         <!-- Form area -->
         <div style="flex:1;overflow-y:auto;padding:20px 24px" id="cm-form-area">
           <div style="display:flex;align-items:center;justify-content:center;
-            height:100%;font-family:monospace;font-size:11px;
+            height:100%;font-family:'JetBrains Mono',monospace;font-size:11px;
             color:var(--text3);text-align:center">
             Select a client to edit<br>or click + New Client
           </div>
@@ -514,52 +514,55 @@ function switchPanel(name){
   document.querySelectorAll('.ws-frame-panel, #panel-dashboard, #panel-deliverables, #panel-clients, #panel-feed')
     .forEach(function(el){
       el.style.display='none';
+      el.style.flexDirection='';
       el.classList.remove('active');
     });
 
-  // Deactivate nav
+  // Deactivate all nav items
   document.querySelectorAll('.nav-item').forEach(function(el){el.classList.remove('active');});
 
+  // Show selected panel
+  var panel = document.getElementById('panel-'+name);
+  if(panel){
+    panel.style.display = 'flex';
+    panel.style.flexDirection = 'column';
+    panel.style.height = '100%';
+    panel.classList.add('active');
+  }
+
   // Activate nav item
-  var navEl = document.getElementById('nav-'+name);
-  if(navEl) navEl.classList.add('active');
+  var navItem = document.getElementById('nav-'+name);
+  if(navItem) navItem.classList.add('active');
 
   currentPanel = name;
 
-  // External studios — open in new tab
+  // External panels open in new tab (avoids iframe cookie issues)
   if(EXTERNAL_PANELS.indexOf(name) >= 0){
     window.open(PANEL_SRCS[name], '_blank');
-    var extPanel = document.getElementById('panel-'+name);
-    if(extPanel){
-      extPanel.style.display='flex';
-      extPanel.style.flexDirection='column';
-      extPanel.style.height='100%';
-      extPanel.classList.add('active');
-      showStudioPlaceholder(name);
-    }
+    // Show placeholder in the panel
+    var panel = document.getElementById('panel-'+name);
+    if(panel){
+            var icons = {linkedin:'📰',brief:'📋',assessment:'🗺',digest:'📊'};
+      var studioUrl = PANEL_SRCS[name] || '/';
+      panel.innerHTML = [
+        '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:var(--text3);font-family:'JetBrains Mono',monospace;text-align:center;padding:40px">',
+        '<div style="font-size:36px">' + (icons[name]||'📄') + '</div>',
+        '<div style="font-size:13px;color:var(--text2);font-weight:700">' + name.charAt(0).toUpperCase() + name.slice(1) + ' Studio</div>',
+        '<div style="font-size:11px;line-height:1.7">Opened in a new tab.<br>Generate your deliverable there,<br>then return here to publish it.</div>',
+        '<button onclick="window.open(\'' + studioUrl + '\', \'_blank\')" style="margin-top:8px;padding:10px 20px;background:var(--blue-dim);color:#fff;border:none;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer">Open Studio ↗</button>',
+        '</div>'
+      ].join('');    }
     return;
   }
+  // Feed loads inline via loadAdminFeed()
 
-
-  // Show internal panel
-  var showPanel = document.getElementById('panel-'+name);
-  if(showPanel){
-    showPanel.style.display='flex';
-    showPanel.style.flexDirection='column';
-    showPanel.style.height='100%';
-    showPanel.classList.add('active');
-  }
-
-  // Panel-specific loaders
+  // Load deliverables when switching to that panel
   if(name==='deliverables') loadDeliverables();
+  // Load client manager
   if(name==='clients') renderClientsPanel();
-  if(name==='feed'){
-    var fp=document.getElementById('panel-feed');
-    if(fp){fp.style.height='100%';fp.style.overflow='hidden';fp.style.flexDirection='column';}
-    loadAdminFeed();
-  }
+  // Load feed
+  if(name==='feed') loadAdminFeed();
 }
-
 
 // ── LOAD STATS + RECENT ───────────────────────────────────────────────────
 function loadDashboard(){
@@ -578,7 +581,7 @@ function loadDashboard(){
     var top = alerts.slice(0,6);
     if(!top.length){
       document.getElementById('recent-list').innerHTML =
-        '<div style="font-family:monospace;font-size:11px;color:var(--text3);padding:12px 0">No alerts in the last 24 hours.</div>';
+        '<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);padding:12px 0">No alerts in the last 24 hours.</div>';
       return;
     }
     function sevInfo(s,c){return c||s>=9?{cl:'crit',l:'CRITICAL'}:s>=7?{cl:'high',l:'HIGH'}:{cl:'med',l:'MEDIUM'};}
@@ -684,7 +687,7 @@ async function openPubModal(delId, title){
 
   // Load clients
   var list = document.getElementById('pm-client-list');
-  list.innerHTML='<div style="font-family:monospace;font-size:10px;color:var(--text3);text-align:center;padding:10px">Loading…</div>';
+  list.innerHTML='<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);text-align:center;padding:10px">Loading…</div>';
   try{
     var r = await fetch(API+'/admin/clients',{credentials:'include'});
     var d = await r.json();
@@ -701,7 +704,7 @@ async function openPubModal(delId, title){
     linkEl.classList.add('show');
 
     if(!clients.length){
-      list.innerHTML='<div style="font-family:monospace;font-size:10px;color:var(--text3);text-align:center;padding:10px">No clients yet. Add via Client Manager.</div>';
+      list.innerHTML='<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);text-align:center;padding:10px">No clients yet. Add via Client Manager.</div>';
       return;
     }
     list.innerHTML=clients.map(function(c){
@@ -712,7 +715,7 @@ async function openPubModal(delId, title){
         +'</div>';
     }).join('');
   }catch(e){
-    list.innerHTML='<div style="color:var(--critical);font-family:monospace;font-size:10px;padding:10px">Error: '+e.message+'</div>';
+    list.innerHTML='<div style="color:var(--critical);font-family:'JetBrains Mono',monospace;font-size:10px;padding:10px">Error: '+e.message+'</div>';
   }
 }
 
@@ -765,7 +768,7 @@ var _adminAlerts = [];
 function loadAdminFeed(){
   var list = document.getElementById('admin-feed-list');
   if(!list) return;
-  list.innerHTML = '<div style="font-family:monospace;font-size:11px;color:var(--text3);padding:20px;text-align:center">Loading…</div>';
+  list.innerHTML = '<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);padding:20px;text-align:center">Loading…</div>';
   var hrs = document.getElementById('feed-hrs') ? document.getElementById('feed-hrs').value : '168';
   fetch(API+'/alerts?hours='+hrs+'&min_score=4&limit=300')
   .then(function(r){return r.json();})
@@ -774,7 +777,7 @@ function loadAdminFeed(){
     renderAdminFeed();
   })
   .catch(function(e){
-    list.innerHTML='<div style="font-family:monospace;font-size:11px;color:var(--critical);padding:20px;text-align:center">Error: '+e.message+'</div>';
+    list.innerHTML='<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--critical);padding:20px;text-align:center">Error: '+e.message+'</div>';
   });
 }
 
@@ -788,7 +791,7 @@ function renderAdminFeed(){
     return true;
   });
   if(!filtered.length){
-    list.innerHTML='<div style="font-family:monospace;font-size:11px;color:var(--text3);padding:20px;text-align:center">No alerts found.</div>';
+    list.innerHTML='<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);padding:20px;text-align:center">No alerts found.</div>';
     return;
   }
   function sevInfo(s,c){return c||s>=9?{cl:'crit',l:'CRITICAL'}:s>=7?{cl:'high',l:'HIGH'}:s>=5?{cl:'med',l:'MEDIUM'}:{cl:'low',l:'LOW'};}
@@ -807,18 +810,18 @@ function renderAdminFeed(){
     var sevFg={crit:'#fca5a5',high:'#fdba74',med:'#93c5fd',low:'#86efac'};
     return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:6px">'
       +'<div style="display:flex;align-items:stretch;min-height:24px">'
-      +'<div style="padding:0 10px;display:flex;align-items:center;font-family:monospace;font-size:8px;font-weight:700;letter-spacing:1px;flex-shrink:0;background:'+sevBg[s.cl]+';color:'+sevFg[s.cl]+'">'+s.l+'</div>'
-      +'<div style="padding:0 10px;display:flex;align-items:center;font-family:monospace;font-size:8px;color:var(--text3);flex:1">'+(a.region||'').replace(/_/g,' ')+'</div>'
-      +'<div style="padding:0 10px;display:flex;align-items:center;font-family:monospace;font-size:8px;color:var(--text4)">SCR '+(a.score||'')+'</div>'
+      +'<div style="padding:0 10px;display:flex;align-items:center;font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;letter-spacing:1px;flex-shrink:0;background:'+sevBg[s.cl]+';color:'+sevFg[s.cl]+'">'+s.l+'</div>'
+      +'<div style="padding:0 10px;display:flex;align-items:center;font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text3);flex:1">'+(a.region||'').replace(/_/g,' ')+'</div>'
+      +'<div style="padding:0 10px;display:flex;align-items:center;font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text4)">SCR '+(a.score||'')+'</div>'
       +'</div>'
       +'<div style="padding:10px 12px">'
       +'<div style="font-size:13px;font-weight:500;color:var(--text);line-height:1.4;margin-bottom:6px">'+(a.title||'')+'</div>'
-      +(a.precis?'<div style="font-family:monospace;font-size:10px;color:var(--text3);line-height:1.6;margin-bottom:6px">'+(a.precis.substring(0,200)+(a.precis.length>200?'…':''))+'</div>':'')
+      +(a.precis?'<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);line-height:1.6;margin-bottom:6px">'+(a.precis.substring(0,200)+(a.precis.length>200?'…':''))+'</div>':'')
       +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
       +streamDot
-      +'<span style="font-family:monospace;font-size:9px;color:var(--text4)">'+(a.source_domain||a.source_dom||'')+'</span>'
-      +'<span style="font-family:monospace;font-size:9px;color:var(--text4)">'+fmtTs(a.ts_iso||a.ts)+'</span>'
-      +(a.url?'<a href="'+a.url+'" target="_blank" style="font-family:monospace;font-size:9px;font-weight:700;color:var(--blue);margin-left:auto;text-decoration:none;padding:4px 10px;border:1px solid rgba(59,130,246,.3);border-radius:3px">Read →</a>':'')
+      +'<span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text4)">'+(a.source_domain||a.source_dom||'')+'</span>'
+      +'<span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text4)">'+fmtTs(a.ts_iso||a.ts)+'</span>'
+      +(a.url?'<a href="'+a.url+'" target="_blank" style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;color:var(--blue);margin-left:auto;text-decoration:none;padding:4px 10px;border:1px solid rgba(59,130,246,.3);border-radius:3px">Read →</a>':'')
       +'</div>'
       +'</div></div>';
   }).join('');
@@ -859,12 +862,12 @@ function loadCmClients(){
     var html='';
     (d.clients||[]).forEach(function(c){
       var isActive=cmCurrentUser===c.username;
-      html+='<div onclick="selectCmClient(''+c.username+'')" style="padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;'+(isActive?'background:var(--blue-pale);border-left:3px solid var(--blue)':'')+'">'
+      html+='<div onclick="selectCmClient(\''+c.username+'\')" style="padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;'+(isActive?'background:var(--blue-pale);border-left:3px solid var(--blue)':'')+'">'
         +'<div style="font-size:12px;font-weight:500;color:var(--text)">'+(c.label||c.username)+'</div>'
-        +'<div style="font-family:monospace;font-size:9px;color:var(--text3);margin-top:2px">@'+c.username+' · '+(c.tier||'analyst').toUpperCase()+'</div>'
+        +'<div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);margin-top:2px">@'+c.username+' · '+(c.tier||'analyst').toUpperCase()+'</div>'
         +'</div>';
     });
-    if(!html)html='<div style="padding:20px;font-family:monospace;font-size:10px;color:var(--text3);text-align:center">No clients yet</div>';
+    if(!html)html='<div style="padding:20px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);text-align:center">No clients yet</div>';
     list.innerHTML=html;
   });
 }
@@ -877,14 +880,14 @@ function renderCmForm(c,isNew){
   cmWatchlistTerms=c?(c.watchlist||[]):[];
   var tier=c?(c.tier||'analyst'):'operator';
   var lim=TIER_LIMITS_CM[tier]||TIER_LIMITS_CM.analyst;
-  var inp='padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:5px;font-family:monospace;font-size:12px;color:var(--text);outline:none;width:100%';
-  var lbl='font-family:monospace;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:5px;display:block';
-  var chk=function(id,label,checked,cls){return'<label style="display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border:1px solid '+(checked?'var(--blue)':'var(--border2)')+';border-radius:4px;cursor:pointer;font-family:monospace;font-size:10px;color:'+(checked?'var(--blue)':'var(--text2)')+';background:'+(checked?'var(--blue-pale)':'transparent')+';" class="'+cls+'" data-id="'+id+'" onclick="toggleCmCheck(this)"><input type="checkbox" value="'+id+'" '+(checked?'checked':'')+' style="display:none">'+label+'</label>';};
+  var inp='padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);outline:none;width:100%';
+  var lbl='font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:5px;display:block';
+  var chk=function(id,label,checked,cls){return'<label style="display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border:1px solid '+(checked?'var(--blue)':'var(--border2)')+';border-radius:4px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px;color:'+(checked?'var(--blue)':'var(--text2)')+';background:'+(checked?'var(--blue-pale)':'transparent')+';" class="'+cls+'" data-id="'+id+'" onclick="toggleCmCheck(this)"><input type="checkbox" value="'+id+'" '+(checked?'checked':'')+' style="display:none">'+label+'</label>';};
   var streamsHtml=ALL_STREAMS_CM.map(function(s){return chk(s.id,s.label,(c&&c.streams&&c.streams.indexOf(s.id)>=0)||(!c&&s.id==='geographic'),'cm-s');}).join('');
   var regionsHtml=Object.keys(ALL_REGIONS_CM).map(function(r){return chk(r,ALL_REGIONS_CM[r],c&&c.regions&&c.regions.indexOf(r)>=0,'cm-r');}).join('');
   area.innerHTML='<div style="display:flex;flex-direction:column;gap:14px">'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-    +'<div><span style="'+lbl+'">Username</span><input id="cf-u" style="'+inp+'"'+(isNew?'':' readonly style="'+inp+';opacity:.6"')+' value="'+(c?c.username:'')+'"></div>'
+    +'<div><span style="'+lbl+'">Username</span><input id="cf-u" style="'+inp+(isNew?'':';opacity:.6')+'"'+(isNew?'':' readonly')+' value="'+(c?c.username:'')+'"></div>'
     +'<div><span style="'+lbl+'">Password</span><input id="cf-p" style="'+inp+'" value="'+(c?c.password:'')+'"></div>'
     +'<div><span style="'+lbl+'">Display Label</span><input id="cf-l" style="'+inp+'" placeholder="Company Name" value="'+(c?c.label||'':'')+'"></div>'
     +'<div><span style="'+lbl+'">Tier</span><select id="cf-t" style="'+inp+'" onchange="onCmTier()">'
@@ -896,14 +899,14 @@ function renderCmForm(c,isNew){
     +'<div><span style="'+lbl+'">Regions <span id="cf-rl" style="color:var(--blue);font-weight:400">(max '+lim.regions+')</span></span><div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px" id="cf-regions">'+regionsHtml+'</div></div>'
     +'<div id="cf-cw"></div>'
     +'<div><span style="'+lbl+'">Watchlist — type and press Enter</span>'
-    +'<div id="cf-ww" style="display:flex;flex-wrap:wrap;gap:5px;padding:8px;background:rgba(255,255,255,.03);border:1px solid var(--border2);border-radius:5px;min-height:44px;cursor:text" onclick="document.getElementById('cf-wi').focus()">'
-    +'<input id="cf-wi" style="border:none;background:transparent;outline:none;font-family:monospace;font-size:11px;color:var(--text);min-width:120px;flex:1;padding:2px 4px" placeholder="Gaza, Sudan, RSF…" autocorrect="off">'
+    +'<div id="cf-ww" style="display:flex;flex-wrap:wrap;gap:5px;padding:8px;background:rgba(255,255,255,.03);border:1px solid var(--border2);border-radius:5px;min-height:44px;cursor:text" onclick="var x=document.getElementById(\'cf-wi\'); if(x) x.focus()">'
+    +'<input id="cf-wi" style="border:none;background:transparent;outline:none;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);min-width:120px;flex:1;padding:2px 4px" placeholder="Gaza, Sudan, RSF…" autocorrect="off">'
     +'</div></div>'
     +'<div style="display:flex;gap:8px">'
-    +'<button onclick="saveCm()" style="flex:1;padding:10px;background:var(--blue-dim);color:#fff;border:none;border-radius:5px;font-family:sans-serif;font-size:13px;font-weight:700;cursor:pointer">Save Client</button>'
-    +(isNew?'':'<button onclick="deleteCm()" style="padding:10px 14px;background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border);border-radius:5px;font-family:monospace;font-size:11px;cursor:pointer">Delete</button>')
+    +'<button onclick="saveCm()" style="flex:1;padding:10px;background:var(--blue-dim);color:#fff;border:none;border-radius:5px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Save Client</button>'
+    +(isNew?'':'<button onclick="deleteCm()" style="padding:10px 14px;background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border);border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer">Delete</button>')
     +'</div>'
-    +'<div id="cf-msg" style="display:none;font-family:monospace;font-size:10px;padding:8px 12px;border-radius:4px"></div>'
+    +'<div id="cf-msg" style="display:none;font-family:'JetBrains Mono',monospace;font-size:10px;padding:8px 12px;border-radius:4px"></div>'
     +'</div>';
   renderCmTags();
   renderCmCountries(c?c.regions||[]:[], c?c.countries||[]:[]);
@@ -932,15 +935,15 @@ function renderCmCountries(sr,sc){
   var html='';
   sr.forEach(function(r){
     var cs=REGION_COUNTRIES_CM[r];if(!cs)return;
-    html+='<div style="margin-bottom:10px"><span style="font-family:monospace;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:5px">'+ALL_REGIONS_CM[r]+' countries</span>';
+    html+='<div style="margin-bottom:10px"><span style="font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:5px">'+ALL_REGIONS_CM[r]+' countries</span>';
     html+='<div style="display:flex;flex-wrap:wrap;gap:4px" id="cg-'+r+'">';
     Object.keys(cs).forEach(function(code){
       var sel=sc.indexOf(code)>=0;
-      html+='<label style="display:inline-flex;align-items:center;padding:3px 8px;border:1px solid '+(sel?'var(--blue)':'var(--border2)')+';border-radius:3px;cursor:pointer;font-family:monospace;font-size:9px;color:'+(sel?'var(--blue)':'var(--text2)')+';background:'+(sel?'var(--blue-pale)':'transparent')+';" onclick="toggleCmCheck(this)"><input type="checkbox" value="'+code+'" '+(sel?'checked':'')+' style="display:none">'+cs[code]+'</label>';
+      html+='<label style="display:inline-flex;align-items:center;padding:3px 8px;border:1px solid '+(sel?'var(--blue)':'var(--border2)')+';border-radius:3px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:9px;color:'+(sel?'var(--blue)':'var(--text2)')+';background:'+(sel?'var(--blue-pale)':'transparent')+';" onclick="toggleCmCheck(this)"><input type="checkbox" value="'+code+'" '+(sel?'checked':'')+' style="display:none">'+cs[code]+'</label>';
     });
     html+='</div></div>';
   });
-  w.innerHTML=html?'<div style="margin-top:4px"><span style="font-family:monospace;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:6px">Country Filter</span>'+html+'</div>':'';
+  w.innerHTML=html?'<div style="margin-top:4px"><span style="font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:6px">Country Filter</span>'+html+'</div>':'';
 }
 
 function renderCmTags(){
@@ -949,7 +952,7 @@ function renderCmTags(){
   w.querySelectorAll('.cmtag').forEach(function(t){t.remove();});
   cmWatchlistTerms.forEach(function(term,idx){
     var t=document.createElement('div');t.className='cmtag';
-    t.style.cssText='display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);border-radius:3px;font-family:monospace;font-size:10px;color:var(--blue)';
+    t.style.cssText='display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue)';
     t.innerHTML=term+'<span style="cursor:pointer;color:var(--text3)" onclick="cmWatchlistTerms.splice('+idx+',1);renderCmTags()">×</span>';
     w.insertBefore(t,i);
   });
@@ -995,7 +998,7 @@ async function deleteCm(){
   await fetch(API+'/admin/clients/'+cmCurrentUser,{method:'DELETE',credentials:'include'});
   cmCurrentUser=null;loadCmClients();
   var area=document.getElementById('cm-form-area');
-  if(area)area.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:monospace;font-size:11px;color:var(--low)">Client deleted.</div>';
+  if(area)area.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--low)">Client deleted.</div>';
 }
 
 function showCfMsg(msg,type){
