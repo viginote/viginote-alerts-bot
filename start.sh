@@ -1,8 +1,13 @@
 #!/bin/bash
-# Always sync clients.json to /data on deploy
-echo "Syncing clients.json to /data..."
-cp clients.json /data/clients.json
-echo "clients.json synced OK"
+# Only copy clients.json if /data/clients.json does NOT already exist
+# This preserves clients added via the hub Client Manager across deploys
+if [ ! -f /data/clients.json ]; then
+  echo "No clients.json on disk — seeding from repo..."
+  cp clients.json /data/clients.json
+  echo "clients.json seeded OK"
+else
+  echo "clients.json already exists on disk — preserving existing clients"
+fi
 
 # Install any missing packages (safety net)
 pip install aiohttp==3.9.5 --quiet --break-system-packages 2>/dev/null || true
