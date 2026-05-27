@@ -22,7 +22,13 @@
   --sans:'Barlow Condensed',sans-serif;
   --body:'Barlow',sans-serif;
   --mono:'JetBrains Mono',monospace;
+  /* Compatibility aliases for shared publish panel styles */
+  --bg2:var(--ui-surface);--border:var(--ui-border);--border2:var(--ui-border2);
+  --text:var(--ui-text);--text2:var(--ui-text2);--text3:var(--ui-text3);
+  --blue-pale:rgba(59,139,196,0.1);--low:#22c55e;--low-bg:rgba(34,197,94,0.1);--low-border:rgba(34,197,94,0.2);
+  --critical:#ef4444;--critical-bg:rgba(239,68,68,0.1);--critical-border:rgba(239,68,68,0.2);
 }
+
 html{-webkit-font-smoothing:antialiased}
 body{font-family:var(--body);background:var(--ui-bg);color:var(--ui-text);min-height:100vh;font-size:14px}
 
@@ -59,6 +65,11 @@ select.lp-input{cursor:pointer}
 
 /* ALERT LIST */
 .alert-scroll{flex:1;overflow-y:auto;min-height:0}
+/* Sliding feed drawer: opens to the right of the control panel */
+body.feed-drawer-open #alert-scroll{position:fixed;left:300px;top:52px;bottom:0;width:430px;max-width:calc(100vw - 300px);z-index:180;background:var(--ui-surface);border-left:1px solid var(--ui-border);border-right:1px solid var(--ui-border);box-shadow:18px 0 50px rgba(0,0,0,.45);transform:translateX(0);opacity:1;pointer-events:auto;display:flex;flex-direction:column;transition:transform .24s ease,opacity .24s ease}
+body:not(.feed-drawer-open) #alert-scroll{position:fixed;left:300px;top:52px;bottom:0;width:430px;max-width:calc(100vw - 300px);z-index:180;background:var(--ui-surface);transform:translateX(-105%);opacity:0;pointer-events:none;display:flex;flex-direction:column;transition:transform .24s ease,opacity .24s ease}
+.feed-drawer-close{font-size:10px;color:var(--ui-text3);background:transparent;border:1px solid var(--ui-border2);border-radius:3px;padding:3px 7px;cursor:pointer;font-family:var(--mono);margin-left:6px}.feed-drawer-close:hover{color:var(--blue2);border-color:var(--blue)}
+@media(max-width:900px){body.feed-drawer-open #alert-scroll,body:not(.feed-drawer-open) #alert-scroll{left:0;top:52px;width:100vw;max-width:100vw}}
 .alert-list-head{padding:9px 16px;background:rgba(0,0,0,0.2);border-bottom:1px solid var(--ui-border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
 .alert-list-head span{font-size:10px;color:var(--ui-text3);font-family:var(--mono)}
 .alert-list-head button{font-size:10px;color:var(--blue2);background:none;border:none;cursor:pointer;font-family:var(--mono)}
@@ -351,7 +362,7 @@ select.lp-input{cursor:pointer}
     <div class="alert-scroll" id="alert-scroll">
       <div class="alert-list-head">
         <span id="alert-count">Loading…</span>
-        <button type="button" onclick="loadAlerts()">↺ Refresh</button>
+        <span><button type="button" onclick="loadAlerts()">↺ Refresh</button><button type="button" class="feed-drawer-close" onclick="closeFeedDrawer()">✕</button></span>
       </div>
       <div id="alert-list"><div style="padding:20px;text-align:center;color:var(--ui-text3);font-family:var(--mono);font-size:11px">Loading alerts…</div></div>
     </div>
@@ -362,7 +373,7 @@ select.lp-input{cursor:pointer}
     <div id="mode-location-section" style="display:none;padding:0 2px">
       <div class="lp-section">
         <label>Location / Subject</label>
-        <input class="lp-input" id="loc-brief-input"
+        <input class="lp-input" id="loc-brief-input" oninput="updateLocationModeState()"
           placeholder="e.g. Khartoum, Sudan · Gaza Strip · Tehran"
           style="font-size:12px" autocorrect="off">
       </div>
@@ -395,7 +406,7 @@ select.lp-input{cursor:pointer}
 
     <div class="lp-footer">
       <div class="sel-count" id="sel-count">0 alerts selected (max 5)</div>
-      <button type="button" class="gen-btn" id="gen-btn" onclick="generateBrief()" disabled>
+      <button type="button" class="gen-btn" id="gen-btn" onclick="handleGenerate()" disabled>
         <div class="spin"></div><span id="gen-label">Generate Client Brief</span>
       </button>
     </div>
@@ -552,7 +563,7 @@ function riskCellClass(score, crit){
 }
 
 // ── Load alerts ───────────────────────────────────────────────────────────────
-async async function loadAlerts(){
+async function loadAlerts(){
   const hours = document.getElementById('fi-hours').value;
   const score = document.getElementById('fi-score').value;
   const region = document.getElementById('fi-region').value;
@@ -565,6 +576,7 @@ async async function loadAlerts(){
     allAlerts = d.alerts || [];
     document.getElementById('alert-count').textContent = `${allAlerts.length} alerts`;
     renderAlertList();
+    if(currentBriefMode === 'alerts') openFeedDrawer();
   }catch(e){
     document.getElementById('alert-list').innerHTML = `<div style="padding:16px;color:#ef4444;font-size:11px;font-family:var(--mono)">Error: ${e.message}</div>`;
   }
@@ -605,7 +617,15 @@ function toggleAlert(id){
 function updateSelCount(){
   const n = selectedIds.size;
   document.getElementById('sel-count').textContent = `${n} alert${n!==1?'s':''} selected (max 5)`;
-  document.getElementById('gen-btn').disabled = n === 0;
+  if(currentBriefMode === 'alerts') document.getElementById('gen-btn').disabled = n === 0;
+}
+
+function openFeedDrawer(){ document.body.classList.add('feed-drawer-open'); }
+function closeFeedDrawer(){ document.body.classList.remove('feed-drawer-open'); }
+function updateLocationModeState(){
+  if(currentBriefMode !== 'location') return;
+  var loc = (document.getElementById('loc-brief-input')?.value || '').trim();
+  document.getElementById('gen-btn').disabled = !loc;
 }
 
 // ── Generate brief ────────────────────────────────────────────────────────────
@@ -946,6 +966,8 @@ function setMode(mode){
     if(tabLocation) { tabLocation.style.borderColor = MUTED; tabLocation.style.background = 'transparent'; tabLocation.style.color = MUTED_TEXT; }
     if(selCount)    { selCount.style.display = 'block'; }
     if(genLabel)    { genLabel.textContent = 'Generate Client Brief'; }
+    openFeedDrawer();
+    updateSelCount();
   } else {
     if(alertsSection)   { alertsSection.style.display = 'none'; }
     if(locationSection) { locationSection.style.display = 'block'; }
@@ -953,8 +975,11 @@ function setMode(mode){
     if(tabAlerts)   { tabAlerts.style.borderColor = MUTED; tabAlerts.style.background = 'transparent'; tabAlerts.style.color = MUTED_TEXT; }
     if(selCount)    { selCount.style.display = 'none'; }
     if(genLabel)    { genLabel.textContent = 'Generate Location Brief'; }
+    closeFeedDrawer();
+    updateLocationModeState();
   }
 }
+
 
 function handleGenerate(){
   if(currentBriefMode === 'location'){
@@ -1034,8 +1059,7 @@ async function generateLocationBrief(){
         : `Assessment of ${location} indicates ${(g.overall_risk||'MEDIUM').toLowerCase()} risk environment requiring active monitoring.`),
       risk_matrix: g.risk_matrix || buildLocationRiskMatrix(g),
       situational_overview: g.executive_summary
-        ? g.executive_summary.split(/
-+/).filter(p=>p.trim().length>20)
+        ? g.executive_summary.split(/\n+/).filter(p=>p.trim().length>20)
         : [g.executive_summary || `Intelligence assessment for ${location}.`],
       alert_summaries: (g.threat_matrix||[]).slice(0,5).map((t,i) => ({
         title: t.category || t.threat || `Threat Vector ${i+1}`,
@@ -1117,6 +1141,9 @@ function buildLocationRiskMatrix(g){
 // ── Init ──────────────────────────────────────────────────────────────────────
 document.getElementById('brief-date').textContent = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}).toUpperCase();
 document.getElementById('fi-ref').placeholder = genRef();
+['fi-hours','fi-score','fi-region'].forEach(function(id){ var el=document.getElementById(id); if(el) el.addEventListener('change', function(){ if(currentBriefMode==='alerts') openFeedDrawer(); }); });
+var locBriefInput=document.getElementById('loc-brief-input'); if(locBriefInput){ locBriefInput.addEventListener('keydown', function(e){ if(e.key==='Enter') handleGenerate(); }); }
+setMode('alerts');
 loadAlerts();
 </script>
 
@@ -1180,9 +1207,50 @@ window.renderBrief = function(g, selected, refInput, dateStr, regionStr, clientN
   saveBrief();
 };
 
+function getBriefReplicaCss(){
+  var css='';
+  document.querySelectorAll('style').forEach(function(styleTag){ css += '
+' + styleTag.innerHTML; });
+  return css + '
+@media print{.topnav,.lp,.rp-bar,.rp-empty,.pub-panel,#print-instructions{display:none!important}#brief-doc{display:block!important}.article-card,.key-j,.recommendations,.art-byline,.risk-row,.ab-card{break-inside:avoid!important;page-break-inside:avoid!important}}';
+}
+
+function buildBriefReplicaPayload(){
+  if(!_lastGenerated) return null;
+  var item = _lastGenerated;
+  var g = Object.assign({}, item.g || {});
+  var doc = document.getElementById('brief-doc');
+  var bodyHtml = doc ? doc.innerHTML : '';
+  var styleHtml = '<style>' + getBriefReplicaCss() + '</style>';
+  var fullHtml = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>' + String(g.headline || item.typeLabelStr || 'VigiNote Brief').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</title>' + styleHtml + '</head><body><div id="brief-doc" class="vgn-brief-export">' + bodyHtml + '</div></body></html>';
+  g.ref = item.refInput;
+  g.date = (item.dateStr || new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})).toUpperCase();
+  g.classification = 'CLIENT CONFIDENTIAL · ' + String(item.clientName || 'CONFIDENTIAL CLIENT').toUpperCase() + ' · AUTHORISED DISTRIBUTION';
+  g.client = item.clientName;
+  g.region = item.regionStr;
+  g.brief_type = item.briefType;
+  g.type_label = g.type_label || item.typeLabelStr;
+  g.selected_alerts = item.selected || [];
+  g.report_body_html = bodyHtml;
+  g.report_html = bodyHtml;
+  g.rendered_html = bodyHtml;
+  g.content_html = bodyHtml;
+  g.direct_replica_html = fullHtml;
+  g.full_document_html = fullHtml;
+  g.report_css = getBriefReplicaCss();
+  g.print_css = getBriefReplicaCss();
+  g.__render_mode = 'direct_html_replica';
+  g.direct_replica = true;
+  g.pdf_theme = 'dark';
+  g.print_background = true;
+  g.saved_at = new Date().toISOString();
+  return g;
+}
+
+
 async function saveBrief(){
   if(!_lastGenerated) return;
-  var {g, refInput, clientName, typeLabelStr} = _lastGenerated;
+  var payloadContent = buildBriefReplicaPayload();
   var saveBtn = document.getElementById('save-btn');
   if(saveBtn){ saveBtn.textContent='☁ Saving…'; saveBtn.disabled=true; }
   try{
@@ -1191,12 +1259,20 @@ async function saveBrief(){
       headers:{'Content-Type':'application/json','X-Feed-Token':sessionStorage.getItem('vgn_t')||''},
       body: JSON.stringify({
         type:'brief',
-        title: g.headline || typeLabelStr || 'Intelligence Brief',
-        content: Object.assign({}, g, {
-          ref: refInput,
-          date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}).toUpperCase(),
-          classification: 'CLIENT CONFIDENTIAL · '+clientName.toUpperCase()+' · AUTHORISED DISTRIBUTION',
-        }),
+        title: payloadContent.headline || payloadContent.type_label || 'Intelligence Brief',
+        content: payloadContent,
+        brief: payloadContent,
+        full_data: payloadContent,
+        report_body_html: payloadContent.report_body_html,
+        report_html: payloadContent.report_html,
+        rendered_html: payloadContent.rendered_html,
+        content_html: payloadContent.content_html,
+        direct_replica_html: payloadContent.direct_replica_html,
+        full_document_html: payloadContent.full_document_html,
+        print_css: payloadContent.print_css,
+        report_css: payloadContent.report_css,
+        pdf_theme:'dark',
+        print_background:true,
         clients:[],
         one_off:false,
       })
@@ -1256,7 +1332,7 @@ async function publishBrief(){
     var r = await fetch(window.location.origin+'/deliverables/'+_savedDeliverableId+'/publish',{
       method:'POST', credentials:'include',
       headers:{'Content-Type':'application/json','X-Feed-Token':sessionStorage.getItem('vgn_t')||''},
-      body: JSON.stringify({clients: selected})
+      body: JSON.stringify({clients: selected, content: buildBriefReplicaPayload(), brief: buildBriefReplicaPayload(), pdf_theme:'dark', print_background:true})
     });
     var d = await r.json();
     showPubMsg('Published to '+selected.length+' client'+(selected.length>1?'s':'')+'. Active immediately.','ok');
