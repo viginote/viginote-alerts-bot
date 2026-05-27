@@ -904,7 +904,9 @@ function loadAnalytics(){
     fetch(API+'/entities?hours='+hrs+'&etype=locs&limit=10',{headers:headers}).then(function(r){return r.json();}),
   ]).then(function(results){
     var traj=results[0], alertsD=results[1], wl=results[2], orgs=results[3], locs=results[4];
+    allAlerts=alertsD.alerts||[]; window._feedAlerts=allAlerts;
     renderAnalytics(traj, alertsD, wl, orgs, locs, hrs);
+    renderAnalyticsTop(wl, traj);
   }).catch(function(){
     document.getElementById('analytics-scroll').innerHTML=
       '<div style="padding:20px;font-family:monospace;font-size:11px;color:var(--text3);text-align:center">Analytics loading…</div>';
@@ -1135,8 +1137,17 @@ function loadInbox(){
 })();
 </script>
 </body>
-</html>function renderAnalytics(wl, trajectory){
+</html>function renderAnalyticsTop(wl, trajectory){
   var alerts = window._feedAlerts || [];
+  // Also update stats strip from live data
+  var totalEl = document.getElementById('sc-total');
+  var critEl  = document.getElementById('sc-crit');
+  var highEl  = document.getElementById('sc-high');
+  var corrEl  = document.getElementById('sc-corr');
+  if(totalEl) totalEl.textContent = alerts.length || '—';
+  if(critEl)  critEl.textContent  = alerts.filter(function(a){return a.is_critical||a.score>=9;}).length || '0';
+  if(highEl)  highEl.textContent  = alerts.filter(function(a){return a.score>=7&&!a.is_critical;}).length || '0';
+  if(corrEl)  corrEl.textContent  = alerts.filter(function(a){return a.corroborated;}).length || '0';
   var crit = alerts.filter(function(a){return a.is_critical||a.score>=9;}).length;
   var high = alerts.filter(function(a){return a.score>=7&&!a.is_critical&&a.score<9;}).length;
   var corr = alerts.filter(function(a){return a.corroborated;}).length;
@@ -1601,143 +1612,7 @@ function loadAnalytics(){
   });
 }
 
-function renderAnalytics(traj, alertsD, wl, orgsD, locsD, hrs){
-  var allAlerts=alertsD.alerts||[]; window._feedAlerts=allAlerts;
-  var crit=allAlerts.filter(function(a){return a.is_critical||a.score>=9;}).length;
-  var high=allAlerts.filter(function(a){return a.score>=7&&a.score<9&&!a.is_critical;}).length;
-  var corr=allAlerts.filter(function(a){return(a.source_count||1)>=2;}).length;
 
-  var html='';
-
-  // Stats
-  html+='<div class="stats-strip">';
-  html+='<div class="stat-card"><div class="sc-l">Total</div><div class="sc-v">'+allAlerts.length+'</div></div>';
-  html+='<div class="stat-card"><div class="sc-l">Critical</div><div class="sc-v crit">'+crit+'</div></div>';
-  html+='<div class="stat-card"><div class="sc-l">High</div><div class="sc-v high">'+high+'</div></div>';
-  html+='<div class="stat-card"><div class="sc-l">Corroborated</div><div class="sc-v grn">'+corr+'</div></div>';
-  html+='</div>';
-
-  // Heatmap
-  var regions=traj.regions||[];
-  if(regions.length){
-    html+='<div class="an-section"><div class="an-head"><span class="an-title">Regional Risk</span><span class="an-meta">'+Math.round(hrs/24)+'d window</span></div>';
-    html+='<div class="an-body"><div class="heatmap">';
-    var clientRegions=profile.regions||[];
-    regions.slice(0,8).forEach(function(r){
-      var label=(ALL_REGIONS_MAP[r.region]||r.region).replace(' ','\n');
-      var count=r.this_period.alerts||0;
-      var avgScore=r.this_period.avg_score||0;
-      var hasCrit=r.this_period.critical>0;
-      var band=hasCrit||avgScore>=9?4:avgScore>=7?3:avgScore>=5?2:count>0?1:0;
-      var lvl=['QUIET','LOW','MED','HIGH','CRIT'][band];
-      html+='<div class="hm-col"><div class="hm-label">'+label.split('\n').join('<br>')+'</div>';
-      html+='<div class="hm-cell hm-'+band+'"><div class="hm-count">'+count+'</div><div class="hm-lvl">'+lvl+'</div></div></div>';
-    });
-    html+='</div></div></div>';
-  }
-
-  // Travel advisories
-  if(regions.length){
-    html+='<div class="an-section"><div class="an-head"><span class="an-title">Travel Advisory</span><span class="an-meta">auto-derived</span></div>';
-    html+='<div class="an-body">';
-    regions.slice(0,7).forEach(function(r){
-      var t=r.trajectory,ap=r.this_period,cs=ap.avg_score||0,crit=ap.critical||0;
-      var adv,cls;
-      if(crit>=2||(t==='DETERIORATING'&&cs>=8)){adv='Do Not Travel';cls='DNT';}
-      else if(t==='DETERIORATING'&&cs>=6){adv='Avoid Non-Essential';cls='ANE';}
-      else if(ap.alerts>=5||cs>=5){adv='Exercise Caution';cls='EC';}
-      else{adv='Normal';cls='N';}
-      html+='<div class="adv-row"><span class="adv-region">'+(ALL_REGIONS_MAP[r.region]||r.region)+'</span>';
-      html+='<span class="adv-badge adv-'+cls+'">'+adv+'</span></div>';
-    });
-    html+='</div></div>';
-  }
-
-  // Watchlist
-  // Use profile watchlist if API returns fewer terms
-  var apiTerms=wl.watchlist||[];
-  var profileTerms=profile.watchlist||[];
-  var wlTerms=apiTerms.length>=profileTerms.length?apiTerms:profileTerms;
-  var wlMatches=wl.matches||{};
-  if(wlTerms.length){
-    html+='<div class="an-section"><div class="an-head"><span class="an-title">Watchlist Monitor</span><span class="an-meta">'+wlTerms.length+' terms</span></div>';
-    html+='<div class="an-body">';
-    wlTerms.forEach(function(term){
-      var hits=(wlMatches[term]||[]).length;
-      var cls=hits>=5?'hot':hits>=1?'warm':'zero';
-      var countStr=hits>0?String(hits):'—';
-      html+='<div class="wl-row"><span class="wl-term">'+term+'</span><span class="wl-count '+cls+'" style="font-size:18px;font-family:sans-serif;font-weight:800">'+countStr+'</span></div>';
-    });
-    html+='</div></div>';
-  }
-
-  // 7-day timeline
-  var now=Date.now();
-  var days=Math.min(Math.round(hrs/24),7);
-  var buckets={};
-  var dayKeys=[];
-  for(var i=days-1;i>=0;i--){
-    var d=new Date(now-i*86400000);
-    var k=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
-    buckets[k]={crit:0,high:0};
-    dayKeys.push(k);
-  }
-  allAlerts.forEach(function(a){
-    var ts=typeof a.ts==='number'?a.ts*1000:new Date(a.ts).getTime();
-    var dk=new Date(ts).toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
-    if(buckets[dk]){
-      if(a.is_critical||a.score>=9)buckets[dk].crit++;
-      else if(a.score>=7)buckets[dk].high++;
-    }
-  });
-  var maxV=Math.max.apply(null,dayKeys.map(function(k){return buckets[k].crit+buckets[k].high;}),1);
-  if(maxV===0) maxV=1;
-  if(maxV>0){
-    html+='<div class="an-section"><div class="an-head"><span class="an-title">Alert Timeline</span><span class="an-meta">'+days+'-day</span></div>';
-    html+='<div class="an-body"><div class="timeline">';
-    dayKeys.forEach(function(k){
-      var b=buckets[k];
-      var ch=b.crit>0?Math.max(Math.round((b.crit/maxV)*88),6):0;
-      var hh=b.high>0?Math.max(Math.round((b.high/maxV)*88),5):0;
-      var lbl=k.split(' ')[0];
-      html+='<div class="tl-col"><div class="tl-bars">';
-      if(b.crit>0)html+='<div class="tl-bar crit" style="height:'+ch+'px"></div>';
-      if(b.high>0)html+='<div class="tl-bar high" style="height:'+hh+'px"></div>';
-      if(!b.crit&&!b.high)html+='<div class="tl-bar" style="height:3px;background:var(--border);opacity:.3"></div>';
-      html+='</div><div class="tl-lbl">'+lbl+'</div></div>';
-    });
-    html+='</div></div></div>';
-  }
-
-  // Entities
-  var orgs=orgsD.results||[];
-  var locs=locsD.results||[];
-  if(orgs.length||locs.length){
-    html+='<div class="an-section"><div class="an-head"><span class="an-title">Entities Under Watch</span></div>';
-    html+='<div class="an-body">';
-    if(orgs.length){
-      html+='<div style="font-family:monospace;font-size:7px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">Organisations</div>';
-      html+='<div class="ent-tags">';
-      orgs.slice(0,8).forEach(function(e,i){
-        html+='<span class="ent-tag '+(i===0?'hot':i<=2?'warm':'')+'">'+e.name+' ×'+e.count+'</span>';
-      });
-      html+='</div>';
-    }
-    if(locs.length){
-      html+='<div style="font-family:monospace;font-size:7px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin:10px 0 6px">Locations</div>';
-      html+='<div class="ent-tags">';
-      locs.slice(0,8).forEach(function(e,i){
-        html+='<span class="ent-tag '+(i===0?'hot':i<=2?'warm':'')+'">'+e.name+' ×'+e.count+'</span>';
-      });
-      html+='</div>';
-    }
-    html+='</div></div>';
-  }
-
-  document.getElementById('analytics-scroll').innerHTML=html;
-}
-
-// ── Mobile tabs ───────────────────────────────────────────────────────────
 function mobileTab(tab){
   var feed=document.getElementById('feed-panel');
   var analytics=document.getElementById('analytics-panel');
