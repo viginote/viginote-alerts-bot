@@ -355,70 +355,214 @@ function renderBrief(wrap, g){
 
 // ── ASSESSMENT RENDERER ───────────────────────────────────────────────────
 function renderAssessment(wrap, g){
-  var lvlClass={CRITICAL:'tl-crit',HIGH:'tl-high',MEDIUM:'tl-med',LOW:'tl-low'};
+  /*
+    Direct assessment replica support.
+    The Location Assessment Studio now saves the exact rendered report HTML + CSS.
+    The previous client renderer rebuilt a shortened assessment and dropped sections 05–08.
+    This block displays the saved studio output first, and only uses the old simplified renderer
+    as a fallback for older saved assessments that do not have replica HTML.
+  */
+  g = g || {};
+
+  function pick(){
+    for(var i=0;i<arguments.length;i++){
+      if(arguments[i] && typeof arguments[i] === 'string' && arguments[i].trim()) return arguments[i];
+    }
+    return '';
+  }
+
+  function extractBodyFromFullHtml(html){
+    if(!html) return '';
+    try{
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      var rb = doc.querySelector('#report-body') || doc.querySelector('.vgn-assessment-export') || doc.body;
+      return rb ? rb.innerHTML : html;
+    }catch(e){
+      var m = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+      return m ? m[1] : html;
+    }
+  }
+
+  var replicaCss = pick(
+    g.report_css,
+    g.print_css,
+    DATA.report_css,
+    DATA.print_css,
+    DATA.content && DATA.content.report_css,
+    DATA.content && DATA.content.print_css
+  );
+
+  var replicaBody = pick(
+    g.report_body_html,
+    g.report_html,
+    g.rendered_html,
+    g.content_html,
+    g.html,
+    DATA.report_body_html,
+    DATA.report_html,
+    DATA.rendered_html,
+    DATA.content_html,
+    DATA.html
+  );
+
+  var fullReplica = pick(
+    g.direct_replica_html,
+    g.full_document_html,
+    DATA.direct_replica_html,
+    DATA.full_document_html
+  );
+
+  if(!replicaBody && fullReplica){
+    replicaBody = extractBodyFromFullHtml(fullReplica);
+  }
+
+  if(replicaBody){
+    document.body.classList.add('vgn-direct-assessment-view');
+    var styleId = 'vgn-assessment-replica-style';
+    var oldStyle = document.getElementById(styleId);
+    if(oldStyle) oldStyle.remove();
+
+    var style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = replicaCss + `
+      body.vgn-direct-assessment-view{background:#0e1420!important;color:#e2e8f0!important;}
+      body.vgn-direct-assessment-view .content-wrap{max-width:900px;margin:0 auto;padding:48px 32px 80px;background:#0e1420!important;}
+      body.vgn-direct-assessment-view .report-panel,
+      body.vgn-direct-assessment-view .report-wrap,
+      body.vgn-direct-assessment-view #report-body,
+      body.vgn-direct-assessment-view .vgn-assessment-export{background:#0e1420!important;color:#e2e8f0!important;}
+      body.vgn-direct-assessment-view .report-wrap{max-width:900px!important;margin:0 auto!important;padding:0!important;}
+      body.vgn-direct-assessment-view .report-header,
+      body.vgn-direct-assessment-view .exec-box,
+      body.vgn-direct-assessment-view .profile-card,
+      body.vgn-direct-assessment-view .threat-row,
+      body.vgn-direct-assessment-view .hotspot-card,
+      body.vgn-direct-assessment-view .adv-card,
+      body.vgn-direct-assessment-view .measure-card,
+      body.vgn-direct-assessment-view .crime-card{background:#111827!important;border-color:#1e2d4a!important;}
+      @media print{
+        *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+        .view-bar,.no-print,.teaser-box{display:none!important;}
+        html,body,body.vgn-direct-assessment-view,.content-wrap,.report-panel,.report-wrap,#report-body,.vgn-assessment-export{background:#0e1420!important;color:#e2e8f0!important;}
+        body.vgn-direct-assessment-view .content-wrap{max-width:100%!important;padding:0 30px 40px!important;}
+        body.vgn-direct-assessment-view .report-wrap{max-width:100%!important;padding:0!important;}
+        .report-header,.exec-box,.profile-card,.threat-row,.hotspot-card,.adv-card,.measure-card,.crime-card{background:#111827!important;border-color:#1e2d4a!important;break-inside:avoid!important;page-break-inside:avoid!important;}
+        .report-title,.section-title,.tr-left .tr-cat,.hs-name,.rh-stat .s-val{color:#e2e8f0!important;}
+        .tr-left .tr-assess,.exec-box p,.adv-text,.adv-list li,.m-list li,.pc-val,.hs-desc{color:#94a3b8!important;}
+        .rh-stat .s-label,.rh-class,.section-num,.m-cat,.adv-title,.ind-chip,.tr-left .tr-impact,.hs-rec,.rf-disc,.rf-brand{color:#64748b!important;}
+        @page{size:A4;margin:0.5in 0.6in;}
+      }`;
+    document.head.appendChild(style);
+
+    wrap.innerHTML = '<div class="vgn-assessment-client-replica"><div class="report-panel"><div class="report-wrap"><div id="report-body" class="vgn-assessment-export">' + replicaBody + '</div></div></div></div>';
+    return;
+  }
+
+  // Fallback renderer for older assessment deliverables saved before direct replica support.
+  var lvlClass={CRITICAL:'tl-crit',HIGH:'tl-high',MEDIUM:'tl-med',LOW:'tl-low',EXTREME:'tl-crit'};
   var html='<div class="assess-wrap">';
 
   html+='<div class="assess-header">';
   html+='<div class="assess-title-block">';
-  html+='<h1>'+( g.location||DATA.title||'Location Assessment')+'</h1>';
+  html+='<h1>'+(g.report_title||g.location||DATA.title||'Location Assessment')+'</h1>';
   html+='<div class="assess-meta-row">';
-  if(g.overall_risk)html+='<span class="assess-meta-badge">RISK: '+g.overall_risk+'</span>';
-  html+='<span class="assess-meta-badge">'+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}).toUpperCase()+'</span>';
+  if(g.overall_risk_level||g.overall_risk)html+='<span class="assess-meta-badge">RISK: '+(g.overall_risk_level||g.overall_risk)+'</span>';
+  if(g.overall_risk_score)html+='<span class="assess-meta-badge">SCORE: '+g.overall_risk_score+'/10</span>';
+  html+='<span class="assess-meta-badge">'+(g.assessment_date||new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}).toUpperCase())+'</span>';
   html+='<span class="assess-meta-badge">VIGINOTE INTELLIGENCE</span>';
   html+='</div></div></div>';
 
   html+='<div class="assess-body">';
 
+  function listItems(arr){
+    if(!arr || !arr.length) return '<p style="font-size:0.86rem;color:var(--steel)">No data available</p>';
+    return '<ul style="list-style:none">'+arr.map(function(i){return '<li style="padding:4px 0;border-bottom:1px solid rgba(59,139,196,0.08)">→ '+i+'</li>';}).join('')+'</ul>';
+  }
+  function section(num,title,body){
+    if(!body) return '';
+    return '<div class="assess-section"><div class="assess-section-head">'+num+' · '+title+'</div><div class="assess-section-body">'+body+'</div></div>';
+  }
+
   if(g.executive_summary){
-    html+='<div class="assess-section">';
-    html+='<div class="assess-section-head">Executive Summary</div>';
-    html+='<div class="assess-section-body">'+g.executive_summary+'</div></div>';
+    var ex=String(g.executive_summary).split('\n\n').filter(Boolean).map(function(p){return '<p>'+p+'</p>';}).join('');
+    html+=section('01','Executive Summary',ex);
+  }
+
+  var lp=g.location_profile||{};
+  if(Object.keys(lp).length){
+    html+=section('02','Location Profile',
+      '<p><strong>Country:</strong> '+(lp.country||g.location||'')+'</p>'+
+      '<p><strong>Region:</strong> '+(lp.region||'')+'</p>'+
+      '<p><strong>Population:</strong> '+(lp.population||'')+'</p>'+
+      '<p><strong>Strategic Significance:</strong> '+(lp.strategic_significance||'')+'</p>'
+    );
   }
 
   if(g.threat_matrix&&g.threat_matrix.length){
-    html+='<div class="assess-section">';
-    html+='<div class="assess-section-head">Threat Matrix</div>';
+    var th='';
     g.threat_matrix.forEach(function(t){
-      var lv=(t.level||'MEDIUM').toUpperCase();
+      var lv=(t.risk_level||t.level||'MEDIUM').toUpperCase();
       var cls=lvlClass[lv]||'tl-med';
-      html+='<div class="threat-card">';
-      html+='<span class="threat-level '+cls+'">'+lv+'</span>';
-      html+='<div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:600;color:var(--paper);margin-bottom:4px">'+(t.category||'')+'</div>';
-      html+='<div style="font-size:0.88rem;color:var(--mist);line-height:1.6">'+(t.assessment||t.description||'')+'</div></div>';
-      html+='</div>';
+      th+='<div class="threat-card"><span class="threat-level '+cls+'">'+lv+'</span>';
+      th+='<div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:600;color:var(--paper);margin-bottom:4px">'+(t.category||'')+'</div>';
+      th+='<div style="font-size:0.88rem;color:var(--mist);line-height:1.6">'+(t.assessment||t.description||'')+'</div>';
+      if(t.visitor_impact) th+='<div style="font-size:0.82rem;color:var(--steel);margin-top:6px"><strong>Visitor impact:</strong> '+t.visitor_impact+'</div>';
+      th+='</div></div>';
     });
-    html+='</div>';
+    html+=section('03','Threat Matrix',th);
   }
 
   if(g.hotspots&&g.hotspots.length){
-    html+='<div class="assess-section">';
-    html+='<div class="assess-section-head">High-Risk Areas</div>';
+    var hs='';
     g.hotspots.forEach(function(h){
       var lv=(h.risk_level||'MEDIUM').toUpperCase();
       var cls=lvlClass[lv]||'tl-med';
-      html+='<div class="threat-card">';
-      html+='<span class="threat-level '+cls+'">'+lv+'</span>';
-      html+='<div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:600;color:var(--paper);margin-bottom:4px">'+(h.name||'')+'</div>';
-      html+='<div style="font-size:0.88rem;color:var(--mist);line-height:1.6">'+(h.description||'')+'</div>';
-      if(h.recommendation)html+='<div style="font-size:0.82rem;color:var(--steel);margin-top:6px;font-style:italic">⚠ '+h.recommendation+'</div>';
-      html+='</div></div>';
+      hs+='<div class="threat-card"><span class="threat-level '+cls+'">'+lv+'</span>';
+      hs+='<div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:600;color:var(--paper);margin-bottom:4px">'+(h.name||'')+'</div>';
+      hs+='<div style="font-size:0.88rem;color:var(--mist);line-height:1.6">'+(h.description||'')+'</div>';
+      if(h.recommendation)hs+='<div style="font-size:0.82rem;color:var(--steel);margin-top:6px;font-style:italic">⚠ '+h.recommendation+'</div>';
+      hs+='</div></div>';
     });
-    html+='</div>';
+    html+=section('04','Area Hotspot Assessment',hs);
   }
 
-  if(g.recommendations&&g.recommendations.length){
-    html+='<div class="assess-section">';
-    html+='<div class="assess-section-head">Recommendations</div>';
-    html+='<div class="recommendations" style="margin:0"><div class="rec-label">■ Security Measures</div>';
-    g.recommendations.forEach(function(r,i){
-      html+='<div class="rec-item"><span class="rec-num">0'+(i+1)+'.</span><span>'+(typeof r==='string'?r:(r.measure||JSON.stringify(r)))+'</span></div>';
+  var va=g.visitor_advisory||g.travel_advisory||g.visitor_travel_advisory||{};
+  if(Object.keys(va).length){
+    html+=section('05','Visitor & Traveller Advisory',
+      '<div class="recommendations" style="margin:0 0 10px"><div class="rec-label">Before Travel</div>'+listItems(va.before_travel)+'</div>'+
+      '<div class="recommendations" style="margin:0 0 10px"><div class="rec-label">Emergency Contacts</div>'+listItems(va.emergency_contacts)+'</div>'+
+      '<div class="recommendations" style="margin:0 0 10px"><div class="rec-label">Areas to Avoid</div>'+listItems(va.areas_to_avoid)+'</div>'+
+      '<div class="recommendations" style="margin:0 0 10px"><div class="rec-label">Safer Zones</div>'+listItems(va.safe_zones)+'</div>'+
+      '<p><strong>Transport:</strong> '+(va.transport||'')+'</p>'+
+      '<p><strong>Accommodation:</strong> '+(va.accommodation||'')+'</p>'+
+      '<p><strong>Communication Security:</strong> '+(va.communication||'')+'</p>'
+    );
+  }
+
+  var oc=g.organised_crime_profile||g.organized_crime_profile||g.organised_crime||g.organized_crime||{};
+  if(Object.keys(oc).length){
+    html+=section('07','Organised Crime Profile',
+      '<div class="recommendations" style="margin:0 0 10px"><div class="rec-label">Active Groups</div>'+listItems(oc.active_groups)+'</div>'+
+      '<div class="recommendations" style="margin:0 0 10px"><div class="rec-label">Primary Methods</div>'+listItems(oc.primary_methods)+'</div>'+
+      '<p><strong>Visitor Targeting:</strong> '+(oc.visitor_targeting||'')+'</p>'+
+      '<p><strong>Current Trend:</strong> '+(oc.trend||'')+'</p>'
+    );
+  }
+
+  var measures=g.recommended_measures||g.recommended_security_measures||g.security_measures||g.recommendations||[];
+  if(measures&&measures.length){
+    var mh='<div class="recommendations" style="margin:0"><div class="rec-label">■ Security Measures</div>';
+    measures.forEach(function(r,i){
+      if(typeof r === 'string') mh+='<div class="rec-item"><span class="rec-num">'+String(i+1).padStart(2,'0')+'.</span><span>'+r+'</span></div>';
+      else mh+='<div class="rec-item"><span class="rec-num">'+String(i+1).padStart(2,'0')+'.</span><span><strong>'+(r.category||'Measure')+':</strong> '+((r.measures&&r.measures.join('; '))||r.measure||JSON.stringify(r))+'</span></div>';
     });
-    html+='</div></div>';
+    mh+='</div>';
+    html+=section('08','Recommended Security Measures',mh);
   }
 
   html+='<div style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(59,139,196,0.1);font-family:var(--mono);font-size:9px;color:var(--wire);letter-spacing:1.5px;text-transform:uppercase">';
   html+='© Viginote '+(new Date().getFullYear())+' · Confidential Analytical Product · Not for Redistribution</div>';
-  html+='</div></div>'; // /assess-body /assess-wrap
+  html+='</div></div>';
   wrap.innerHTML=html;
 }
 
