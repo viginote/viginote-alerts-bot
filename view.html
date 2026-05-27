@@ -232,6 +232,103 @@ function init(){
 
 // ── BRIEF RENDERER ────────────────────────────────────────────────────────
 function renderBrief(wrap, g){
+  /*
+    Direct brief replica support.
+    The Client Brief Studio saves the exact rendered brief HTML + CSS.
+    Use that first so the client portal mirrors the studio/PDF layout.
+    Fall back to the legacy renderer only for older briefs.
+  */
+  g = g || {};
+
+  function pickBrief(){
+    for(var i=0;i<arguments.length;i++){
+      if(arguments[i] && typeof arguments[i] === 'string' && arguments[i].trim()) return arguments[i];
+    }
+    return '';
+  }
+
+  function extractBriefBodyFromFullHtml(html){
+    if(!html) return '';
+    try{
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      var bd = doc.querySelector('#brief-doc') || doc.querySelector('.vgn-brief-export') || doc.body;
+      return bd ? bd.innerHTML : html;
+    }catch(e){
+      var m = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+      return m ? m[1] : html;
+    }
+  }
+
+  var replicaCss = pickBrief(
+    g.report_css,
+    g.print_css,
+    DATA.report_css,
+    DATA.print_css,
+    DATA.content && DATA.content.report_css,
+    DATA.content && DATA.content.print_css
+  );
+
+  var replicaBody = pickBrief(
+    g.report_body_html,
+    g.report_html,
+    g.rendered_html,
+    g.content_html,
+    g.html,
+    DATA.report_body_html,
+    DATA.report_html,
+    DATA.rendered_html,
+    DATA.content_html,
+    DATA.html
+  );
+
+  var fullReplica = pickBrief(
+    g.direct_replica_html,
+    g.full_document_html,
+    DATA.direct_replica_html,
+    DATA.full_document_html
+  );
+
+  if(!replicaBody && fullReplica){
+    replicaBody = extractBriefBodyFromFullHtml(fullReplica);
+  }
+
+  if(replicaBody){
+    document.body.classList.add('vgn-direct-brief-view');
+    var styleId = 'vgn-brief-replica-style';
+    var oldStyle = document.getElementById(styleId);
+    if(oldStyle) oldStyle.remove();
+
+    var style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = replicaCss + `
+:root{
+  --ink:#0C1018;--ink2:#111620;--charcoal:#1C2333;--surface:#232C3D;
+  --paper:#D8DDE6;--mist:#8A96A8;--steel:#4E5D72;--wire:#2E3A4E;
+  --blue:#3B8BC4;--blue2:#5BA8DA;--blue-dim:#2A6494;
+  --risk-high:#B03030;--risk-med:#B07020;
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'Barlow Condensed',sans-serif;
+  --body:'Barlow',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+body.vgn-direct-brief-view{background:#0C1018!important;color:#D8DDE6!important;}
+body.vgn-direct-brief-view .content-wrap{max-width:860px!important;padding:32px 24px 80px!important;}
+body.vgn-direct-brief-view #brief-doc,
+body.vgn-direct-brief-view .vgn-brief-export{display:block!important;max-width:860px!important;margin:0 auto!important;padding:0!important;}
+body.vgn-direct-brief-view .article-card{background:#111620!important;border:1px solid rgba(59,139,196,0.15)!important;}
+@media print{
+  body.vgn-direct-brief-view .view-bar{display:none!important;}
+  body.vgn-direct-brief-view{background:#0C1018!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  body.vgn-direct-brief-view .content-wrap{max-width:100%!important;padding:0 0 40px!important;margin:0!important;}
+  body.vgn-direct-brief-view #brief-doc{display:block!important;max-width:100%!important;margin:0!important;padding:0!important;}
+  body.vgn-direct-brief-view *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+}`;
+    document.head.appendChild(style);
+
+    wrap.innerHTML = '<div id="brief-doc" class="vgn-brief-export">' + replicaBody + '</div>';
+    return;
+  }
+
   var html='<div class="article-card">';
 
   // Header
