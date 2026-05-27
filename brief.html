@@ -1065,7 +1065,7 @@ async function generateLocationBrief(){
         title: t.category || t.threat || `Threat Vector ${i+1}`,
         enhanced: t.assessment || t.description || '',
         region: location,
-        source: 'AI Knowledge Base',
+        source: 'Viginote Analysis',
         score: t.level==='CRITICAL'?9:t.level==='HIGH'?7:5,
         risk: t.level||'MEDIUM'
       })),
@@ -1086,8 +1086,8 @@ async function generateLocationBrief(){
             `${briefType==='travel'?'Update travel advisories and review in-country support arrangements.':'Review operational exposure and contingency options.'}`,
             `Establish enhanced monitoring cadence for ${location} over the next 30 days.`
           ],
-      sources: `AI Knowledge Base — ${location} · Open-Source Intelligence · Viginote Analysis`,
-      source_reliability: 'A-2 (AI-assisted analytical product)',
+      sources: `${location} · Open-Source Intelligence · Viginote Analysis`,
+      source_reliability: 'A-2 (OSINT-supported analytical product)',
       byline_role: `Senior Intelligence Analyst — ${location} · Viginote`
     };
 
@@ -1209,10 +1209,8 @@ window.renderBrief = function(g, selected, refInput, dateStr, regionStr, clientN
 
 function getBriefReplicaCss(){
   var css='';
-  document.querySelectorAll('style').forEach(function(styleTag){ css += '
-' + styleTag.innerHTML; });
-  return css + '
-@media print{.topnav,.lp,.rp-bar,.rp-empty,.pub-panel,#print-instructions{display:none!important}#brief-doc{display:block!important}.article-card,.key-j,.recommendations,.art-byline,.risk-row,.ab-card{break-inside:avoid!important;page-break-inside:avoid!important}}';
+  document.querySelectorAll('style').forEach(function(styleTag){ css += '\n' + styleTag.innerHTML; });
+  return css + '\n@media print{.topnav,.lp,.rp-bar,.rp-empty,.pub-panel,#print-instructions{display:none!important}#brief-doc{display:block!important}.article-card,.key-j,.recommendations,.art-byline,.risk-row,.ab-card{break-inside:avoid!important;page-break-inside:avoid!important}}';
 }
 
 function buildBriefReplicaPayload(){
@@ -1281,7 +1279,7 @@ async function saveBrief(){
     if(d.id){
       _savedDeliverableId = d.id;
       _savedToken = d.token;
-      if(saveBtn){ saveBtn.textContent='☁ Saved'; }
+      if(saveBtn){ saveBtn.textContent='☁ Saved'; saveBtn.disabled=false; }
       document.getElementById('pub-link-url').textContent = window.location.origin+'/view/'+d.token;
       document.getElementById('pub-link-box').classList.add('show');
       document.getElementById('publish-btn').style.display='inline-flex';
@@ -1293,7 +1291,12 @@ async function saveBrief(){
 
 async function openPublish(){
   if(!_savedDeliverableId){ await saveBrief(); }
-  document.getElementById('pub-panel').classList.add('show');
+  var panel = document.getElementById('pub-panel');
+  if(panel) panel.classList.add('show');
+  if(!_savedDeliverableId){
+    showPubMsg('Save failed. Generate the brief again or check server access.', 'err');
+    return;
+  }
   loadPubClients();
 }
 
@@ -1329,12 +1332,30 @@ async function publishBrief(){
     .map(el => el.id.replace('pci-',''));
   if(!selected.length){ showPubMsg('Select at least one client.','err'); return; }
   try{
+    var payloadContent = buildBriefReplicaPayload();
     var r = await fetch(window.location.origin+'/deliverables/'+_savedDeliverableId+'/publish',{
       method:'POST', credentials:'include',
       headers:{'Content-Type':'application/json','X-Feed-Token':sessionStorage.getItem('vgn_t')||''},
-      body: JSON.stringify({clients: selected, content: buildBriefReplicaPayload(), brief: buildBriefReplicaPayload(), pdf_theme:'dark', print_background:true})
+      body: JSON.stringify({
+        clients: selected,
+        content: payloadContent,
+        brief: payloadContent,
+        full_data: payloadContent,
+        report_body_html: payloadContent.report_body_html,
+        report_html: payloadContent.report_html,
+        rendered_html: payloadContent.rendered_html,
+        content_html: payloadContent.content_html,
+        direct_replica_html: payloadContent.direct_replica_html,
+        full_document_html: payloadContent.full_document_html,
+        print_css: payloadContent.print_css,
+        report_css: payloadContent.report_css,
+        pdf_theme:'dark',
+        print_background:true
+      })
     });
-    var d = await r.json();
+    var d = {};
+    try{ d = await r.json(); }catch(parseErr){}
+    if(!r.ok) throw new Error(d.detail || d.message || 'Publish failed');
     showPubMsg('Published to '+selected.length+' client'+(selected.length>1?'s':'')+'. Active immediately.','ok');
     setTimeout(closePublish, 3000);
   }catch(e){ showPubMsg('Error: '+e.message,'err'); }
