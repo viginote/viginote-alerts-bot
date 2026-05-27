@@ -215,34 +215,18 @@ select.ip-input{cursor:pointer}
 .pub-msg.ok{background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2)}
 .pub-msg.err{background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2)}
 
-
-/* ── CLIENT/PDF DARK THEME EXPORT SUPPORT ──
-   These styles are also sent inside the saved assessment payload so the
-   client access portal can print/download the same dark assessment instead
-   of falling back to a white/default browser print theme. */
-#report-body.vgn-assessment-export,
-.vgn-assessment-export{
-  background:var(--bg)!important;
-  color:var(--text)!important;
-}
-
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   .topbar,.input-panel,.report-topbar,.teaser-box,.overlay,.pub-panel{display:none!important}
-  html,body{height:auto!important;overflow:visible!important;background:var(--bg)!important;color:var(--text)!important}
-  .app{display:block!important;height:auto!important;background:var(--bg)!important}
-  .report-panel{overflow:visible!important;background:var(--bg)!important}
-  #report-output{display:block!important}
-  .report-wrap{max-width:100%!important;padding:0 30px 40px!important;background:var(--bg)!important}
-  .report-header,.exec-box,.profile-card,.threat-row,.hotspot-card,.adv-card,.measure-card,.crime-card{
-    background:var(--bg2)!important;
-    border-color:var(--border)!important;
-    box-shadow:none!important;
-  }
-  .report-title,.section-title,.tr-left .tr-cat,.hs-name,.rh-stat .s-val{color:var(--text)!important}
-  .rh-stat .s-label,.rh-class,.section-num,.m-cat,.adv-title,.ind-chip,.tr-left .tr-impact,.hs-rec,.rf-disc,.rf-brand{color:var(--text3)!important}
-  .tr-left .tr-assess,.exec-box p,.adv-text,.adv-list li,.m-list li,.rc-summary,.pc-val{color:var(--text2)!important}
-  .threat-row,.hotspot-card,.adv-card,.measure-card,.crime-card,.profile-card,.exec-box,.report-header{page-break-inside:avoid!important;break-inside:avoid!important}
+  .app{display:block!important;height:auto!important;background:#0e1420!important}
+  .report-panel{overflow:visible!important;background:#0e1420!important}
+  body{background:#0e1420!important;color:#e2e8f0!important}
+  .report-wrap{max-width:100%!important;padding:0 30px 40px!important;background:#0e1420!important}
+  .report-header,.exec-box,.profile-card,.threat-row,.hotspot-card,.adv-card,.measure-card,.crime-card{background:#111827!important;border-color:#1e2d4a!important}
+  .report-title,.section-title,.tr-left .tr-cat,.hs-name,.rh-stat .s-val{color:#e2e8f0!important}
+  .rh-stat .s-label,.rh-class,.section-num,.m-cat,.adv-title,.ind-chip,.tr-left .tr-impact,.hs-rec,.rf-disc,.rf-brand{color:#64748b!important}
+  .tr-left .tr-assess,.exec-box p,.adv-text,.adv-list li,.m-list li,.rc-summary,.pc-val,.hs-desc{color:#94a3b8!important}
+  .threat-row,.hotspot-card,.adv-card,.measure-card{page-break-inside:avoid!important;break-inside:avoid!important}
   @page{size:A4;margin:0.5in 0.6in}
   /* Watermark */
   #vgn-watermark{display:flex!important}
@@ -397,7 +381,7 @@ function quickLoad(loc){document.getElementById('loc-input').value=loc}
 function riskBadge(level){const l=(level||'MEDIUM').toUpperCase();return`<span class="risk-badge risk-${l}"><span class="dot"></span>${l}</span>`}
 function scoreBarColor(level){const map={LOW:'#22c55e',MEDIUM:'#f59e0b',HIGH:'#f97316',CRITICAL:'#ef4444',EXTREME:'#a855f7'};return map[(level||'MEDIUM').toUpperCase()]||'#64748b'}
 function trajectoryIcon(t){if(!t)return'';const map={IMPROVING:'↑ Improving',STABLE:'→ Stable',DETERIORATING:'↓ Deteriorating'};const colors={IMPROVING:'color:var(--low)',STABLE:'color:var(--text2)',DETERIORATING:'color:var(--critical)'};return`<span class="traj-badge" style="${colors[t]||''}">${map[t]||t}</span>`}
-function listItems(arr,cls='adv-list'){if(!arr||!arr.length)return'<p style="font-size:12px;color:var(--text3)">No data available</p>';if(typeof arr==='string')arr=arr.split(/\n|;|\u2022/).map(i=>i.trim()).filter(Boolean);return`<ul class="${cls}">${arr.map(i=>`<li>${i}</li>`).join('')}</ul>`}
+function listItems(arr,cls='adv-list'){if(!arr||!arr.length)return'<p style="font-size:12px;color:var(--text3)">No data available</p>';return`<ul class="${cls}">${arr.map(i=>`<li>${i}</li>`).join('')}</ul>`}
 
 function buildReport(g,mode){
   const lp=g.location_profile||{};const ov=g.overall_risk_level||'MEDIUM';
@@ -461,7 +445,6 @@ async function generateAssessment(){
     if(!resp.ok)throw new Error(data.detail||'Assessment failed');
     if(!data.generated){alert(data.message||'No data returned.');return}
     document.getElementById('report-body').innerHTML=buildReport(data.generated,mode);
-    document.getElementById('report-body').classList.add('vgn-assessment-export');
     document.getElementById('empty-state').style.display='none';
     document.getElementById('report-output').style.display='block';
     _captureAssessment(data.generated);
@@ -485,7 +468,7 @@ document.getElementById('loc-input').addEventListener('keydown',e=>{if(e.key==='
 (function(){
   function updateWatermark(){
     // Grab location from input field if present
-    const loc   = document.getElementById('loc-input')?.value?.trim()
+    const loc   = document.getElementById('location-input')?.value?.trim()
                || document.querySelector('.report-title')?.textContent?.trim()
                || 'LOCATION ASSESSMENT';
     const date  = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}).toUpperCase();
@@ -520,21 +503,30 @@ var _savedId = null, _savedToken = null, _lastGenData = null;
 
 function getAssessmentPrintCss(){
   return `
-  :root{--bg:#0e1420;--bg2:#111827;--bg3:#151d2e;--border:#1e2d4a;--border2:#243558;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--blue:#3b82f6;--blue-dim:#1d4ed8;--blue-pale:rgba(59,130,246,0.08);--low:#22c55e;--medium:#f59e0b;--high:#f97316;--critical:#ef4444;--extreme:#a855f7;}
-  html,body,.report-panel,.report-wrap,#report-body,.vgn-assessment-export{background:#0e1420!important;color:#e2e8f0!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  :root{--bg:#0e1420;--bg2:#111827;--bg3:#151d2e;--bg4:#1a2540;--border:#1e2d4a;--border2:#243558;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--blue:#3b82f6;--blue-dim:#1d4ed8;--blue-pale:rgba(59,130,246,0.08);--low:#22c55e;--low-bg:rgba(34,197,94,0.1);--low-border:rgba(34,197,94,0.25);--medium:#f59e0b;--medium-bg:rgba(245,158,11,0.1);--medium-border:rgba(245,158,11,0.25);--high:#f97316;--high-bg:rgba(249,115,22,0.1);--high-border:rgba(249,115,22,0.25);--critical:#ef4444;--critical-bg:rgba(239,68,68,0.1);--critical-border:rgba(239,68,68,0.25);--extreme:#a855f7;--extreme-bg:rgba(168,85,247,0.1);--extreme-border:rgba(168,85,247,0.25);}
+  html,body,.app,.report-panel,.report-wrap,#report-body,.vgn-assessment-export{background:#0e1420!important;color:#e2e8f0!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  .topbar,.input-panel,.report-topbar,.teaser-box,.overlay,.pub-panel,.no-print{display:none!important;}
+  .report-wrap{max-width:900px!important;margin:0 auto!important;padding:0 28px 80px!important;}
   .report-header,.exec-box,.profile-card,.threat-row,.hotspot-card,.adv-card,.measure-card,.crime-card{background:#111827!important;border-color:#1e2d4a!important;box-shadow:none!important;break-inside:avoid!important;page-break-inside:avoid!important;}
   .report-title,.section-title,.tr-left .tr-cat,.hs-name,.rh-stat .s-val{color:#e2e8f0!important;}
   .tr-left .tr-assess,.exec-box p,.adv-text,.adv-list li,.m-list li,.pc-val,.hs-desc{color:#94a3b8!important;}
   .rh-stat .s-label,.rh-class,.section-num,.m-cat,.adv-title,.ind-chip,.tr-left .tr-impact,.hs-rec,.rf-disc,.rf-brand{color:#64748b!important;}
-  .topbar,.input-panel,.report-topbar,.teaser-box,.overlay,.pub-panel,.no-print{display:none!important;}
+  .threat-row,.hotspot-card,.adv-card,.measure-card{page-break-inside:avoid!important;break-inside:avoid!important;}
   @page{size:A4;margin:0.5in 0.6in;}`;
 }
 
-function normaliseAssessmentForPortal(raw){
+function getAssessmentReplicaStyle(){
+  var baseStyle = '';
+  document.querySelectorAll('style').forEach(function(styleTag){ baseStyle += '\n' + styleTag.innerHTML; });
+  return baseStyle + '\n' + getAssessmentPrintCss();
+}
+
+function buildAssessmentReplicaPayload(raw){
   var data = JSON.parse(JSON.stringify(raw || {}));
-  var reportEl = document.getElementById('report-body');
-  var html = reportEl ? reportEl.innerHTML : buildReport(data, 'published');
-  var printCss = getAssessmentPrintCss();
+  var reportBody = document.getElementById('report-body');
+  var reportHtml = reportBody ? reportBody.innerHTML : buildReport(data, 'published');
+  var styleHtml = '<style>' + getAssessmentReplicaStyle() + '</style>';
+  var fullHtml = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>' + ((data.location || 'Location') + ' — Risk Assessment').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</title>' + styleHtml + '</head><body><div class="report-panel"><div class="report-wrap"><div id="report-body" class="vgn-assessment-export">' + reportHtml + '</div></div></div></body></html>';
 
   data.location_profile = data.location_profile || {};
   data.visitor_advisory = data.visitor_advisory || data.travel_advisory || data.visitor_travel_advisory || {};
@@ -550,59 +542,77 @@ function normaliseAssessmentForPortal(raw){
   data.recommended_security_measures = data.recommended_security_measures || data.recommended_measures;
   data.security_measures = data.security_measures || data.recommended_measures;
 
-  data.sections = data.sections || {};
-  data.sections.visitor_advisory = data.visitor_advisory;
-  data.sections.travel_advisory = data.travel_advisory;
-  data.sections.organised_crime_profile = data.organised_crime_profile;
-  data.sections.organized_crime_profile = data.organized_crime_profile;
-  data.sections.recommended_security_measures = data.recommended_security_measures;
-  data.sections.recommended_measures = data.recommended_measures;
+  data.sections = Object.assign({}, data.sections || {}, {
+    executive_summary: data.executive_summary || '',
+    location_profile: data.location_profile,
+    threat_matrix: data.threat_matrix || [],
+    hotspots: data.hotspots || [],
+    visitor_advisory: data.visitor_advisory,
+    travel_advisory: data.travel_advisory,
+    visitor_travel_advisory: data.visitor_travel_advisory,
+    organised_crime_profile: data.organised_crime_profile,
+    organized_crime_profile: data.organized_crime_profile,
+    recommended_measures: data.recommended_measures,
+    recommended_security_measures: data.recommended_security_measures
+  });
 
-  data.full_assessment = JSON.parse(JSON.stringify(data));
+  data.__render_mode = 'direct_html_replica';
+  data.direct_replica = true;
+  data.full_data = JSON.parse(JSON.stringify(raw || {}));
   data.raw_assessment = JSON.parse(JSON.stringify(raw || {}));
-  data.report_html = html;
-  data.rendered_html = html;
-  data.content_html = html;
-  data.html = html;
-  data.report_print_css = printCss;
-  data.print_css = printCss;
+  data.report_body_html = reportHtml;
+  data.report_html = reportHtml;
+  data.rendered_html = reportHtml;
+  data.content_html = reportHtml;
+  data.html = reportHtml;
+  data.direct_replica_html = fullHtml;
+  data.full_document_html = fullHtml;
+  data.print_css = getAssessmentPrintCss();
+  data.report_css = getAssessmentReplicaStyle();
   data.pdf_theme = 'dark';
   data.print_background = true;
-  data.full_document_html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'+printCss+'</style></head><body><div class="report-wrap"><div id="report-body" class="vgn-assessment-export">'+html+'</div></div></body></html>';
   data.saved_at = new Date().toISOString();
   return data;
 }
 
 // Called after generation to save deliverable
 function _captureAssessment(data){
-  _lastGenData = normaliseAssessmentForPortal(data);
+  _lastGenData = buildAssessmentReplicaPayload(data);
   window._currentReport = _lastGenData;
   saveAssessment();
 }
 
 async function saveAssessment(){
   if(!_lastGenData && !window._currentReport) return;
-  var data = normaliseAssessmentForPortal(_lastGenData || window._currentReport);
+  var data = buildAssessmentReplicaPayload(_lastGenData || window._currentReport);
   _lastGenData = data;
   window._currentReport = data;
   var saveBtn = document.getElementById('as-save-btn');
   if(saveBtn){ saveBtn.textContent='☁ Saving…'; saveBtn.disabled=true; }
   try{
+    var payload = {
+      type:'assessment',
+      title:(data.location||'Location')+' — Risk Assessment',
+      content:data,
+      assessment:data,
+      full_data:data.full_data,
+      report_body_html:data.report_body_html,
+      report_html:data.report_html,
+      rendered_html:data.rendered_html,
+      content_html:data.content_html,
+      direct_replica_html:data.direct_replica_html,
+      full_document_html:data.full_document_html,
+      print_css:data.print_css,
+      report_css:data.report_css,
+      pdf_theme:'dark',
+      print_background:true,
+      clients:[],
+      one_off:false
+    };
     var r = await fetch(window.location.origin+'/deliverables/save',{
       method:'POST', credentials:'include',
       headers:{'Content-Type':'application/json','X-Feed-Token':sessionStorage.getItem('vgn_t')||''},
-      body: JSON.stringify({
-        type:'assessment',
-        title:(data.location||'Location')+' — Risk Assessment',
-        content: data,
-        assessment: data,
-        report_html: data.report_html,
-        rendered_html: data.rendered_html,
-        content_html: data.content_html,
-        print_css: data.print_css,
-        clients:[],
-        one_off:false,
-      })
+      body: JSON.stringify(payload)
     });
     var d = await r.json();
     if(!r.ok) throw new Error(d.detail || d.message || 'Save failed');
@@ -641,10 +651,26 @@ async function publishAssessment(){
   var selected=[...document.querySelectorAll('.pub-client-item.selected')].map(el=>el.id.replace('pci-',''));
   if(!selected.length){ showPubMsg('Select at least one client.','err'); return; }
   try{
+    var data = buildAssessmentReplicaPayload(_lastGenData || window._currentReport);
     await fetch(window.location.origin+'/deliverables/'+_savedId+'/publish',{
       method:'POST', credentials:'include',
       headers:{'Content-Type':'application/json','X-Feed-Token':sessionStorage.getItem('vgn_t')||''},
-      body:JSON.stringify({clients:selected,content:normaliseAssessmentForPortal(_lastGenData||window._currentReport),assessment:normaliseAssessmentForPortal(_lastGenData||window._currentReport),report_html:(normaliseAssessmentForPortal(_lastGenData||window._currentReport).report_html),print_css:getAssessmentPrintCss()})
+      body:JSON.stringify({
+        clients:selected,
+        content:data,
+        assessment:data,
+        full_data:data.full_data,
+        report_body_html:data.report_body_html,
+        report_html:data.report_html,
+        rendered_html:data.rendered_html,
+        content_html:data.content_html,
+        direct_replica_html:data.direct_replica_html,
+        full_document_html:data.full_document_html,
+        print_css:data.print_css,
+        report_css:data.report_css,
+        pdf_theme:'dark',
+        print_background:true
+      })
     });
     showPubMsg('Published to '+selected.length+' client'+(selected.length!==1?'s':'')+'.','ok');
     setTimeout(closePublish,3000);
