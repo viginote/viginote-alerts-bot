@@ -500,8 +500,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
         <option value="168" selected>7 days</option>
         <option value="336">14 days</option>
       </select>
-      <button class="ff-refresh" type="button" onclick="loadFeed()">↺</button>
+      <button class="ff-refresh" type="button" onclick="mobileTab('feed');loadFeed()">↺</button>
       <div class="ff-countdown" id="ff-countdown"></div>
+      <button class="ff-refresh" type="button" onclick="mobileTab('feed')" title="Back to Feed">← Feed</button>
       <button class="ff-refresh" type="button" onclick="mobileTab('inbox')" title="Inbox" style="position:relative">
         📬<span id="inbox-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;border-radius:10px;padding:1px 4px;font-size:8px"></span>
       </button>
@@ -673,6 +674,7 @@ function buildStreamTabs(){
 }
 
 function switchStream(stream, el){
+  mobileTab('feed');
   currentStream=stream;
   document.querySelectorAll('.stab').forEach(function(t){t.classList.remove('on');});
   if(el) el.classList.add('on');
@@ -693,7 +695,7 @@ function buildRegionFilter(){
 }
 
 // ── Filters ───────────────────────────────────────────────────────────────
-function applyFilters(){ renderFeed(); }
+function applyFilters(){ mobileTab('feed'); renderFeed(); }
 
 function getSevFilter(){ return document.getElementById('ff-sev').value; }
 function getRegFilter(){ return document.getElementById('ff-reg').value; }
@@ -1050,19 +1052,30 @@ function renderAnalytics(traj, alertsD, wl, orgsD, locsD, hrs){
   if(analyticsScroll) analyticsScroll.innerHTML=html;
 }
 
-// ── Mobile tabs ───────────────────────────────────────────────────────────
+// ── Mobile tabs / panel switching ─────────────────────────────────────────
 function mobileTab(tab){
   var feed=document.getElementById('feed-panel');
   var inbox=document.getElementById('inbox-panel');
-  // New layout: just toggle feed vs inbox
+
   if(tab==='inbox'){
     if(feed) feed.style.display='none';
-    if(inbox){inbox.style.display='flex';inbox.style.flexDirection='column';inbox.style.flex='1';}
+    if(inbox){
+      inbox.style.display='flex';
+      inbox.style.flexDirection='column';
+      inbox.style.flex='1';
+      inbox.style.minHeight='0';
+    }
     loadInbox();
-  } else {
-    if(feed) feed.style.display='flex';
-    if(inbox) inbox.style.display='none';
+    return;
   }
+
+  if(feed){
+    feed.style.display='flex';
+    feed.style.flexDirection='column';
+    feed.style.flex='1';
+    feed.style.minHeight='0';
+  }
+  if(inbox) inbox.style.display='none';
 }
 
 function loadInbox(){
@@ -1078,13 +1091,13 @@ function loadInbox(){
     var badge=document.getElementById('inbox-badge');
     if(badge){if(unread>0){badge.textContent=unread;badge.style.display='inline';}else badge.style.display='none';}
     if(!items.length){
-      scroll.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;gap:10px;font-family:monospace;font-size:11px;color:var(--text3);text-align:center"><span style="font-size:24px">📬</span><span>Your inbox is empty.<br>Briefs and assessments<br>published to you appear here.</span></div>';
+      scroll.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;gap:10px;font-family:monospace;font-size:11px;color:var(--text3);text-align:center"><span style="font-size:24px">📬</span><span>Your inbox is empty.<br>Briefs and assessments<br>published to you appear here.</span><button class="inbox-open-btn" type="button" onclick="mobileTab(\'feed\')">← Back to Feed</button></div>';
       return;
     }
     var typeCls={brief:'ib-brief',assessment:'ib-assessment',digest:'ib-digest'};
     var typeLabel={brief:'Brief',assessment:'Assessment',digest:'Digest'};
     var typeIcon={brief:'📋',assessment:'🗺',digest:'📊'};
-    scroll.innerHTML='<div class="an-section"><div class="an-head"><span class="an-title">📬 Intelligence Inbox</span><span class="an-meta">'+items.length+' deliverable'+(items.length!==1?'s':'')+'</span></div><div class="an-body">'
+    scroll.innerHTML='<div class="an-section"><div class="an-head"><span class="an-title">📬 Intelligence Inbox</span><div style="display:flex;align-items:center;gap:8px"><button class="inbox-open-btn" type="button" onclick="mobileTab(\'feed\')">← Back to Feed</button><span class="an-meta">'+items.length+' deliverable'+(items.length!==1?'s':'')+'</span></div></div><div class="an-body">'
       +items.map(function(item){
         var isUnread=!item.viewed;
         var created=new Date(item.created_at*1000).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
