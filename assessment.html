@@ -217,16 +217,21 @@ select.ip-input{cursor:pointer}
 
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-  .topbar,.input-panel,.report-topbar,.teaser-box,.overlay{display:none!important}
-  .app{display:block!important;height:auto!important}
-  .report-panel{overflow:visible!important;background:#fff!important}
-  body{background:#fff!important}
-  .report-wrap{max-width:100%!important;padding:0 30px 40px!important}
-  .report-header,.exec-box,.profile-card,.threat-row,.hotspot-card,.adv-card,.measure-card,.crime-card{background:#fff!important;border-color:#ddd!important}
-  .report-title,.section-title,.tr-left .tr-cat,.hs-name,.rh-stat .s-val{color:#000!important}
-  .rh-stat .s-label,.rh-class,.section-num,.m-cat,.adv-title,.ind-chip,.tr-left .tr-impact,.hs-rec,.rf-disc,.rf-brand{color:#555!important}
-  .tr-left .tr-assess,.exec-box p,.adv-text,.adv-list li,.m-list li,.rc-summary{color:#222!important}
-  .threat-row,.hotspot-card,.adv-card,.measure-card{page-break-inside:avoid!important;break-inside:avoid!important}
+  .topbar,.input-panel,.report-topbar,.teaser-box,.overlay,.pub-panel{display:none!important}
+  html,body{height:auto!important;overflow:visible!important;background:var(--bg)!important;color:var(--text)!important}
+  .app{display:block!important;height:auto!important;background:var(--bg)!important}
+  .report-panel{overflow:visible!important;background:var(--bg)!important}
+  #report-output{display:block!important}
+  .report-wrap{max-width:100%!important;padding:0 30px 40px!important;background:var(--bg)!important}
+  .report-header,.exec-box,.profile-card,.threat-row,.hotspot-card,.adv-card,.measure-card,.crime-card{
+    background:var(--bg2)!important;
+    border-color:var(--border)!important;
+    box-shadow:none!important;
+  }
+  .report-title,.section-title,.tr-left .tr-cat,.hs-name,.rh-stat .s-val{color:var(--text)!important}
+  .rh-stat .s-label,.rh-class,.section-num,.m-cat,.adv-title,.ind-chip,.tr-left .tr-impact,.hs-rec,.rf-disc,.rf-brand{color:var(--text3)!important}
+  .tr-left .tr-assess,.exec-box p,.adv-text,.adv-list li,.m-list li,.rc-summary,.pc-val{color:var(--text2)!important}
+  .threat-row,.hotspot-card,.adv-card,.measure-card,.crime-card,.profile-card,.exec-box,.report-header{page-break-inside:avoid!important;break-inside:avoid!important}
   @page{size:A4;margin:0.5in 0.6in}
   /* Watermark */
   #vgn-watermark{display:flex!important}
@@ -468,7 +473,7 @@ document.getElementById('loc-input').addEventListener('keydown',e=>{if(e.key==='
 (function(){
   function updateWatermark(){
     // Grab location from input field if present
-    const loc   = document.getElementById('location-input')?.value?.trim()
+    const loc   = document.getElementById('loc-input')?.value?.trim()
                || document.querySelector('.report-title')?.textContent?.trim()
                || 'LOCATION ASSESSMENT';
     const date  = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}).toUpperCase();
@@ -519,7 +524,12 @@ async function saveAssessment(){
       body: JSON.stringify({
         type:'assessment',
         title:(data.location||'Location')+' — Risk Assessment',
-        content: data,
+        content: Object.assign({}, data, {
+          full_assessment: data,
+          report_html: document.getElementById('report-body') ? document.getElementById('report-body').innerHTML : '',
+          rendered_html: document.getElementById('report-body') ? document.getElementById('report-body').innerHTML : '',
+          saved_at: new Date().toISOString()
+        }),
         clients:[],
         one_off:false,
       })
