@@ -23,7 +23,7 @@ from viginote.scoring import severity_score, source_tier
 
 UA          = os.getenv("USER_AGENT", "VigiNoteAlertsBot/1.2 (+https://viginote.com)")
 POLL_LIMIT  = int(os.getenv("POLL_LIMIT", "25"))
-SIM_THRESHOLD      = int(os.getenv("SIM_THRESHOLD", "82"))  # tighter — catch same story from multiple sources
+SIM_THRESHOLD      = int(os.getenv("SIM_THRESHOLD", "72"))  # catch same story from multiple sources
 SEVERITY_THRESHOLD = int(os.getenv("SEVERITY_THRESHOLD", "5"))
 CRITICAL_THRESHOLD = int(os.getenv("CRITICAL_THRESHOLD", "8"))
 MAX_PER_SOURCE_RUN = int(os.getenv("MAX_PER_SOURCE_RUN", "1"))
@@ -45,7 +45,29 @@ def make_title_hash(raw: str) -> str:
 
 
 def looks_duplicate(title: str, pool: list[str], threshold: int) -> bool:
+    """Check fuzzy title similarity."""
     return any(fuzz.token_set_ratio(title, t) >= threshold for t in pool)
+
+
+def _key_words(title: str) -> set:
+    """Extract meaningful words (4+ chars, not stopwords)."""
+    STOP = {'with','that','this','from','have','been','will','were','they',
+            'says','said','after','over','into','also','amid','amid','than',
+            'more','less','some','news','report','latest','update'}
+    words = re.findall(r"[A-Za-z]{4,}", title.lower())
+    return {w for w in words if w not in STOP}
+
+
+def keyword_overlap_duplicate(title: str, pool: list[str], min_overlap: int = 3) -> bool:
+    """Block if article shares 3+ key words with a recent title — catches rephrased duplicates."""
+    title_keys = _key_words(title)
+    if len(title_keys) < 3:
+        return False
+    for existing in pool:
+        overlap = title_keys & _key_words(existing)
+        if len(overlap) >= min_overlap:
+            return True
+    return False
 
 
 async def _fetch_feed_bytes(session: aiohttp.ClientSession, url: str) -> bytes | None:
@@ -170,14 +192,21 @@ def collect_candidates(
         if _seen_hash(db_conn, h, days=DEDUPE_DAYS):
             continue
 
-        # Cross-run cluster cap
+        # Cross-run cluster cap — fuzzy + keyword
         if looks_duplicate(raw_title, recent, SIM_THRESHOLD):
             dupes = sum(1 for t in recent if fuzz.token_set_ratio(raw_title, t) >= SIM_THRESHOLD)
             if dupes >= MAX_PER_CLUSTER:
                 continue
+        elif keyword_overlap_duplicate(raw_title, recent, min_overlap=4):
+            # Same story rephrased — seen in recent DB titles
+            continue
 
-        # Within-run duplicate guard
+        # Within-run duplicate guard — fuzzy title match
         if looks_duplicate(raw_title, candidate_titles, SIM_THRESHOLD):
+            continue
+
+        # Within-run keyword overlap guard — catches rephrased same-story duplicates
+        if keyword_overlap_duplicate(raw_title, candidate_titles):
             continue
 
         dom = domain_of(link)
