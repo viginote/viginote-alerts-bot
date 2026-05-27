@@ -361,7 +361,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
   cursor:pointer;text-decoration:none;transition:all .15s}
 .inbox-open-btn:hover{background:var(--blue-dim);color:#fff;border-color:var(--blue-dim)}
 
-@media(max-width:900px){@media(max-width:900px){
+@media(max-width:900px){
   .feed-panel{width:100%;min-height:0}
   .analytics-panel{display:none}
   .analytics-panel.mobile-show{display:flex;width:100%;min-height:0}
@@ -1046,7 +1046,8 @@ function renderAnalytics(traj, alertsD, wl, orgsD, locsD, hrs){
     html+='</div></div>';
   }
 
-  document.getElementById('analytics-scroll').innerHTML=html;
+  var analyticsScroll=document.getElementById('analytics-scroll');
+  if(analyticsScroll) analyticsScroll.innerHTML=html;
 }
 
 // ── Mobile tabs ───────────────────────────────────────────────────────────
@@ -1105,566 +1106,147 @@ function loadInbox(){
   });
 }
 
-// ── Boot ──────────────────────────────────────────────────────────────────
-(function(){
-  document.getElementById('inp-u').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
-  document.getElementById('inp-p').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
 
-  var saved=sessionStorage.getItem('vgn_c');
-  if(saved){
-    try{
-      var s=JSON.parse(saved);
-      if(s.u&&s.t){
-        fetch(API+'/auth/profile',{headers:{'X-Feed-Token':s.t}})
-        .then(function(r){if(!r.ok)throw new Error('invalid');return r.json();})
-        .then(function(d){
-          me=s.u; tok=s.t;
-          profile={
-            tier:d.tier||'analyst',label:d.label||s.u,
-            regions:d.regions||[],all_regions:d.all_regions||[],
-            countries:d.countries||[],
-            streams:d.streams||['geographic'],
-            all_streams:d.all_streams||['geographic','maritime','cyber','economic','political','executive'],
-            watchlist:d.watchlist||[]
-          };
-          sessionStorage.setItem('vgn_c',JSON.stringify({u:s.u,t:s.t,p:profile}));
-          startApp();
-        })
-        .catch(function(){sessionStorage.removeItem('vgn_c');});
-      }
-    }catch(e){sessionStorage.removeItem('vgn_c');}
-  }
-})();
-</script>
-</body>
-</html>function renderAnalyticsTop(wl, trajectory){
-  var alerts = window._feedAlerts || [];
-  // Also update stats strip from live data
+// ── Analytics top panel renderer ──────────────────────────────────────────
+function esc(v){
+  return String(v == null ? '' : v)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+function renderAnalyticsTop(wl, trajectory){
+  var feedAlerts = window._feedAlerts || alerts || [];
+  var total = feedAlerts.length;
+  var crit = feedAlerts.filter(function(a){return a.is_critical || a.score >= 9;}).length;
+  var high = feedAlerts.filter(function(a){return a.score >= 7 && a.score < 9 && !a.is_critical;}).length;
+  var corr = feedAlerts.filter(function(a){return (a.source_count || 1) >= 2 || a.corroborated;}).length;
+
   var totalEl = document.getElementById('sc-total');
   var critEl  = document.getElementById('sc-crit');
   var highEl  = document.getElementById('sc-high');
   var corrEl  = document.getElementById('sc-corr');
-  if(totalEl) totalEl.textContent = alerts.length || '—';
-  if(critEl)  critEl.textContent  = alerts.filter(function(a){return a.is_critical||a.score>=9;}).length || '0';
-  if(highEl)  highEl.textContent  = alerts.filter(function(a){return a.score>=7&&!a.is_critical;}).length || '0';
-  if(corrEl)  corrEl.textContent  = alerts.filter(function(a){return a.corroborated;}).length || '0';
-  var crit = alerts.filter(function(a){return a.is_critical||a.score>=9;}).length;
-  var high = alerts.filter(function(a){return a.score>=7&&!a.is_critical&&a.score<9;}).length;
-  var corr = alerts.filter(function(a){return a.corroborated;}).length;
 
-  // Stats strip
-  var sc = document.getElementById('sc-total'); if(sc) sc.textContent = alerts.length;
-  var sc2 = document.getElementById('sc-crit'); if(sc2) sc2.textContent = crit;
-  var sc3 = document.getElementById('sc-high'); if(sc3) sc3.textContent = high;
-  var sc4 = document.getElementById('sc-corr'); if(sc4) sc4.textContent = corr;
+  if(totalEl) totalEl.textContent = total;
+  if(critEl)  critEl.textContent  = crit;
+  if(highEl)  highEl.textContent  = high;
+  if(corrEl)  corrEl.textContent  = corr;
 
-  // Regional Risk column
   var regBody = document.getElementById('ancol-regional-body');
   if(regBody){
     var regionCounts = {};
-    alerts.forEach(function(a){
-      var r = (a.region||'UNKNOWN').replace(/_/g,' ');
-      regionCounts[r] = (regionCounts[r]||0)+1;
+    feedAlerts.forEach(function(a){
+      var r = a.region || 'UNKNOWN';
+      regionCounts[r] = (regionCounts[r] || 0) + 1;
     });
     var regions = Object.keys(regionCounts).sort(function(a,b){return regionCounts[b]-regionCounts[a];}).slice(0,6);
-    var maxCount = Math.max.apply(null, regions.map(function(r){return regionCounts[r];})||[1]);
+    var maxCount = Math.max.apply(null, regions.map(function(r){return regionCounts[r];}).concat([1]));
+
     if(!regions.length){
-      regBody.innerHTML = '<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);padding:4px 0">No data</div>';
+      regBody.innerHTML = '<div class="dd-val">No regional data</div>';
     } else {
       regBody.innerHTML = regions.map(function(r){
-        var pct = Math.round((regionCounts[r]/maxCount)*100);
-        return '<div style="margin-bottom:6px">'
-          +'<div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text2);margin-bottom:2px">'
-          +'<span>'+r+'</span><span style="color:var(--text3)">'+regionCounts[r]+'</span></div>'
-          +'<div style="height:3px;background:var(--border);border-radius:2px">'
-          +'<div style="height:3px;background:var(--blue);border-radius:2px;width:'+pct+'%"></div>'
-          +'</div></div>';
+        var pct = Math.round((regionCounts[r] / maxCount) * 100);
+        var label = ALL_REGIONS_MAP[r] || r.replace(/_/g,' ');
+        return '<div style="margin-bottom:8px">'
+          + '<div style="display:flex;justify-content:space-between;font-family:JetBrains Mono,monospace;font-size:9px;color:var(--text2);margin-bottom:3px">'
+          + '<span>'+esc(label)+'</span><span style="color:var(--text3)">'+regionCounts[r]+'</span></div>'
+          + '<div style="height:3px;background:var(--border);border-radius:2px">'
+          + '<div style="height:3px;background:var(--blue);border-radius:2px;width:'+pct+'%"></div>'
+          + '</div></div>';
       }).join('');
     }
   }
 
-  // Travel Advisory column
   var travBody = document.getElementById('ancol-travel-body');
   if(travBody){
-    var regions2 = (profile.regions||[]).filter(function(r){return r!=='GLOBAL';});
-    if(!regions2.length) regions2 = ['MIDDLE_EAST','EUROPE'];
-    var advisoryColors = {CRITICAL:'#ef4444',HIGH:'#f97316',MEDIUM:'#f59e0b',LOW:'#22c55e',MINIMAL:'#64748b'};
-    var advisoryLabels = ['CRITICAL','HIGH','MEDIUM','LOW','MINIMAL'];
-    var regionAlerts = {};
-    alerts.forEach(function(a){
-      var r = a.region||'';
-      regionAlerts[r] = regionAlerts[r]||[];
-      regionAlerts[r].push(a.score||5);
+    var configured = (profile.regions && profile.regions.length ? profile.regions : Object.keys(ALL_REGIONS_MAP)).filter(function(r){return r !== 'GLOBAL';}).slice(0,6);
+    var regionScores = {};
+    feedAlerts.forEach(function(a){
+      var r = a.region || 'UNKNOWN';
+      if(!regionScores[r]) regionScores[r] = [];
+      regionScores[r].push(a.score || 0);
     });
-    travBody.innerHTML = regions2.slice(0,5).map(function(r){
-      var scores = regionAlerts[r]||[];
-      var maxScore = scores.length ? Math.max.apply(null,scores) : 0;
-      var level = maxScore>=9?'CRITICAL':maxScore>=7?'HIGH':maxScore>=5?'MEDIUM':maxScore>=3?'LOW':'MINIMAL';
-      var col = advisoryColors[level]||'#64748b';
-      var label = r.replace(/_/g,' ');
-      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">'
-        +'<span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text2)">'+label+'</span>'
-        +'<span style="font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:700;letter-spacing:1px;'
-        +'padding:2px 7px;border-radius:2px;background:'+col+'22;color:'+col+';border:1px solid '+col+'44">'+level+'</span>'
-        +'</div>';
-    }).join('');
-    if(!travBody.innerHTML) travBody.innerHTML = '<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);padding:4px 0">No regions configured</div>';
+
+    travBody.innerHTML = configured.map(function(r){
+      var scores = regionScores[r] || [];
+      var maxScore = scores.length ? Math.max.apply(null, scores) : 0;
+      var level = maxScore >= 9 ? 'CRITICAL' : maxScore >= 7 ? 'HIGH' : maxScore >= 5 ? 'MEDIUM' : maxScore >= 3 ? 'LOW' : 'MINIMAL';
+      var cls = level === 'CRITICAL' ? 'adv-DNT' : level === 'HIGH' ? 'adv-ANE' : level === 'MEDIUM' ? 'adv-EC' : 'adv-N';
+      return '<div class="adv-row" style="padding:7px 0">'
+        + '<span class="adv-region">'+esc(ALL_REGIONS_MAP[r] || r.replace(/_/g,' '))+'</span>'
+        + '<span class="adv-badge '+cls+'">'+level+'</span>'
+        + '</div>';
+    }).join('') || '<div class="dd-val">No regions configured</div>';
   }
 
-  // Watchlist column
   var wlBody = document.getElementById('ancol-watchlist-body');
   var wlTermCount = document.getElementById('wl-term-count');
   if(wlBody){
-    var apiTerms = wl.watchlist||[];
-    var profileTerms = profile.watchlist||[];
-    var wlTerms = apiTerms.length>=profileTerms.length ? apiTerms : profileTerms;
-    var wlMatches = wl.matches||{};
+    wl = wl || {};
+    var apiTerms = wl.watchlist || [];
+    var profileTerms = profile.watchlist || [];
+    var wlTerms = apiTerms.length >= profileTerms.length ? apiTerms : profileTerms;
+    var wlMatches = wl.matches || {};
     if(wlTermCount) wlTermCount.textContent = wlTerms.length + ' terms';
+
     if(!wlTerms.length){
-      wlBody.innerHTML = '<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);padding:4px 0">No watchlist terms</div>';
+      wlBody.innerHTML = '<div class="dd-val">No watchlist terms</div>';
     } else {
       wlBody.innerHTML = wlTerms.map(function(term){
-        var hits = (wlMatches[term]||[]).length;
-        var col = hits>=10?'var(--critical)':hits>=5?'var(--high)':hits>=1?'var(--medium)':'var(--text4)';
-        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">'
-          +'<span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text2);letter-spacing:.5px">'+term+'</span>'
-          +'<span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:'+col+'">'+( hits||'—')+'</span>'
-          +'</div>';
+        var hits = (wlMatches[term] || []).length;
+        var cls = hits >= 5 ? 'hot' : hits >= 1 ? 'warm' : 'zero';
+        return '<div class="wl-row">'
+          + '<span class="wl-term">'+esc(term)+'</span>'
+          + '<span class="wl-count '+cls+'">'+(hits || '—')+'</span>'
+          + '</div>';
       }).join('');
     }
   }
 
-  // Timeline column
   var tlBody = document.getElementById('ancol-timeline-body');
   if(tlBody){
     var now = Date.now();
-    var dayMs = 86400000;
     var buckets = {};
-    var dayKeys = [];
+    var keys = [];
     for(var i=6;i>=0;i--){
-      var d = new Date(now - i*dayMs);
+      var d = new Date(now - i * 86400000);
       var k = d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric'});
       buckets[k] = {crit:0,high:0};
-      dayKeys.push(k);
+      keys.push(k);
     }
-    alerts.forEach(function(a){
-      var ts = typeof a.ts_iso==='string' ? new Date(a.ts_iso) : new Date((a.ts||0)*1000);
-      var k = ts.toLocaleDateString('en-GB',{weekday:'short',day:'numeric'});
+
+    feedAlerts.forEach(function(a){
+      var ts = a.ts_iso ? new Date(a.ts_iso).getTime() : (typeof a.ts === 'number' ? a.ts * 1000 : new Date(a.ts).getTime());
+      if(!ts) return;
+      var k = new Date(ts).toLocaleDateString('en-GB',{weekday:'short',day:'numeric'});
       if(buckets[k]){
-        if(a.is_critical||a.score>=9) buckets[k].crit++;
-        else if(a.score>=7) buckets[k].high++;
+        if(a.is_critical || a.score >= 9) buckets[k].crit++;
+        else if(a.score >= 7) buckets[k].high++;
       }
     });
-    var maxV = Math.max.apply(null, dayKeys.map(function(k){return buckets[k].crit+buckets[k].high;}));
-    if(!maxV) maxV = 1;
-    tlBody.innerHTML = '<div style="display:flex;gap:4px;align-items:flex-end;height:56px;padding-bottom:4px">'
-      + dayKeys.map(function(k){
-          var b = buckets[k];
-          var ch = b.crit ? Math.max(Math.round((b.crit/maxV)*48),4) : 0;
-          var hh = b.high ? Math.max(Math.round((b.high/maxV)*48),3) : 0;
-          var today = k === new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric'});
-          return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;justify-content:flex-end">'
-            + (ch?'<div style="width:100%;background:var(--critical);border-radius:2px 2px 0 0;height:'+ch+'px"></div>':'')
-            + (hh?'<div style="width:100%;background:var(--high);opacity:.8;height:'+hh+'px"></div>':'')
-            + (!ch&&!hh?'<div style="width:100%;background:var(--border);height:3px;border-radius:2px"></div>':'')
-            + '<div style="font-family:'JetBrains Mono',monospace;font-size:7px;color:'+(today?'var(--blue)':'var(--text4)')+';margin-top:3px;white-space:nowrap">'+k+'</div>'
-            + '</div>';
-        }).join('')
+
+    var maxV = Math.max.apply(null, keys.map(function(k){return buckets[k].crit + buckets[k].high;}).concat([1]));
+    tlBody.innerHTML = '<div class="timeline">'
+      + keys.map(function(k){
+        var b = buckets[k];
+        var ch = b.crit ? Math.max(Math.round((b.crit/maxV)*52),4) : 0;
+        var hh = b.high ? Math.max(Math.round((b.high/maxV)*52),3) : 0;
+        return '<div class="tl-col"><div class="tl-bars">'
+          + (ch ? '<div class="tl-bar crit" style="height:'+ch+'px"></div>' : '')
+          + (hh ? '<div class="tl-bar high" style="height:'+hh+'px"></div>' : '')
+          + (!ch && !hh ? '<div class="tl-bar" style="height:3px;background:var(--border);opacity:.35"></div>' : '')
+          + '</div><div class="tl-lbl">'+esc(k)+'</div></div>';
+      }).join('')
       + '</div>';
   }
 }
 
 function toggleAnCol(name){
-  var col = document.getElementById('ancol-'+name);
-  if(!col) return;
-  col.classList.toggle('collapsed');
-}
-
-
-function togglePw(){
-  var f=document.getElementById('inp-p');
-  f.type=f.type==='password'?'text':'password';
-}
-
-function doLogin(){
-  var u=document.getElementById('inp-u').value.trim();
-  var p=document.getElementById('inp-p').value;
-  if(!u||!p){showErr('Please enter username and password.');return;}
-  var btn=document.getElementById('login-btn');
-  btn.disabled=true; btn.textContent='Authenticating…';
-  document.getElementById('login-err').style.display='none';
-
-  fetch(API+'/auth/login',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({username:u,password:p})
-  })
-  .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d};});})
-  .then(function(res){
-    if(res.ok&&res.d.token){
-      me=u; tok=res.d.token;
-      profile={
-        tier:res.d.tier||'analyst',label:res.d.label||u,
-        regions:res.d.regions||[],all_regions:res.d.all_regions||[],
-        countries:res.d.countries||[],
-        streams:res.d.streams||['geographic'],
-        all_streams:res.d.all_streams||['geographic','maritime','cyber','economic','political','executive'],
-        watchlist:res.d.watchlist||[]
-      };
-      sessionStorage.setItem('vgn_c',JSON.stringify({u:u,t:res.d.token,p:profile}));
-      startApp();
-    } else {
-      showErr(res.d.detail||'Invalid credentials.');
-      btn.disabled=false; btn.textContent='Access Intelligence';
-    }
-  })
-  .catch(function(){
-    showErr('Connection error. Please try again.');
-    btn.disabled=false; btn.textContent='Access Intelligence';
-  });
-}
-
-function showErr(m){
-  var e=document.getElementById('login-err');
-  e.textContent=m; e.style.display='block';
-}
-
-function doLogout(){
-  sessionStorage.removeItem('vgn_c');
-  me=null; tok=null; clearInterval(tickerInt);
-  document.getElementById('app').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
-  document.getElementById('inp-p').value='';
-  document.getElementById('login-btn').disabled=false;
-  document.getElementById('login-btn').textContent='Access Intelligence';
-}
-
-// ── App start ─────────────────────────────────────────────────────────────
-function startApp(){
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('app').style.display='flex';
-  document.getElementById('tb-user').textContent=(profile.label||me).toUpperCase();
-  var tierEl=document.getElementById('tb-tier');
-  tierEl.textContent=profile.tier.toUpperCase();
-  tierEl.className='pill pill-tier '+profile.tier;
-  tierEl.style.display='block';
-  buildStreamTabs();
-  buildRegionFilter();
-  loadFeed();
-  loadAnalytics();
-  loadInbox();
-  startTicker();
-}
-
-// ── Stream tabs ───────────────────────────────────────────────────────────
-function buildStreamTabs(){
-  var wrap=document.getElementById('stream-tabs');
-  var allowed=profile.streams||[];
-  var all=profile.all_streams||[];
-  var html='<button class="stab on" onclick="switchStream(\'all\',this)">All <span class="stab-count" id="sc-all">—</span></button>';
-  all.forEach(function(s){
-    var def=STREAM_DEF[s]||{label:s,icon:'📡',col:'var(--blue)'};
-    var has=allowed.indexOf(s)>=0;
-    if(has){
-      html+='<button class="stab" onclick="switchStream(\''+s+'\',this)">'+def.icon+' '+def.label+' <span class="stab-count" id="sc-'+s+'">—</span></button>';
-    } else {
-      html+='<button class="stab locked" title="Upgrade to access '+def.label+'">🔒 '+def.label+'</button>';
-    }
-  });
-  wrap.innerHTML=html;
-}
-
-function switchStream(stream, el){
-  currentStream=stream;
-  document.querySelectorAll('.stab').forEach(function(t){t.classList.remove('on');});
-  if(el) el.classList.add('on');
-  loadFeed();
-}
-
-// ── Region filter ─────────────────────────────────────────────────────────
-function buildRegionFilter(){
-  var sel=document.getElementById('ff-reg');
-  var allowed=profile.regions||[];
-  sel.innerHTML='<option value="all">All Regions</option>';
-  allowed.forEach(function(r){
-    var label=ALL_REGIONS_MAP[r]||r;
-    var opt=document.createElement('option');
-    opt.value=r; opt.textContent=label;
-    sel.appendChild(opt);
-  });
-}
-
-// ── Filters ───────────────────────────────────────────────────────────────
-function applyFilters(){ renderFeed(); }
-
-function getSevFilter(){ return document.getElementById('ff-sev').value; }
-function getRegFilter(){ return document.getElementById('ff-reg').value; }
-
-function filterAlerts(arr){
-  return arr.filter(function(a){
-    var sev=getSevFilter();
-    if(sev==='critical'&&!(a.is_critical||a.score>=9)) return false;
-    if(sev==='high'&&a.score<7) return false;
-    if(sev==='medium'&&a.score<5) return false;
-    var reg=getRegFilter();
-    if(reg!=='all'&&a.region!==reg) return false;
-    return true;
-  });
-}
-
-// ── Ticker ────────────────────────────────────────────────────────────────
-function startTicker(){
-  clearInterval(tickerInt);
-  secsLeft=REFRESH_SEC;
-  updateTicker();
-  tickerInt=setInterval(function(){
-    secsLeft--;
-    if(secsLeft<=0){secsLeft=REFRESH_SEC;loadFeed();loadAnalytics();}
-    updateTicker();
-  },1000);
-}
-
-function updateTicker(){
-  var m=String(Math.floor(secsLeft/60)).padStart(2,'0');
-  var s=String(secsLeft%60).padStart(2,'0');
-  var el=document.getElementById('ff-countdown');
-  if(el) el.textContent='↺ '+m+':'+s;
-}
-
-// ── Load feed ─────────────────────────────────────────────────────────────
-function loadFeed(){
-  document.getElementById('feed-list').innerHTML='<div class="feed-loading">Loading intelligence feed…</div>';
-  var hrs=document.getElementById('ff-hrs').value;
-  var url=API+'/alerts?hours='+hrs+'&min_score=4&limit=200';
-  if(currentStream&&currentStream!=='all') url+='&stream='+currentStream;
-  var headers=tok?{'X-Feed-Token':tok}:{};
-  fetch(url,{headers:headers})
-  .then(function(r){if(r.status===401){doLogout();return null;}return r.json();})
-  .then(function(d){
-    if(!d)return;
-    alerts=d.alerts||[];
-    updateStreamCounts();
-    renderFeed();
-  })
-  .catch(function(e){
-    document.getElementById('feed-list').innerHTML='<div class="feed-loading" style="color:var(--critical)">Error: '+e.message+'</div>';
-  });
-}
-
-function updateStreamCounts(){
-  var counts={};
-  alerts.forEach(function(a){
-    var s=a.stream||'geographic';
-    counts[s]=(counts[s]||0)+1;
-  });
-  var allEl=document.getElementById('sc-all');
-  if(allEl) allEl.textContent=alerts.length;
-  Object.keys(counts).forEach(function(s){
-    var el=document.getElementById('sc-'+s);
-    if(el) el.textContent=counts[s];
-  });
-}
-
-// ── Render feed ───────────────────────────────────────────────────────────
-function sevInfo(score,crit){
-  if(crit||score>=9)return{c:'crit',l:'CRITICAL'};
-  if(score>=7)return{c:'high',l:'HIGH'};
-  if(score>=5)return{c:'med',l:'MEDIUM'};
-  return{c:'low',l:'LOW'};
-}
-function tierTag(t){
-  if(t===2)return'<span class="tier-badge tier-loc">LOCAL</span>';
-  if(t===1)return'<span class="tier-badge tier-reg">REGIONAL</span>';
-  return'<span class="tier-badge tier-wire">WIRE</span>';
-}
-function fmtTs(ts){
-  try{
-    var d=typeof ts==='number'?new Date(ts*1000):new Date(ts);
-    return d.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC';
-  }catch(e){return'';}
-}
-
-function renderFeed(){
-  var list=document.getElementById('feed-list');
-  var filtered=filterAlerts(alerts);
-  if(!filtered.length){
-    list.innerHTML='<div class="feed-empty"><h3>NO ALERTS</h3><p>No alerts match current filters.</p></div>';
-    return;
-  }
-  var html='';
-  filtered.forEach(function(a){
-    var s=sevInfo(a.score,a.is_critical);
-    var ents=a.entities||{};
-    var locs=(ents.locs||ents.locations||[]).slice(0,2).join(' · ');
-    var dom=a.source_domain||a.source_dom||'';
-    var isCorr=(a.source_count||1)>=2;
-    var sel=selectedId===a.id?' sel':'';
-    var streamDef=STREAM_DEF[a.stream||'geographic']||{col:'var(--blue)'};
-    html+='<div class="a-card'+sel+'" id="acard-'+a.id+'" onclick="selectAlert('+a.id+')">';
-    html+='<div class="a-flagbar">';
-    html+='<div class="a-sev '+s.c+'">'+s.l+'</div>';
-    html+='<div class="a-reg">'+(a.region||'').replace(/_/g,' ')+'</div>';
-    html+='<div class="a-scr">SCR<span>'+a.score+'</span></div>';
-    html+='<div class="a-time">'+fmtTs(a.ts_iso||a.ts)+'</div>';
-    html+='</div><div class="a-inner">';
-    html+='<div class="a-title">'+(a.title||'')+'</div>';
-    html+='<div class="a-meta">';
-    html+='<div class="stream-dot" style="background:'+streamDef.col+'"></div>';
-    html+='<span class="a-src">'+dom+'</span>';
-    html+=tierTag(a.source_tier||0);
-    if(isCorr) html+='<span class="corr-badge">✦ '+a.source_count+' SRC</span>';
-    if(locs) html+='<span class="locs-badge">📍 '+locs+'</span>';
-    html+='</div></div></div>';
-  });
-  list.innerHTML=html;
-}
-
-// ── Select alert ──────────────────────────────────────────────────────────
-function selectAlert(id){
-  selectedId=id;
-  document.querySelectorAll('.a-card').forEach(function(c){c.classList.remove('sel');});
-  var card=document.getElementById('acard-'+id);
-  if(card) card.classList.add('sel');
-  var a=alerts.find(function(x){return x.id===id;});
-  if(!a)return;
-
-  var s=sevInfo(a.score,a.is_critical);
-  var ents=a.entities||{};
-  var locs=ents.locs||ents.locations||[];
-  var orgs=ents.orgs||ents.organizations||[];
-  var dom=a.source_domain||a.source_dom||'';
-  var isCorr=(a.source_count||1)>=2;
-
-  document.getElementById('dd-ref').textContent='VGN · '+fmtTs(a.ts_iso||a.ts);
-  document.getElementById('dd-title').textContent=a.title||'';
-  document.getElementById('dd-precis').textContent=a.precis||a.title||'';
-  document.getElementById('dd-intel').innerHTML=
-    '<strong>Source</strong> '+dom+'<br>'+
-    '<strong>Tier</strong> '+(['Wire','Regional','Local Specialist'][a.source_tier||0])+'<br>'+
-    '<strong>Score</strong> '+a.score+'/12<br>'+
-    (isCorr?'<strong>Corr.</strong> '+a.source_count+' independent sources<br>':'')+
-    '<strong>Region</strong> '+(a.region||'').replace(/_/g,' ')+
-    (a.country?'<br><strong>Country</strong> '+a.country:'')+
-    (a.stream?'<br><strong>Stream</strong> '+(STREAM_DEF[a.stream]||{label:a.stream}).label:'');
-
-  if(locs.length){document.getElementById('dd-lsec').style.display='block';document.getElementById('dd-locs').textContent='📍 '+locs.join(' · ');}
-  else document.getElementById('dd-lsec').style.display='none';
-  if(orgs.length){document.getElementById('dd-esec').style.display='block';document.getElementById('dd-ents').textContent=orgs.slice(0,6).join(' · ');}
-  else document.getElementById('dd-esec').style.display='none';
-
-  var cols={crit:'var(--critical)',high:'var(--high)',med:'var(--blue)',low:'var(--low)'};
-  var bgs={crit:'rgba(239,68,68,.15)',high:'rgba(249,115,22,.12)',med:'rgba(59,130,246,.1)',low:'rgba(34,197,94,.08)'};
-  document.getElementById('dd-flags').innerHTML=
-    '<span class="tier-badge" style="background:'+bgs[s.c]+';color:'+cols[s.c]+';border:1px solid '+cols[s.c]+'">'+s.l+'</span>'+
-    (isCorr?'<span class="corr-badge">✦ CORROBORATED</span>':'');
-
-  var lnk=document.getElementById('dd-src-link');
-  lnk.href=a.url||'#';
-
-  document.getElementById('dd-art-sec').style.display='none';
-  document.getElementById('dd-article').textContent='';
-
-  openDrawer();
-}
-
-function openDrawer(){
-  document.getElementById('detail-drawer').classList.add('open');
-  document.getElementById('dd-overlay').classList.add('show');
-}
-function closeDrawer(){
-  document.getElementById('detail-drawer').classList.remove('open');
-  document.getElementById('dd-overlay').classList.remove('show');
-}
-
-function loadArticle(){
-  var a=alerts.find(function(x){return x.id===selectedId;});
-  if(!a)return;
-  var artSec=document.getElementById('dd-art-sec');
-  var artEl=document.getElementById('dd-article');
-  artSec.style.display='block';
-  artEl.textContent='Loading…';
-  fetch(API+'/alerts/'+a.id,{headers:tok?{'X-Feed-Token':tok}:{}})
-  .then(function(r){return r.json();})
-  .then(function(d){
-    artEl.textContent=d.article_text&&d.article_text.length>100
-      ?d.article_text
-      :(a.precis||'Full article not available. Open source link.');
-  })
-  .catch(function(){artEl.textContent=a.precis||'Article not available.';});
-}
-
-// ── Analytics ─────────────────────────────────────────────────────────────
-function loadAnalytics(){
-  var hrs=document.getElementById('ff-hrs').value;
-  var headers=tok?{'X-Feed-Token':tok}:{};
-
-  Promise.all([
-    fetch(API+'/analytics/trajectory?days='+Math.round(hrs/24),{headers:headers}).then(function(r){return r.json();}),
-    fetch(API+'/alerts?hours='+hrs+'&min_score=4&limit=500',{headers:headers}).then(function(r){return r.json();}),
-    fetch(API+'/watchlist/check?hours='+hrs,{headers:headers}).then(function(r){return r.json();}),
-    fetch(API+'/entities?hours='+hrs+'&etype=orgs&limit=10',{headers:headers}).then(function(r){return r.json();}),
-    fetch(API+'/entities?hours='+hrs+'&etype=locs&limit=10',{headers:headers}).then(function(r){return r.json();}),
-  ]).then(function(results){
-    var traj=results[0], alertsD=results[1], wl=results[2], orgs=results[3], locs=results[4];
-    renderAnalytics(traj, alertsD, wl, orgs, locs, hrs);
-  }).catch(function(){
-    document.getElementById('analytics-scroll').innerHTML=
-      '<div style="padding:20px;font-family:monospace;font-size:11px;color:var(--text3);text-align:center">Analytics loading…</div>';
-  });
-}
-
-
-function mobileTab(tab){
-  var feed=document.getElementById('feed-panel');
-  var analytics=document.getElementById('analytics-panel');
-  var inbox=document.getElementById('inbox-panel');
-  feed.classList.add('mobile-hide'); analytics.classList.remove('mobile-show'); inbox.style.display='none';
-  document.getElementById('mtab-feed').classList.remove('on');
-  document.getElementById('mtab-analytics').classList.remove('on');
-  if(document.getElementById('mtab-inbox')) document.getElementById('mtab-inbox').classList.remove('on');
-  if(tab==='feed'){feed.classList.remove('mobile-hide');document.getElementById('mtab-feed').classList.add('on');}
-  else if(tab==='analytics'){analytics.classList.add('mobile-show');document.getElementById('mtab-analytics').classList.add('on');}
-  else if(tab==='inbox'){inbox.style.display='flex';inbox.style.width='100%';if(document.getElementById('mtab-inbox'))document.getElementById('mtab-inbox').classList.add('on');loadInbox();}
-}
-
-function loadInbox(){
-  var scroll=document.getElementById('inbox-scroll');
-  if(!scroll)return;
-  scroll.innerHTML='<div style="font-family:monospace;font-size:11px;color:var(--text3);padding:20px;text-align:center">Loading…</div>';
-  var headers=tok?{'X-Feed-Token':tok}:{};
-  fetch(API+'/deliverables/client',{headers:headers})
-  .then(function(r){return r.json();})
-  .then(function(d){
-    var items=d.deliverables||[];
-    var unread=items.filter(function(i){return!i.viewed;}).length;
-    var badge=document.getElementById('inbox-badge');
-    if(badge){if(unread>0){badge.textContent=unread;badge.style.display='inline';}else badge.style.display='none';}
-    if(!items.length){
-      scroll.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;gap:10px;font-family:monospace;font-size:11px;color:var(--text3);text-align:center"><span style="font-size:24px">📬</span><span>Your inbox is empty.<br>Briefs and assessments<br>published to you appear here.</span></div>';
-      return;
-    }
-    var typeCls={brief:'ib-brief',assessment:'ib-assessment',digest:'ib-digest'};
-    var typeLabel={brief:'Brief',assessment:'Assessment',digest:'Digest'};
-    var typeIcon={brief:'📋',assessment:'🗺',digest:'📊'};
-    scroll.innerHTML='<div class="an-section"><div class="an-head"><span class="an-title">📬 Intelligence Inbox</span><span class="an-meta">'+items.length+' deliverable'+(items.length!==1?'s':'')+'</span></div><div class="an-body">'
-      +items.map(function(item){
-        var isUnread=!item.viewed;
-        var created=new Date(item.created_at*1000).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
-        return '<div class="inbox-card'+(isUnread?' unread':'')+'">'
-          +'<div class="inbox-card-head">'
-          +'<span class="inbox-type-badge '+typeCls[item.type]+'">'+typeIcon[item.type]+' '+(typeLabel[item.type]||item.type)+'</span>'
-          +'<div class="inbox-card-title">'+(item.title||'Intelligence Deliverable')+'</div>'
-          +(isUnread?'<div class="inbox-unread-dot"></div>':'')
-          +'</div>'
-          +'<div class="inbox-card-meta">'
-          +'<span class="inbox-meta-left">'+created+' · '+(item.time_remaining||'')+'</span>'
-          +'<a class="inbox-open-btn" href="'+API+'/view/'+item.token+'" target="_blank">Open →</a>'
-          +'</div></div>';
-      }).join('')
-    +'</div></div>';
-  })
-  .catch(function(e){
-    scroll.innerHTML='<div style="padding:16px;font-family:monospace;font-size:10px;color:var(--critical)">Error loading inbox: '+e.message+'</div>';
-  });
+  var col = document.getElementById('ancol-' + name);
+  if(col) col.classList.toggle('collapsed');
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────
