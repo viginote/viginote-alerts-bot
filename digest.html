@@ -363,9 +363,66 @@ window.addEventListener('afterprint',function(){
 <script>
 var _savedId=null,_savedToken=null;
 
+
+function getDigestReplicaStyle(){
+  var css = '';
+  document.querySelectorAll('style').forEach(function(styleTag){
+    css += '\n' + styleTag.innerHTML;
+  });
+  return css + `
+  :root{--bg:#0e1420;--bg2:#111827;--bg3:#151d2e;--bg4:#1a2540;--border:#1e2d4a;--border2:#243558;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--blue:#3b82f6;--blue-dim:#1d4ed8;--blue-pale:rgba(59,130,246,0.08);--low:#22c55e;--high:#f97316;--critical:#ef4444;}
+  body,.report-panel,.report-wrap,#report-body,.vgn-digest-export{background:#0e1420!important;color:#e2e8f0!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  .topbar,.input-panel,.report-topbar,.overlay,.pub-panel,.no-print{display:none!important;}
+  .report-wrap{max-width:860px!important;margin:0 auto!important;padding:0 28px 80px!important;}
+  .digest-header,.review-box,.story-card,.region-card,.watch-item,.stat-callout{background:#111827!important;border-color:#1e2d4a!important;break-inside:avoid!important;page-break-inside:avoid!important;}
+  .digest-title,.ds-head,.story-content .s-hl,.dh-stat .s-val{color:#e2e8f0!important;}
+  .story-content .s-sig,.review-box p,.rc-summary,.watch-item,.sc-text{color:#94a3b8!important;}
+  .dh-over,.dh-period,.story-content .s-region,.rc-region,.df-disc,.df-brand{color:#64748b!important;}
+  @media print{
+    body,.report-panel,.report-wrap,#report-body,.vgn-digest-export{background:#0e1420!important;color:#e2e8f0!important;}
+    .report-wrap{max-width:100%!important;padding:0 30px 40px!important;}
+    @page{size:A4;margin:0.5in 0.6in;}
+  }`;
+}
+
+function buildDigestReplicaPayload(raw){
+  var data = JSON.parse(JSON.stringify(raw || {}));
+  var reportBody = document.getElementById('report-body');
+  var reportHtml = reportBody ? reportBody.innerHTML : '';
+  var styleHtml = '<style>' + getDigestReplicaStyle() + '</style>';
+  var title = (data.digest_title || data.period || 'Weekly Intelligence Digest');
+  var safeTitle = String(title).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  var fullHtml = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>' + safeTitle + '</title>' + styleHtml + '</head><body><div class="report-panel"><div class="report-wrap"><div id="report-body" class="vgn-digest-export">' + reportHtml + '</div></div></div></body></html>';
+
+  data.__render_mode = 'direct_html_replica';
+  data.direct_replica = true;
+  data.report_body_html = reportHtml;
+  data.report_html = reportHtml;
+  data.rendered_html = reportHtml;
+  data.content_html = reportHtml;
+  data.html = reportHtml;
+  data.direct_replica_html = fullHtml;
+  data.full_document_html = fullHtml;
+  data.report_css = getDigestReplicaStyle();
+  data.print_css = getDigestReplicaStyle();
+  data.pdf_theme = 'dark';
+  data.print_background = true;
+  data.saved_at = new Date().toISOString();
+
+  // Compatibility fields for older view renderers.
+  data.executive_summary = data.week_in_review || data.executive_summary || '';
+  data.summary = data.week_in_review || data.summary || '';
+  data.content = data.week_in_review || data.content || '';
+  data.regional_summaries = data.regional_summaries || data.regional_roundup || [];
+  return data;
+}
+
+
 async function saveDigest(){
-  var data=window._lastDigestData;
-  if(!data)return;
+  var sourceData = window._lastDigestData;
+  if(!sourceData)return;
+  var data = buildDigestReplicaPayload(sourceData);
+  window._lastDigestData = data;
   var saveBtn=document.getElementById('dg-save-btn');
   if(saveBtn){saveBtn.textContent='☁ Saving…';saveBtn.disabled=true;}
   try{
@@ -376,18 +433,32 @@ async function saveDigest(){
         type:'digest',
         title:(data.digest_title||data.period||'Weekly Intelligence Digest'),
         content:data,
+        report_body_html:data.report_body_html,
+        report_html:data.report_html,
+        rendered_html:data.rendered_html,
+        content_html:data.content_html,
+        direct_replica_html:data.direct_replica_html,
+        full_document_html:data.full_document_html,
+        report_css:data.report_css,
+        print_css:data.print_css,
+        pdf_theme:'dark',
+        print_background:true,
         clients:[],
-        one_off:false,
+        one_off:false
       })
     });
     var d=await r.json();
+    if(!r.ok) throw new Error(d.detail || d.message || 'Save failed');
     if(d.id){
       _savedId=d.id;_savedToken=d.token;
       if(saveBtn){saveBtn.textContent='☁ Saved';saveBtn.disabled=false;}
       document.getElementById('pub-link-url').textContent=window.location.origin+'/view/'+d.token;
       document.getElementById('pub-link-box').classList.add('show');
     }
-  }catch(e){if(saveBtn){saveBtn.textContent='☁ Save';saveBtn.disabled=false;}}
+  }catch(e){
+    if(saveBtn){saveBtn.textContent='☁ Save';saveBtn.disabled=false;}
+    showPubMsg('Save error: '+e.message,'err');
+  }
 }
 
 async function openPublish(){
@@ -406,14 +477,29 @@ async function openPublish(){
 function closePublish(){document.getElementById('pub-panel').classList.remove('show');}
 
 async function publishDigest(){
+  if(!_savedId){await saveDigest();}
   if(!_savedId){showPubMsg('Save first.','err');return;}
   var selected=[...document.querySelectorAll('.pub-client-item.selected')].map(el=>el.id.replace('pci-',''));
   if(!selected.length){showPubMsg('Select at least one client.','err');return;}
   try{
+    var data = buildDigestReplicaPayload(window._lastDigestData || {});
     await fetch(window.location.origin+'/deliverables/'+_savedId+'/publish',{
       method:'POST',credentials:'include',
       headers:{'Content-Type':'application/json','X-Feed-Token':sessionStorage.getItem('vgn_t')||''},
-      body:JSON.stringify({clients:selected})
+      body:JSON.stringify({
+        clients:selected,
+        content:data,
+        report_body_html:data.report_body_html,
+        report_html:data.report_html,
+        rendered_html:data.rendered_html,
+        content_html:data.content_html,
+        direct_replica_html:data.direct_replica_html,
+        full_document_html:data.full_document_html,
+        report_css:data.report_css,
+        print_css:data.print_css,
+        pdf_theme:'dark',
+        print_background:true
+      })
     });
     showPubMsg('Published to '+selected.length+' client'+(selected.length!==1?'s':'')+'.','ok');
     setTimeout(closePublish,3000);
