@@ -181,46 +181,199 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
 #panel-clients.active{display:flex}
 
 /* Publish modal */
-.pub-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);
-  z-index:500;display:none;align-items:center;justify-content:center;
-  backdrop-filter:blur(4px)}
-.pub-modal-overlay.show{display:flex}
-.pub-modal{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;
-  width:100%;max-width:420px;padding:24px;position:relative}
-.pub-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,var(--blue-dim),var(--blue));border-radius:10px 10px 0 0}
-.pm-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
-  color:var(--text);margin-bottom:16px}
-.pm-sub{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);
-  margin-bottom:12px;padding:8px 12px;background:rgba(59,130,246,.06);
-  border:1px solid rgba(59,130,246,.15);border-radius:4px}
-.pm-client-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;
-  max-height:220px;overflow-y:auto}
-.pm-client-item{display:flex;align-items:center;gap:10px;padding:9px 12px;
-  background:rgba(255,255,255,.03);border:1px solid var(--border);
-  border-radius:5px;cursor:pointer;transition:all .15s}
-.pm-client-item:hover{border-color:var(--border2)}
-.pm-client-item.on{border-color:var(--blue);background:var(--blue-pale)}
-.pm-client-name{font-size:12px;font-weight:500;color:var(--text);flex:1}
-.pm-client-tier{font-family:'JetBrains Mono',monospace;font-size:8px;
-  padding:1px 6px;border-radius:2px;background:rgba(59,130,246,.1);color:var(--blue)}
-.pm-link{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue);
-  padding:8px 12px;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);
-  border-radius:4px;margin-bottom:14px;word-break:break-all;cursor:pointer;display:none}
-.pm-link.show{display:block}
-.pm-actions{display:flex;gap:8px}
-.pm-btn{flex:1;padding:10px;border-radius:5px;font-family:'Syne',sans-serif;
-  font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s}
-.pm-btn-blue{background:var(--blue-dim);color:#fff}
-.pm-btn-blue:hover{background:var(--blue)}
-.pm-btn-ghost{background:transparent;color:var(--text3);border:1px solid var(--border2)}
-.pm-btn-ghost:hover{border-color:var(--blue);color:var(--blue)}
-.pm-msg{font-family:'JetBrains Mono',monospace;font-size:10px;margin-top:10px;
-  padding:7px 10px;border-radius:4px;display:none}
-.pm-msg.ok{background:var(--low-bg);color:var(--low);border:1px solid var(--low-border)}
-.pm-msg.err{background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border)}
+async function openPubModal(delId, titleEncoded){
+  var title = decodeURIComponent(titleEncoded||'');
+  publishingId = delId;
 
+  document.getElementById('pm-del-info').textContent =
+    title || 'Deliverable';
 
+  document.getElementById('pm-msg').style.display = 'none';
+
+  document.getElementById('pm-link').classList.remove('show');
+
+  document.getElementById('pub-overlay').classList.add('show');
+
+  var list = document.getElementById('pm-client-list');
+
+  list.innerHTML =
+    '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--text3);text-align:center;padding:10px">Loading&#x2026;</div>';
+
+  try{
+
+    // Load clients
+    var r = await fetch(API+'/admin/clients',{
+      credentials:'include'
+    });
+
+    var d = await r.json();
+
+    var clients = (d.clients||[])
+      .filter(function(c){
+        return c.username !== 'viginote_admin';
+      });
+
+    // Load deliverable info
+    var dr = await fetch(API+'/deliverables/'+delId,{
+      credentials:'include'
+    });
+
+    var dd = await dr.json();
+
+    var existingClients = dd.clients || [];
+
+    // Public link
+    var linkEl = document.getElementById('pm-link');
+
+    linkEl.textContent = API+'/view/'+(dd.token||'');
+
+    linkEl.classList.add('show');
+
+    // No clients
+    if(!clients.length){
+
+      list.innerHTML =
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--text3);text-align:center;padding:10px">No clients yet. Add via Client Manager.</div>';
+
+      return;
+    }
+
+    // IMPORTANT:
+    // DO NOT auto-select existing clients
+    list.innerHTML = clients.map(function(c){
+
+      var already =
+        existingClients.indexOf(c.username) >= 0;
+
+      return '<div class="pm-client-item" id="pm-ci-'+c.username+'" onclick="this.classList.toggle(\'on\')">'
+        +'<div class="pm-client-name">'
+          +(c.label||c.username)
+          +(already
+            ? ' <span style="color:var(--low);font-size:9px">· already published</span>'
+            : '')
+        +'</div>'
+        +'<span class="pm-client-tier">'
+          +(c.tier||'analyst').toUpperCase()
+        +'</span>'
+      +'</div>';
+
+    }).join('');
+
+  }catch(e){
+
+    list.innerHTML =
+      '<div style="color:var(--critical);font-family:\'JetBrains Mono\',monospace;font-size:10px;padding:10px">Error: '
+      +e.message+
+      '</div>';
+  }
+}
+
+function closePubModal(){
+  document.getElementById('pub-overlay').classList.remove('show');
+  publishingId = null;
+}
+
+document.getElementById('pub-overlay').addEventListener('click',function(e){
+  if(e.target===this) closePubModal();
+});
+
+async function confirmPublish(){
+
+  if(!publishingId) return;
+
+  var selected = [...document.querySelectorAll('.pm-client-item.on')]
+    .map(function(el){
+      return el.id.replace('pm-ci-','');
+    });
+
+  if(!selected.length){
+
+    showPmMsg(
+      'Select at least one client.',
+      'err'
+    );
+
+    return;
+  }
+
+  try{
+
+    var r = await fetch(
+      API+'/deliverables/'+publishingId+'/publish',
+      {
+        method:'POST',
+        credentials:'include',
+        headers:{
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify({
+          clients:selected
+        })
+      }
+    );
+
+    var d = await r.json();
+
+    if(!r.ok){
+      throw new Error(
+        d.detail || 'Publish failed'
+      );
+    }
+
+    showPmMsg(
+      'Published to '
+      +selected.length+
+      ' client'
+      +(selected.length!==1?'s':'')
+      +'. Active immediately.',
+      'ok'
+    );
+
+    setTimeout(function(){
+
+      closePubModal();
+
+      loadDeliverables();
+
+    },2500);
+
+  }catch(e){
+
+    showPmMsg(
+      'Error: '+e.message,
+      'err'
+    );
+  }
+}
+
+function copyPmLink(){
+
+  var el = document.getElementById('pm-link');
+
+  navigator.clipboard.writeText(el.textContent)
+  .then(function(){
+
+    var orig = el.textContent;
+
+    el.textContent = '✓ Copied!';
+
+    setTimeout(function(){
+      el.textContent = orig;
+    },2000);
+
+  });
+}
+
+function showPmMsg(msg,type){
+
+  var el = document.getElementById('pm-msg');
+
+  el.textContent = msg;
+
+  el.className = 'pm-msg '+type;
+
+  el.style.display = 'block';
+}
 /* ── ADMIN LIVE FEED REFINEMENT ── */
 .admin-feed-shell{flex:1;display:flex;overflow:hidden;min-height:0;background:var(--bg)}
 .admin-feed-list{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;max-width:100%}
