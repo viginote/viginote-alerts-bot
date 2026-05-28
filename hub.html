@@ -481,6 +481,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
 
 <script>
 var API = window.location.origin;
+window.addEventListener('error', function(e){
+  console.error('[HUB ERROR]', e.message, e.filename, e.lineno);
+});
+window.addEventListener('unhandledrejection', function(e){
+  console.error('[HUB PROMISE ERROR]', e.reason);
+});
 var currentPanel = 'dashboard';
 var allDeliverables = [];
 var currentDelFilter = 'all';
@@ -662,7 +668,7 @@ function renderDeliverables(){
       +'</div>'
       +'<div class="del-actions">'
         +'<a class="del-btn del-btn-view" href="'+API+'/view/'+d.token+'" target="_blank">View</a>'
-        +'<button class="del-btn del-btn-publish" onclick="openPubModal(\''+d.id+'\','+JSON.stringify(d.title||'').replace(/'/g,"\\'")+')">Publish</button>'
+        +'<button class="del-btn del-btn-publish" data-del-id="'+escapeHtml(d.id)+'" data-del-title="'+escapeHtml(d.title||'')+'" onclick="openPubModalFromBtn(this)">Publish</button>'
         +'<button class="del-btn del-btn-delete" onclick="deleteDeliverable(\''+d.id+'\')">✕</button>'
       +'</div>'
       +'</div>';
@@ -678,6 +684,11 @@ async function deleteDeliverable(id){
 }
 
 // ── PUBLISH MODAL ─────────────────────────────────────────────────────────
+function openPubModalFromBtn(btn){
+  if(!btn) return;
+  openPubModal(btn.getAttribute('data-del-id'), btn.getAttribute('data-del-title') || '');
+}
+
 async function openPubModal(delId, title){
   publishingId = delId;
 
@@ -930,7 +941,7 @@ function renderCmForm(c,isNew){
     +'<div><span style="'+lbl+'">Regions <span id="cf-rl" style="color:var(--blue);font-weight:400">(max '+lim.regions+')</span></span><div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px" id="cf-regions">'+regionsHtml+'</div></div>'
     +'<div id="cf-cw"></div>'
     +'<div><span style="'+lbl+'">Watchlist — type and press Enter</span>'
-    +'<div id="cf-ww" style="display:flex;flex-wrap:wrap;gap:5px;padding:8px;background:rgba(255,255,255,.03);border:1px solid var(--border2);border-radius:5px;min-height:44px;cursor:text" onclick="document.getElementById('cf-wi').focus()">'
+    +'<div id="cf-ww" style="display:flex;flex-wrap:wrap;gap:5px;padding:8px;background:rgba(255,255,255,.03);border:1px solid var(--border2);border-radius:5px;min-height:44px;cursor:text" onclick="document.getElementById(\'cf-wi\').focus()">'
     +'<input id="cf-wi" style="border:none;background:transparent;outline:none;font-family:monospace;font-size:11px;color:var(--text);min-width:120px;flex:1;padding:2px 4px" placeholder="Gaza, Sudan, RSF…" autocorrect="off">'
     +'</div></div>'
     +'<div style="display:flex;gap:8px">'
@@ -1175,8 +1186,6 @@ loadDashboard();
 setInterval(loadDashboard, 120000);
 </script>
 
-<!-- CLIENT MANAGER SCRIPTS -->
-<script src="/static/client-manager.js" onerror="console.log('CM script optional')"></script>
 
 </body>
 </html>
