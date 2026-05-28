@@ -838,22 +838,124 @@ body.vgn-direct-assessment-view .crime-card.full{grid-column:1/-1!important;}
 
 // ── DIGEST RENDERER ───────────────────────────────────────────────────────
 function renderDigest(wrap, g){
+  /*
+    Direct digest replica support.
+    The Weekly Digest Studio saves exact rendered HTML + CSS.
+    Use that first so the client portal mirrors the admin digest output.
+    Fall back to the older digest renderer only for old saved digests.
+  */
+  g = g || {};
+
+  function pickDigest(){
+    for(var i=0;i<arguments.length;i++){
+      if(arguments[i] && typeof arguments[i] === 'string' && arguments[i].trim()) return arguments[i];
+    }
+    return '';
+  }
+
+  function extractDigestBodyFromFullHtml(html){
+    if(!html) return '';
+    try{
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      var rb = doc.querySelector('#report-body') || doc.querySelector('.vgn-digest-export') || doc.body;
+      return rb ? rb.innerHTML : html;
+    }catch(e){
+      var m = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+      return m ? m[1] : html;
+    }
+  }
+
+  var replicaCss = pickDigest(
+    g.report_css,
+    g.print_css,
+    DATA.report_css,
+    DATA.print_css,
+    DATA.content && DATA.content.report_css,
+    DATA.content && DATA.content.print_css
+  );
+
+  var replicaBody = pickDigest(
+    g.report_body_html,
+    g.report_html,
+    g.rendered_html,
+    g.content_html,
+    g.html,
+    DATA.report_body_html,
+    DATA.report_html,
+    DATA.rendered_html,
+    DATA.content_html,
+    DATA.html
+  );
+
+  var fullReplica = pickDigest(
+    g.direct_replica_html,
+    g.full_document_html,
+    DATA.direct_replica_html,
+    DATA.full_document_html
+  );
+
+  if(!replicaBody && fullReplica){
+    replicaBody = extractDigestBodyFromFullHtml(fullReplica);
+  }
+
+  if(replicaBody){
+    document.body.classList.add('vgn-direct-digest-view');
+    var styleId = 'vgn-digest-replica-style';
+    var oldStyle = document.getElementById(styleId);
+    if(oldStyle) oldStyle.remove();
+
+    var style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = replicaCss + `
+:root{
+  --bg:#0e1420;--bg2:#111827;--bg3:#151d2e;--bg4:#1a2540;
+  --border:#1e2d4a;--border2:#243558;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+  --blue:#3b82f6;--blue-dim:#1d4ed8;--blue-pale:rgba(59,130,246,0.08);
+  --low:#22c55e;--high:#f97316;--critical:#ef4444;
+}
+body.vgn-direct-digest-view{background:#0e1420!important;color:#e2e8f0!important;font-family:'Inter',sans-serif!important;}
+body.vgn-direct-digest-view .content-wrap{max-width:920px!important;margin:0 auto!important;padding:32px 32px 80px!important;background:#0e1420!important;}
+body.vgn-direct-digest-view .vgn-digest-client-replica{background:#0e1420!important;}
+body.vgn-direct-digest-view .report-panel{background:#0e1420!important;overflow:visible!important;}
+body.vgn-direct-digest-view .report-wrap{max-width:860px!important;margin:0 auto!important;padding:0 28px 80px!important;background:#0e1420!important;}
+body.vgn-direct-digest-view #report-body{background:#0e1420!important;color:#e2e8f0!important;}
+body.vgn-direct-digest-view .digest-header,
+body.vgn-direct-digest-view .review-box,
+body.vgn-direct-digest-view .story-card,
+body.vgn-direct-digest-view .region-card,
+body.vgn-direct-digest-view .watch-item,
+body.vgn-direct-digest-view .stat-callout{background:#111827!important;border-color:#1e2d4a!important;}
+@media print{
+  body.vgn-direct-digest-view .view-bar{display:none!important;}
+  body.vgn-direct-digest-view{background:#0e1420!important;color:#e2e8f0!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  body.vgn-direct-digest-view .content-wrap{max-width:100%!important;padding:0 30px 40px!important;margin:0!important;}
+  body.vgn-direct-digest-view .report-wrap{max-width:100%!important;padding:0!important;margin:0!important;}
+  body.vgn-direct-digest-view *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+}`;
+    document.head.appendChild(style);
+
+    wrap.innerHTML = '<div class="vgn-digest-client-replica"><div class="report-panel"><div class="report-wrap"><div id="report-body" class="vgn-digest-export">' + replicaBody + '</div></div></div></div>';
+    return;
+  }
+
   var html='<div class="digest-wrap">';
   html+='<div class="digest-header">';
   html+='<h1>'+(g.digest_title||DATA.title||'Weekly Intelligence Digest')+'</h1>';
   html+='<p>'+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}).toUpperCase()+' · VIGINOTE INTELLIGENCE</p>';
-  if(g.executive_summary)html+='<p style="font-size:0.95rem;color:var(--mist);margin-top:16px;line-height:1.7">'+g.executive_summary+'</p>';
+  if(g.executive_summary||g.week_in_review)html+='<p style="font-size:0.95rem;color:var(--mist);margin-top:16px;line-height:1.7">'+(g.executive_summary||g.week_in_review)+'</p>';
   html+='</div>';
 
-  if(g.regional_summaries&&g.regional_summaries.length){
-    g.regional_summaries.forEach(function(r){
+  var regions = g.regional_summaries || g.regional_roundup || [];
+  if(regions&&regions.length){
+    regions.forEach(function(r){
       html+='<div class="digest-region">';
       html+='<div class="digest-region-head">'+(r.region||'').replace(/_/g,' ')+'</div>';
       html+='<div class="digest-region-body">'+(r.summary||r.content||'')+'</div>';
       html+='</div>';
     });
-  } else if(g.content||g.summary){
-    html+='<div class="art-text"><p>'+(g.content||g.summary||'')+'</p></div>';
+  } else if(g.content||g.summary||g.week_in_review){
+    html+='<div class="art-text"><p>'+(g.content||g.summary||g.week_in_review||'')+'</p></div>';
   }
 
   html+='<div style="margin-top:28px;padding-top:16px;border-top:1px solid rgba(59,139,196,0.1);font-family:var(--mono);font-size:9px;color:var(--wire);letter-spacing:1.5px;text-transform:uppercase;text-align:center">';
