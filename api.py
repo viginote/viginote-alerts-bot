@@ -572,6 +572,8 @@ class ClientProfile(BaseModel):
     password:        str
     tier:            str = "analyst"
     regions:         list[str] = []
+    countries:       list[str] = []
+    streams:         list[str] = []
     watchlist:       list[str] = []
     brief_allowance: int = 2
     label:           str = ""
@@ -588,14 +590,16 @@ async def upsert_client(req: ClientProfile, request: Request):
     regions = req.regions if req.tier in ("admin","enterprise") else req.regions[:limits["regions"]]
     watchlist = req.watchlist if limits["watchlist"] == -1 else req.watchlist[:limits["watchlist"]]
     clients[ukey] = {
-        "password":        req.password,
-        "tier":            req.tier,
-        "regions":         regions,
-        "watchlist":       watchlist,
-        "brief_allowance": req.brief_allowance if limits["briefs"] == -1 else min(req.brief_allowance, limits["briefs"]),
-        "briefs_used":     clients.get(ukey, {}).get("briefs_used", 0),
-        "label":           req.label or req.username.replace("_"," ").title(),
-    }
+    "password":        req.password,
+    "tier":            req.tier,
+    "regions":         regions,
+    "countries":       req.countries,
+    "streams":         req.streams if req.streams else ["geographic"],
+    "watchlist":       watchlist,
+    "brief_allowance": req.brief_allowance if limits["briefs"] == -1 else min(req.brief_allowance, limits["briefs"]),
+    "briefs_used":     clients.get(ukey, {}).get("briefs_used", 0),
+    "label":           req.label or req.username.replace("_"," ").title(),
+}
     _save_clients(clients)
     return {"status": "ok", "username": ukey, "profile": clients[ukey]}
 
