@@ -572,18 +572,23 @@ var ALL_REGIONS_MAP = {
   'SOUTHERN_AFRICA':'S Africa','SOUTH_AMERICA':'S America'
 };
 var STREAM_DEF = {
-  geographic: { label: '🌍 Geographic', color: '#3b82f6', bg: 'rgba(59,130,246,.10)', border: 'rgba(59,130,246,.25)' },
-  maritime:   { label: '⚓ Maritime',   color: '#06b6d4', bg: 'rgba(6,182,212,.10)',  border: 'rgba(6,182,212,.25)' },
-  cyber:      { label: '💻 Cyber',      color: '#a855f7', bg: 'rgba(168,85,247,.10)', border: 'rgba(168,85,247,.25)' },
-  economic:   { label: '📊 Economic',   color: '#f59e0b', bg: 'rgba(245,158,11,.10)', border: 'rgba(245,158,11,.25)' },
-  political:  { label: '🗳 Political',  color: '#f97316', bg: 'rgba(249,115,22,.10)', border: 'rgba(249,115,22,.25)' },
-  executive:  { label: '🛡 Executive',  color: '#22c55e', bg: 'rgba(34,197,94,.10)',  border: 'rgba(34,197,94,.25)' }
+  geographic: { icon:'🌍', label:'Geographic', color:'#3b82f6', col:'#3b82f6', bg:'rgba(59,130,246,.10)', border:'rgba(59,130,246,.25)' },
+  maritime:   { icon:'⚓', label:'Maritime',   color:'#06b6d4', col:'#06b6d4', bg:'rgba(6,182,212,.10)',  border:'rgba(6,182,212,.25)' },
+  cyber:      { icon:'💻', label:'Cyber',      color:'#a855f7', col:'#a855f7', bg:'rgba(168,85,247,.10)', border:'rgba(168,85,247,.25)' },
+  economic:   { icon:'📊', label:'Economic',   color:'#f59e0b', col:'#f59e0b', bg:'rgba(245,158,11,.10)', border:'rgba(245,158,11,.25)' },
+  political:  { icon:'🗳', label:'Political',  color:'#f97316', col:'#f97316', bg:'rgba(249,115,22,.10)', border:'rgba(249,115,22,.25)' },
+  executive:  { icon:'🛡', label:'Executive',  color:'#22c55e', col:'#22c55e', bg:'rgba(34,197,94,.10)',  border:'rgba(34,197,94,.25)' }
 };
 
 function streamStyle(stream){
-  return STREAM_STYLE[stream || 'geographic'] || STREAM_STYLE.geographic;
+  return STREAM_DEF[stream || 'geographic'] || STREAM_DEF.geographic;
 }
-};
+
+function streamBadge(stream){
+  var st = streamStyle(stream);
+  return '<span class="tier-badge" style="color:'+st.color+';background:'+st.bg+';border:1px solid '+st.border+'">'
+    + st.icon + ' ' + st.label.toUpperCase() + '</span>';
+}
 
 // ── Auth ──────────────────────────────────────────────────────────────────
 function togglePw(){
@@ -804,7 +809,7 @@ function renderFeed(){
     var dom=a.source_domain||a.source_dom||'';
     var isCorr=(a.source_count||1)>=2;
     var sel=selectedId===a.id?' sel':'';
-    var streamDef=STREAM_DEF[a.stream||'geographic']||{col:'var(--blue)'};
+    var streamDef=streamStyle(a.stream);
     html+='<div class="a-card'+sel+'" id="acard-'+a.id+'" onclick="selectAlert('+a.id+')">';
     html+='<div class="a-flagbar">';
     html+='<div class="a-sev '+s.c+'">'+s.l+'</div>';
@@ -816,6 +821,7 @@ function renderFeed(){
     html+='<div class="a-meta">';
     html+='<div class="stream-dot" style="background:'+streamDef.col+'"></div>';
     html+='<span class="a-src">'+dom+'</span>';
+    html+=streamBadge(a.stream);
     html+=tierTag(a.source_tier||0);
     if(isCorr) html+='<span class="corr-badge">✦ '+a.source_count+' SRC</span>';
     if(locs) html+='<span class="locs-badge">📍 '+locs+'</span>';
@@ -850,7 +856,7 @@ function selectAlert(id){
     (isCorr?'<strong>Corr.</strong> '+a.source_count+' independent sources<br>':'')+
     '<strong>Region</strong> '+(a.region||'').replace(/_/g,' ')+
     (a.country?'<br><strong>Country</strong> '+a.country:'')+
-    (a.stream?'<br><strong>Stream</strong> '+(STREAM_DEF[a.stream]||{label:a.stream}).label:'');
+    (a.stream?'<br><strong>Stream</strong> '+streamStyle(a.stream).icon+' '+streamStyle(a.stream).label:'');
 
   if(locs.length){document.getElementById('dd-lsec').style.display='block';document.getElementById('dd-locs').textContent='📍 '+locs.join(' · ');}
   else document.getElementById('dd-lsec').style.display='none';
