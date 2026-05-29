@@ -572,12 +572,17 @@ var ALL_REGIONS_MAP = {
   'SOUTHERN_AFRICA':'S Africa','SOUTH_AMERICA':'S America'
 };
 var STREAM_DEF = {
-  'geographic':{label:'Geographic',icon:'🌍',col:'#3b82f6'},
-  'maritime':  {label:'Maritime', icon:'⚓',col:'#06b6d4'},
-  'cyber':     {label:'Cyber',    icon:'💻',col:'#a855f7'},
-  'economic':  {label:'Economic', icon:'📊',col:'#f59e0b'},
-  'political': {label:'Political',icon:'🗳',col:'#f97316'},
-  'executive': {label:'Exec',     icon:'🛡',col:'#22c55e'},
+  geographic: { label: '🌍 Geographic', color: '#3b82f6', bg: 'rgba(59,130,246,.10)', border: 'rgba(59,130,246,.25)' },
+  maritime:   { label: '⚓ Maritime',   color: '#06b6d4', bg: 'rgba(6,182,212,.10)',  border: 'rgba(6,182,212,.25)' },
+  cyber:      { label: '💻 Cyber',      color: '#a855f7', bg: 'rgba(168,85,247,.10)', border: 'rgba(168,85,247,.25)' },
+  economic:   { label: '📊 Economic',   color: '#f59e0b', bg: 'rgba(245,158,11,.10)', border: 'rgba(245,158,11,.25)' },
+  political:  { label: '🗳 Political',  color: '#f97316', bg: 'rgba(249,115,22,.10)', border: 'rgba(249,115,22,.25)' },
+  executive:  { label: '🛡 Executive',  color: '#22c55e', bg: 'rgba(34,197,94,.10)',  border: 'rgba(34,197,94,.25)' }
+};
+
+function streamStyle(stream){
+  return STREAM_STYLE[stream || 'geographic'] || STREAM_STYLE.geographic;
+}
 };
 
 // ── Auth ──────────────────────────────────────────────────────────────────
