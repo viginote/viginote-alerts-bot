@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VigiNote — Deep Analysis Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080c14;--bg2:#0e1420;--bg3:#111827;--bg4:#151d2e;
+  --border:#1e2d4a;--border2:#243558;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--text4:#334155;
+  --blue:#3b82f6;--blue-dim:#1d4ed8;--blue-pale:rgba(59,130,246,0.1);
+  --low:#22c55e;--low-bg:rgba(34,197,94,0.1);--low-border:rgba(34,197,94,0.2);
+  --critical:#ef4444;--critical-bg:rgba(239,68,68,0.1);--critical-border:rgba(239,68,68,0.2);
+  --medium:#f59e0b;--high:#f97316;
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'Barlow Condensed',sans-serif;
+  --body:'Barlow',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+html,body{height:100%;-webkit-font-smoothing:antialiased}
+body{font-family:var(--body);background:var(--bg);color:var(--text);
+  display:flex;flex-direction:column;font-weight:300}
+
+/* ── TOPBAR ── */
+.topbar{height:52px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0}
+.tb-brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.tb-wordmark{font-family:var(--sans);font-size:15px;font-weight:700;letter-spacing:3px;color:var(--text)}
+.tb-sub{font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--text3);display:block;text-transform:uppercase}
+.tb-btn{padding:5px 11px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;
+  border:1px solid var(--border2);background:transparent;color:var(--text3);
+  font-family:var(--mono);transition:all .15s;letter-spacing:.5px;text-decoration:none}
+.tb-btn:hover{border-color:var(--blue);color:var(--blue)}
+.gen-btn{padding:8px 20px;border-radius:5px;font-family:var(--sans);font-size:13px;
+  font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s;
+  background:var(--blue-dim);color:#fff}
+.gen-btn:hover{background:var(--blue)}
+.gen-btn:disabled{opacity:.5;cursor:not-allowed}
+.gen-btn.generating{animation:pulse-btn 1.5s infinite}
+@keyframes pulse-btn{0%,100%{opacity:1}50%{opacity:.6}}
+
+/* ── LAYOUT ── */
+.app-body{flex:1;display:flex;overflow:hidden}
+
+/* ── LEFT PANEL ── */
+.lp{width:300px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden}
+.lp-head{padding:16px 18px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.lp-title{font-family:var(--sans);font-size:13px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--text);margin-bottom:4px}
+.lp-desc{font-family:var(--mono);font-size:9px;color:var(--text3);line-height:1.6}
+.lp-body{flex:1;overflow-y:auto;padding:12px}
+.lp-section{margin-bottom:14px}
+.lp-label{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--text3);margin-bottom:6px;display:block}
+.lp-input{width:100%;padding:9px 12px;background:rgba(255,255,255,.04);
+  border:1px solid var(--border2);border-radius:5px;font-family:var(--mono);
+  font-size:12px;color:var(--text);outline:none;transition:border-color .15s;resize:none}
+.lp-input:focus{border-color:var(--blue)}
+.lp-input::placeholder{color:var(--text4)}
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.type-btn{padding:9px 8px;border:1px solid var(--border2);border-radius:5px;
+  cursor:pointer;transition:all .15s;text-align:center;background:transparent}
+.type-btn:hover{border-color:var(--border2);background:rgba(255,255,255,.03)}
+.type-btn.on{border-color:var(--blue);background:var(--blue-pale)}
+.type-btn-icon{font-size:18px;margin-bottom:4px}
+.type-btn-label{font-family:var(--mono);font-size:9px;font-weight:700;
+  letter-spacing:.5px;color:var(--text2);display:block}
+.type-btn.on .type-btn-label{color:var(--blue)}
+.horizon-grid{display:flex;gap:4px}
+.hz-btn{flex:1;padding:7px 4px;border:1px solid var(--border2);border-radius:4px;
+  cursor:pointer;font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.5px;
+  color:var(--text3);background:transparent;transition:all .15s;text-align:center}
+.hz-btn.on{border-color:var(--blue);background:var(--blue-pale);color:var(--blue)}
+.depth-toggle{display:flex;background:var(--bg3);border:1px solid var(--border);
+  border-radius:5px;overflow:hidden}
+.depth-opt{flex:1;padding:8px;font-family:var(--mono);font-size:9px;font-weight:700;
+  letter-spacing:.5px;text-align:center;cursor:pointer;color:var(--text3);transition:all .15s}
+.depth-opt.on{background:var(--blue-dim);color:#fff}
+.lp-footer{padding:12px;border-top:1px solid var(--border);flex-shrink:0}
+.alert-ctx{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);
+  border-radius:4px;padding:8px 10px;font-family:var(--mono);font-size:9px;
+  color:var(--blue);margin-bottom:10px;display:none}
+.alert-ctx.show{display:block}
+
+/* ── RIGHT PANEL ── */
+.rp{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.rp-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;
+  background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
+.rp-status{font-family:var(--mono);font-size:9px;color:var(--text3);margin-right:auto}
+.rp-body{flex:1;overflow-y:auto;background:var(--bg)}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;gap:16px;color:var(--text3);text-align:center;padding:40px}
+.es-icon{font-size:48px;margin-bottom:8px}
+.es-title{font-family:var(--sans);font-size:20px;font-weight:700;color:var(--text2);letter-spacing:1px}
+.es-desc{font-family:var(--mono);font-size:11px;line-height:1.8;max-width:400px}
+
+/* ── REPORT STYLES ── */
+.report-wrap{max-width:860px;margin:0 auto;padding:40px 32px 80px}
+
+.r-header{background:var(--bg2);border:1px solid var(--border);margin-bottom:24px}
+.r-header-top{background:var(--bg);padding:20px 28px;display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.r-org{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--blue)}
+.r-class{font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:4px}
+.r-date{font-family:var(--mono);font-size:9px;color:var(--text3);text-align:right;line-height:2}
+.r-class-bar{background:var(--blue-dim);padding:5px 28px;display:flex;justify-content:space-between;align-items:center}
+.r-class-text{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2px;color:#fff}
+.r-type-bar{padding:16px 28px 20px;border-top:1px solid var(--border)}
+.r-type-label{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--blue);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.r-type-label::before{content:'';width:20px;height:1px;background:var(--blue)}
+.r-title{font-family:var(--serif);font-size:2.2rem;font-weight:600;color:var(--text);line-height:1.2}
+
+/* Key Judgements box */
+.r-kj-box{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);
+  border-left:3px solid var(--blue);padding:18px 22px;margin-bottom:24px}
+.r-kj-label{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2.5px;
+  text-transform:uppercase;color:var(--blue);margin-bottom:12px}
+.r-kj-item{display:flex;gap:10px;margin-bottom:8px;font-family:var(--serif);font-size:1rem;color:var(--text);line-height:1.6}
+.r-kj-num{font-family:var(--mono);font-size:9px;color:var(--blue);flex-shrink:0;margin-top:3px;width:16px}
+
+/* Section */
+.r-section{margin-bottom:28px}
+.r-section-head{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:3px;
+  text-transform:uppercase;color:var(--text2);margin-bottom:12px;padding-bottom:8px;
+  border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.r-section-head::before{content:'';width:14px;height:1px;background:var(--blue)}
+.r-body-text{font-family:var(--serif);font-size:1rem;color:var(--text2);line-height:1.85}
+.r-body-text p+p{margin-top:12px}
+
+/* Actors table */
+.actors-grid{display:flex;flex-direction:column;gap:8px}
+.actor-row{background:var(--bg2);border:1px solid var(--border);border-radius:5px;
+  padding:12px 16px;display:flex;gap:14px;align-items:flex-start}
+.actor-name{font-family:var(--sans);font-size:13px;font-weight:700;color:var(--text);
+  min-width:140px;flex-shrink:0}
+.actor-role{font-family:var(--serif);font-size:.95rem;color:var(--text2);flex:1;line-height:1.5}
+.actor-meta{display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0}
+.actor-cap{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:1px;
+  padding:2px 7px;border-radius:2px}
+.cap-high{background:rgba(239,68,68,.12);color:var(--critical);border:1px solid rgba(239,68,68,.2)}
+.cap-med{background:rgba(245,158,11,.1);color:var(--medium);border:1px solid rgba(245,158,11,.2)}
+.cap-low{background:rgba(34,197,94,.1);color:var(--low);border:1px solid rgba(34,197,94,.2)}
+.actor-traj{font-family:var(--mono);font-size:8px;color:var(--text3)}
+
+/* Drivers */
+.driver-row{background:var(--bg2);border:1px solid var(--border);border-radius:5px;
+  padding:12px 16px;margin-bottom:8px;display:flex;gap:12px}
+.driver-name{font-family:var(--sans);font-size:12px;font-weight:700;color:var(--text);
+  min-width:130px;flex-shrink:0}
+.driver-dir{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:1px;
+  padding:2px 6px;border-radius:2px;flex-shrink:0;margin-top:2px;height:fit-content}
+.dir-int{background:rgba(239,68,68,.12);color:var(--critical);border:1px solid rgba(239,68,68,.2)}
+.dir-stab{background:rgba(245,158,11,.1);color:var(--medium);border:1px solid rgba(245,158,11,.2)}
+.dir-weak{background:rgba(34,197,94,.1);color:var(--low);border:1px solid rgba(34,197,94,.2)}
+.driver-desc{font-family:var(--serif);font-size:.95rem;color:var(--text2);line-height:1.6;flex:1}
+
+/* Scenarios */
+.scenarios-grid{display:flex;flex-direction:column;gap:10px}
+.scenario-card{border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.scenario-head{padding:12px 16px;display:flex;align-items:center;gap:12px}
+.sc-type-badge{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:1.5px;
+  padding:3px 9px;border-radius:2px;flex-shrink:0}
+.sc-opt{background:rgba(34,197,94,.12);color:var(--low);border:1px solid rgba(34,197,94,.2)}
+.sc-base{background:rgba(59,130,246,.12);color:var(--blue);border:1px solid rgba(59,130,246,.2)}
+.sc-pess{background:rgba(239,68,68,.12);color:var(--critical);border:1px solid rgba(239,68,68,.2)}
+.sc-name{font-family:var(--sans);font-size:13px;font-weight:700;color:var(--text);flex:1}
+.sc-prob{font-family:var(--mono);font-size:9px;color:var(--text3)}
+.scenario-body{padding:10px 16px 14px;background:rgba(255,255,255,.02)}
+.scenario-desc{font-family:var(--serif);font-size:.95rem;color:var(--text2);line-height:1.7;margin-bottom:10px}
+.sc-triggers{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.sc-trigger{font-family:var(--mono);font-size:9px;padding:3px 8px;border-radius:3px;
+  background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text3)}
+.sc-impl{font-family:var(--mono);font-size:10px;color:var(--text3);font-style:italic}
+
+/* Implications */
+.impl-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.impl-card{background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:12px 14px}
+.impl-label{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--blue);margin-bottom:6px}
+.impl-text{font-family:var(--serif);font-size:.9rem;color:var(--text2);line-height:1.65}
+
+/* Recommendations */
+.rec-list{display:flex;flex-direction:column;gap:8px}
+.rec-item{display:flex;gap:12px;align-items:flex-start;padding:10px 14px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:5px}
+.rec-priority{font-family:var(--mono);font-size:7px;font-weight:700;letter-spacing:1.5px;
+  padding:3px 7px;border-radius:2px;flex-shrink:0;margin-top:2px;text-transform:uppercase}
+.pri-imm{background:rgba(239,68,68,.12);color:var(--critical);border:1px solid rgba(239,68,68,.2)}
+.pri-short{background:rgba(245,158,11,.1);color:var(--medium);border:1px solid rgba(245,158,11,.2)}
+.pri-med{background:rgba(59,130,246,.12);color:var(--blue);border:1px solid rgba(59,130,246,.2)}
+.rec-content{flex:1}
+.rec-action{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
+.rec-rationale{font-family:var(--serif);font-size:.88rem;color:var(--text3);line-height:1.5}
+
+/* Intel gaps */
+.gap-list{display:flex;flex-direction:column;gap:6px}
+.gap-item{font-family:var(--mono);font-size:10px;color:var(--text3);padding:7px 12px;
+  background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:4px;
+  display:flex;gap:8px;align-items:flex-start}
+.gap-item::before{content:'?';color:var(--medium);font-weight:700;flex-shrink:0}
+
+/* LinkedIn post box */
+.li-box{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);
+  border-radius:6px;padding:16px 18px}
+.li-text{font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.8;
+  white-space:pre-wrap;word-break:break-word}
+.li-actions{display:flex;gap:8px;margin-top:12px}
+.li-btn{padding:7px 14px;border-radius:4px;font-family:var(--mono);font-size:10px;
+  font-weight:700;letter-spacing:.5px;cursor:pointer;border:1px solid;transition:all .15s}
+.li-copy{color:var(--blue);border-color:rgba(59,130,246,.3);background:rgba(59,130,246,.06)}
+.li-copy:hover{background:var(--blue-dim);color:#fff;border-color:var(--blue-dim)}
+
+/* Pub panel */
+.pub-panel{position:fixed;right:24px;bottom:24px;background:var(--bg2);
+  border:1px solid var(--border2);border-radius:10px;padding:20px 24px;
+  width:320px;z-index:300;box-shadow:0 8px 40px rgba(0,0,0,.5);display:none}
+.pub-panel.show{display:block}
+.pub-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--blue-dim),var(--blue));border-radius:10px 10px 0 0}
+.pub-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;color:var(--text);margin-bottom:14px}
+.pub-client-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;max-height:200px;overflow-y:auto}
+.pub-client-item{display:flex;align-items:center;gap:8px;padding:8px 10px;
+  background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:5px;cursor:pointer;transition:all .15s}
+.pub-client-item.selected{border-color:var(--blue);background:var(--blue-pale)}
+.pub-client-name{font-size:12px;font-weight:500;color:var(--text);flex:1}
+.pub-actions{display:flex;gap:8px}
+.pub-btn{flex:1;padding:9px;border-radius:5px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;border:none;transition:all .15s}
+.pub-btn-blue{background:var(--blue-dim);color:#fff}.pub-btn-blue:hover{background:var(--blue)}
+.pub-btn-ghost{background:transparent;color:var(--text3);border:1px solid var(--border2)}
+.pub-btn-ghost:hover{border-color:var(--blue);color:var(--blue)}
+.pub-link-box{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:5px;padding:8px 10px;margin-top:10px;display:none}
+.pub-link-box.show{display:block}
+.pub-link-label{font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px}
+.pub-link-url{font-family:var(--mono);font-size:10px;color:var(--blue);word-break:break-all;cursor:pointer}
+.pub-msg{font-family:var(--mono);font-size:10px;margin-top:8px;padding:6px 10px;border-radius:4px;display:none}
+.pub-msg.ok{background:var(--low-bg);color:var(--low);border:1px solid var(--low-border)}
+.pub-msg.err{background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border)}
+
+@media print{
+  .topbar,.lp,.rp-bar,.pub-panel{display:none}
+  .rp-body{overflow:visible}
+  .report-wrap{padding:20px}
+}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="tb-brand">
+    <svg width="20" height="24" viewBox="0 0 72 84" fill="none">
+      <path d="M36 3L66 14L66 40C66 58 36 72 36 72S6 58 6 40L6 14Z" fill="#151d2e" stroke="#3b82f6" stroke-width="2"/>
+      <circle cx="36" cy="32" r="7" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+      <circle cx="36" cy="32" r="3" fill="#3b82f6"/>
+    </svg>
+    <div><span class="tb-wordmark">VIGINOTE</span><span class="tb-sub">Deep Analysis Studio</span></div>
+  </div>
+  <a href="/hub" class="tb-btn">← Hub</a>
+  <button class="tb-btn" id="save-btn" onclick="saveAnalysis()" style="display:none">☁ Save</button>
+  <button class="tb-btn" onclick="openPublish()" id="publish-btn" style="display:none">⬆ Publish</button>
+  <button class="tb-btn" onclick="window.print()">⬇ PDF</button>
+  <button class="gen-btn" id="gen-btn" onclick="generateAnalysis()">
+    <span id="gen-label">Generate Analysis</span>
+  </button>
+</nav>
+
+<div class="app-body">
+
+  <!-- LEFT PANEL -->
+  <div class="lp">
+    <div class="lp-head">
+      <div class="lp-title">Deep Analysis</div>
+      <div class="lp-desc">Structured analytical intelligence product — actor profiles, scenario analysis, strategic outlook</div>
+    </div>
+    <div class="lp-body">
+
+      <!-- SUBJECT -->
+      <div class="lp-section">
+        <span class="lp-label">Subject / Topic</span>
+        <textarea class="lp-input" id="da-subject" rows="3"
+          placeholder="e.g. RSF expansion strategy in Sudan&#10;Iran nuclear programme&#10;Red Sea shipping corridor threats&#10;Wagner Group Africa operations"></textarea>
+      </div>
+
+      <!-- ANALYSIS TYPE -->
+      <div class="lp-section">
+        <span class="lp-label">Analysis Type</span>
+        <div class="type-grid">
+          <div class="type-btn on" id="type-strategic" onclick="setType('strategic',this)">
+            <div class="type-btn-icon">🎯</div>
+            <span class="type-btn-label">Strategic</span>
+          </div>
+          <div class="type-btn" id="type-threat_actor" onclick="setType('threat_actor',this)">
+            <div class="type-btn-icon">🕵</div>
+            <span class="type-btn-label">Threat Actor</span>
+          </div>
+          <div class="type-btn" id="type-sitrep" onclick="setType('sitrep',this)">
+            <div class="type-btn-icon">📡</div>
+            <span class="type-btn-label">Situation Report</span>
+          </div>
+          <div class="type-btn" id="type-scenario" onclick="setType('scenario',this)">
+            <div class="type-btn-icon">🔀</div>
+            <span class="type-btn-label">Scenario Analysis</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TIME HORIZON -->
+      <div class="lp-section">
+        <span class="lp-label">Time Horizon</span>
+        <div class="horizon-grid">
+          <button class="hz-btn on" id="hz-current" onclick="setHorizon('current',this)">Now</button>
+          <button class="hz-btn" id="hz-30d" onclick="setHorizon('30d',this)">30d</button>
+          <button class="hz-btn" id="hz-90d" onclick="setHorizon('90d',this)">90d</button>
+          <button class="hz-btn" id="hz-12m" onclick="setHorizon('12m',this)">12m</button>
+        </div>
+      </div>
+
+      <!-- DEPTH -->
+      <div class="lp-section">
+        <span class="lp-label">Output Depth</span>
+        <div class="depth-toggle">
+          <div class="depth-opt" id="depth-summary" onclick="setDepth('summary',this)">Summary</div>
+          <div class="depth-opt on" id="depth-full" onclick="setDepth('full',this)">Full Product</div>
+        </div>
+      </div>
+
+      <!-- CLIENT CONTEXT -->
+      <div class="lp-section">
+        <span class="lp-label">Client Context <span style="color:var(--text4);font-weight:400">(optional)</span></span>
+        <textarea class="lp-input" id="da-context" rows="3"
+          placeholder="e.g. Client has staff in Port Sudan and operates humanitarian corridors in North Darfur"></textarea>
+      </div>
+
+      <!-- INTEL CONTEXT -->
+      <div class="alert-ctx" id="alert-ctx"></div>
+
+    </div>
+    <div class="lp-footer">
+      <button class="gen-btn" style="width:100%" onclick="generateAnalysis()">
+        <span id="gen-label-foot">Generate Deep Analysis</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="rp">
+    <div class="rp-bar">
+      <span class="rp-status" id="rp-status">Configure parameters and generate</span>
+    </div>
+    <div class="rp-body" id="rp-body">
+      <div class="empty-state" id="empty-state">
+        <div class="es-icon">🔬</div>
+        <div class="es-title">Deep Analysis Studio</div>
+        <div class="es-desc">
+          Enter a subject — an actor, event, region or trend.<br>
+          Select your analysis type and time horizon.<br>
+          Viginote produces a structured analytical intelligence product<br>
+          drawing on live feeds and AI analytical reasoning.
+        </div>
+      </div>
+      <div id="report-output" style="display:none">
+        <div class="report-wrap" id="report-body"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- PUBLISH PANEL -->
+<div class="pub-panel" id="pub-panel">
+  <div class="pub-title">⬆ Publish Analysis</div>
+  <div class="pub-client-list" id="pub-client-list">
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text3);text-align:center;padding:10px">Loading clients…</div>
+  </div>
+  <div class="pub-actions">
+    <button class="pub-btn pub-btn-blue" onclick="publishAnalysis()">Publish</button>
+    <button class="pub-btn pub-btn-ghost" onclick="closePublish()">Cancel</button>
+  </div>
+  <div class="pub-link-box" id="pub-link-box">
+    <div class="pub-link-label">Share Link</div>
+    <div class="pub-link-url" id="pub-link-url" onclick="copyLink()">—</div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:4px">Click to copy · Valid 30 days</div>
+  </div>
+  <div class="pub-msg" id="pub-msg"></div>
+</div>
+
+<script>
+const API = window.location.origin;
+let currentType = 'strategic';
+let currentHorizon = 'current';
+let currentDepth = 'full';
+let _savedId = null, _savedToken = null, _lastGenData = null;
+
+// ── PARAMETER CONTROLS ────────────────────────────────────────────────────
+function setType(type, el){
+  currentType = type;
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+}
+function setHorizon(hz, el){
+  currentHorizon = hz;
+  document.querySelectorAll('.hz-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+}
+function setDepth(d, el){
+  currentDepth = d;
+  document.querySelectorAll('.depth-opt').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+}
+
+// ── GENERATE ──────────────────────────────────────────────────────────────
+async function generateAnalysis(){
+  const subject = document.getElementById('da-subject').value.trim();
+  if(!subject){ document.getElementById('da-subject').focus(); return; }
+  const context = document.getElementById('da-context').value.trim();
+
+  const btn = document.getElementById('gen-btn');
+  const lbl = document.getElementById('gen-label');
+  const lbl2 = document.getElementById('gen-label-foot');
+  const status = document.getElementById('rp-status');
+  btn.disabled = true; btn.classList.add('generating');
+  lbl.textContent = 'Generating…';
+  lbl2.textContent = 'Generating…';
+  status.textContent = `Generating deep analysis: ${subject}…`;
+
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('report-output').style.display = 'none';
+  document.getElementById('alert-ctx').classList.remove('show');
+
+  try{
+    const resp = await fetch(API+'/ai/deep-analysis', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        subject,
+        analysis_type: currentType,
+        time_horizon: currentHorizon,
+        depth: currentDepth,
+        client_context: context,
+        hours: 168
+      })
+    });
+    const data = await resp.json();
+    if(!resp.ok) throw new Error(data.detail || 'Generation failed');
+    const g = data.generated;
+    _lastGenData = g;
+    renderReport(g);
+    document.getElementById('save-btn').style.display = 'inline-block';
+    document.getElementById('publish-btn').style.display = 'inline-block';
+    status.textContent = `${g.title || 'Analysis'} — generated ${new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})} UTC`;
+    autoSave(g, subject);
+  }catch(e){
+    status.textContent = `Error: ${e.message}`;
+    document.getElementById('empty-state').style.display = 'flex';
+  }
+  btn.disabled = false; btn.classList.remove('generating');
+  lbl.textContent = 'Generate Analysis';
+  lbl2.textContent = 'Generate Deep Analysis';
+}
+
+// ── RENDER REPORT ─────────────────────────────────────────────────────────
+function renderReport(g){
+  const typeLabels = {strategic:'Strategic Intelligence Assessment',threat_actor:'Threat Actor Profile',sitrep:'Situation Report',scenario:'Scenario Analysis'};
+  const typeIcons  = {strategic:'🎯',threat_actor:'🕵',sitrep:'📡',scenario:'🔀'};
+  const priorClass = {IMMEDIATE:'pri-imm',SHORT_TERM:'pri-short',MEDIUM_TERM:'pri-med'};
+  const dirClass   = {INTENSIFYING:'dir-int',STABLE:'dir-stab',WEAKENING:'dir-weak'};
+  const capClass   = {HIGH:'cap-high',MEDIUM:'cap-med',LOW:'cap-low'};
+  const trajColors = {ESCALATING:'var(--critical)',STABLE:'var(--medium)',DECLINING:'var(--low)'};
+
+  function txt(t){ return (t||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function paras(t){
+    if(!t) return '';
+    return t.split(/\n+/).filter(p=>p.trim()).map(p=>`<p>${txt(p)}</p>`).join('');
+  }
+
+  let html = '';
+
+  // Header
+  html += `<div class="r-header">
+    <div class="r-header-top">
+      <div>
+        <div class="r-org">VIGINOTE INTELLIGENCE</div>
+        <div class="r-class">${txt(g.classification||'VIGINOTE INTELLIGENCE — CLIENT CONFIDENTIAL')}</div>
+      </div>
+      <div class="r-date">
+        <strong>DATE:</strong> ${txt(g.date||'')}<br>
+        <strong>SUBJECT:</strong> ${txt(g.subject||'')}<br>
+        <strong>HORIZON:</strong> ${txt(g.time_horizon||'')}
+      </div>
+    </div>
+    <div class="r-class-bar">
+      <span class="r-class-text">${txt(g.classification||'CLIENT CONFIDENTIAL')}</span>
+      <span class="r-class-text">${typeIcons[currentType]||''} ${typeLabels[currentType]||''}</span>
+    </div>
+    <div class="r-type-bar">
+      <div class="r-type-label">${typeLabels[currentType]||''}</div>
+      <div class="r-title">${txt(g.title||g.subject||'Intelligence Assessment')}</div>
+    </div>
+  </div>`;
+
+  // Analyst note
+  if(g.analyst_note){
+    html += `<div style="font-family:var(--mono);font-size:9px;color:var(--text3);
+      padding:8px 14px;background:rgba(255,255,255,.02);border:1px solid var(--border);
+      border-radius:4px;margin-bottom:20px;font-style:italic">
+      ℹ ${txt(g.analyst_note)}</div>`;
+  }
+
+  // Key Judgements
+  if(g.key_judgements && g.key_judgements.length){
+    html += `<div class="r-kj-box">
+      <div class="r-kj-label">● Key Judgements</div>
+      ${g.key_judgements.map((kj,i)=>`<div class="r-kj-item">
+        <span class="r-kj-num">KJ${i+1}</span><span>${txt(kj)}</span></div>`).join('')}
+    </div>`;
+  }
+
+  // Executive Summary
+  if(g.executive_summary){
+    html += `<div class="r-section">
+      <div class="r-section-head">Executive Summary</div>
+      <div class="r-body-text">${paras(g.executive_summary)}</div>
+    </div>`;
+  }
+
+  // Background
+  if(g.background){
+    html += `<div class="r-section">
+      <div class="r-section-head">Background & Context</div>
+      <div class="r-body-text">${paras(g.background)}</div>
+    </div>`;
+  }
+
+  // Current Situation
+  if(g.current_situation){
+    html += `<div class="r-section">
+      <div class="r-section-head">Current Situation</div>
+      <div class="r-body-text">${paras(g.current_situation)}</div>
+    </div>`;
+  }
+
+  // Key Actors
+  if(g.key_actors && g.key_actors.length){
+    html += `<div class="r-section">
+      <div class="r-section-head">Key Actors</div>
+      <div class="actors-grid">
+        ${g.key_actors.map(a=>`<div class="actor-row">
+          <div class="actor-name">${txt(a.name||'')}</div>
+          <div class="actor-role">${txt(a.role||'')} ${a.intent?'<br><em style="color:var(--text3);font-size:.88rem">Intent: '+txt(a.intent)+'</em>':''}</div>
+          <div class="actor-meta">
+            <span class="actor-cap ${capClass[a.capability]||'cap-med'}">${txt(a.capability||'MEDIUM')}</span>
+            <span class="actor-traj" style="color:${trajColors[a.trajectory]||'var(--text3)'}">↗ ${txt(a.trajectory||'STABLE')}</span>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Drivers
+  if(g.drivers && g.drivers.length){
+    html += `<div class="r-section">
+      <div class="r-section-head">Key Drivers</div>
+      ${g.drivers.map(d=>`<div class="driver-row">
+        <div class="driver-name">${txt(d.driver||'')}</div>
+        <span class="driver-dir ${dirClass[d.direction]||'dir-stab'}">${txt(d.direction||'STABLE')}</span>
+        <div class="driver-desc">${txt(d.description||'')}</div>
+      </div>`).join('')}
+    </div>`;
+  }
+
+  // Scenarios
+  if(g.scenarios && g.scenarios.length){
+    const scClass = {OPTIMISTIC:'sc-opt',BASELINE:'sc-base',PESSIMISTIC:'sc-pess'};
+    html += `<div class="r-section">
+      <div class="r-section-head">Scenario Analysis</div>
+      <div class="scenarios-grid">
+        ${g.scenarios.map(s=>`<div class="scenario-card">
+          <div class="scenario-head">
+            <span class="sc-type-badge ${scClass[s.type]||'sc-base'}">${txt(s.type||'BASELINE')}</span>
+            <span class="sc-name">${txt(s.name||'')}</span>
+            <span class="sc-prob">Probability: ${txt(s.probability||'MEDIUM')}</span>
+          </div>
+          <div class="scenario-body">
+            <div class="scenario-desc">${txt(s.description||'')}</div>
+            ${s.triggers&&s.triggers.length?`<div class="sc-triggers">${s.triggers.map(t=>`<span class="sc-trigger">▶ ${txt(t)}</span>`).join('')}</div>`:''}
+            ${s.implications?`<div class="sc-impl">Implication: ${txt(s.implications)}</div>`:''}
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Outlook
+  if(g.outlook){
+    html += `<div class="r-section">
+      <div class="r-section-head">Strategic Outlook</div>
+      <div class="r-body-text">${paras(g.outlook)}</div>
+    </div>`;
+  }
+
+  // Implications
+  if(g.implications){
+    const im = g.implications;
+    html += `<div class="r-section">
+      <div class="r-section-head">Implications</div>
+      <div class="impl-grid">
+        ${im.operational?`<div class="impl-card"><div class="impl-label">Operational</div><div class="impl-text">${txt(im.operational)}</div></div>`:''}
+        ${im.security?`<div class="impl-card"><div class="impl-label">Security</div><div class="impl-text">${txt(im.security)}</div></div>`:''}
+        ${im.reputational?`<div class="impl-card"><div class="impl-label">Reputational</div><div class="impl-text">${txt(im.reputational)}</div></div>`:''}
+        ${im.financial?`<div class="impl-card"><div class="impl-label">Financial</div><div class="impl-text">${txt(im.financial)}</div></div>`:''}
+      </div>
+    </div>`;
+  }
+
+  // Recommendations
+  if(g.recommendations && g.recommendations.length){
+    html += `<div class="r-section">
+      <div class="r-section-head">Recommendations</div>
+      <div class="rec-list">
+        ${g.recommendations.map(r=>`<div class="rec-item">
+          <span class="rec-priority ${priorClass[r.priority]||'pri-med'}">${(r.priority||'').replace('_',' ')}</span>
+          <div class="rec-content">
+            <div class="rec-action">${txt(r.action||'')}</div>
+            ${r.rationale?`<div class="rec-rationale">${txt(r.rationale)}</div>`:''}
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Intel Gaps
+  if(g.intelligence_gaps && g.intelligence_gaps.length){
+    html += `<div class="r-section">
+      <div class="r-section-head">Intelligence Gaps</div>
+      <div class="gap-list">
+        ${g.intelligence_gaps.map(gap=>`<div class="gap-item">${txt(gap)}</div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  // LinkedIn Post
+  if(g.linkedin_post){
+    html += `<div class="r-section">
+      <div class="r-section-head">LinkedIn Post</div>
+      <div class="li-box">
+        <div class="li-text" id="li-post-text">${txt(g.linkedin_post)}</div>
+        <div class="li-actions">
+          <button class="li-btn li-copy" onclick="copyLinkedIn()">📋 Copy post</button>
+          <a href="https://www.linkedin.com" target="_blank" class="li-btn li-copy" style="text-decoration:none">Open LinkedIn →</a>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Footer
+  html += `<div style="margin-top:32px;padding-top:16px;border-top:1px solid var(--border);
+    font-family:var(--mono);font-size:9px;color:var(--text4);letter-spacing:1.5px;
+    text-transform:uppercase;display:flex;justify-content:space-between">
+    <span>© Viginote Intelligence ${new Date().getFullYear()}</span>
+    <span>Confidential Analytical Product · Not for Redistribution</span>
+  </div>`;
+
+  document.getElementById('report-body').innerHTML = html;
+  document.getElementById('report-output').style.display = 'block';
+  document.getElementById('empty-state').style.display = 'none';
+}
+
+function copyLinkedIn(){
+  const el = document.getElementById('li-post-text');
+  if(!el) return;
+  navigator.clipboard.writeText(el.textContent).then(()=>{
+    el.style.color = 'var(--low)';
+    setTimeout(()=>{ el.style.color=''; }, 2000);
+  });
+}
+
+// ── SAVE + PUBLISH ────────────────────────────────────────────────────────
+async function autoSave(g, subject){
+  try{
+    const r = await fetch(API+'/deliverables/save',{
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        type:'assessment',
+        title: g.title || subject + ' — Deep Analysis',
+        content: g,
+        clients:[], one_off:false
+      })
+    });
+    const d = await r.json();
+    if(d.id){
+      _savedId = d.id; _savedToken = d.token;
+      document.getElementById('save-btn').textContent = '☁ Saved';
+      document.getElementById('pub-link-url').textContent = API+'/view/'+d.token;
+      document.getElementById('pub-link-box').classList.add('show');
+    }
+  }catch(e){ console.log('Save error:', e); }
+}
+
+async function saveAnalysis(){
+  if(!_lastGenData) return;
+  await autoSave(_lastGenData, document.getElementById('da-subject').value);
+}
+
+async function openPublish(){
+  if(!_savedId){ await saveAnalysis(); }
+  document.getElementById('pub-panel').classList.add('show');
+  const list = document.getElementById('pub-client-list');
+  try{
+    const r = await fetch(API+'/admin/clients',{credentials:'include'});
+    const d = await r.json();
+    const clients = (d.clients||[]).filter(c=>c.username!=='viginote_admin');
+    if(!clients.length){
+      list.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--text3);text-align:center;padding:10px">No clients yet.</div>';
+      return;
+    }
+    list.innerHTML = clients.map(c=>`
+      <div class="pub-client-item" id="pci-${c.username}" onclick="this.classList.toggle('selected')">
+        <div class="pub-client-name">${c.label||c.username}</div>
+        <span style="font-family:var(--mono);font-size:8px;background:var(--blue-pale);color:var(--blue);padding:1px 6px;border-radius:2px">${(c.tier||'analyst').toUpperCase()}</span>
+      </div>`).join('');
+  }catch(e){
+    list.innerHTML=`<div style="color:var(--critical);font-family:var(--mono);font-size:10px;padding:10px">Error: ${e.message}</div>`;
+  }
+}
+
+function closePublish(){ document.getElementById('pub-panel').classList.remove('show'); }
+
+async function publishAnalysis(){
+  if(!_savedId){ showPubMsg('Save first.','err'); return; }
+  const selected = [...document.querySelectorAll('.pub-client-item.selected')]
+    .map(el=>el.id.replace('pci-',''));
+  if(!selected.length){ showPubMsg('Select at least one client.','err'); return; }
+  try{
+    await fetch(API+'/deliverables/'+_savedId+'/publish',{
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({clients:selected})
+    });
+    showPubMsg('Published to '+selected.length+' client'+(selected.length!==1?'s':'')+'.','ok');
+    setTimeout(closePublish, 2500);
+  }catch(e){ showPubMsg('Error: '+e.message,'err'); }
+}
+
+function copyLink(){
+  const el = document.getElementById('pub-link-url');
+  navigator.clipboard.writeText(el.textContent).then(()=>{
+    const orig = el.textContent; el.textContent='✓ Copied!';
+    setTimeout(()=>el.textContent=orig, 2000);
+  });
+}
+
+function showPubMsg(msg,type){
+  const el = document.getElementById('pub-msg');
+  el.textContent=msg; el.className='pub-msg '+type; el.style.display='block';
+}
+</script>
+</body>
+</html>
