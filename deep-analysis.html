@@ -240,9 +240,60 @@ body{font-family:var(--body);background:var(--bg);color:var(--text);
 .pub-msg.err{background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border)}
 
 @media print{
-  .topbar,.lp,.rp-bar,.pub-panel{display:none}
-  .rp-body{overflow:visible}
-  .report-wrap{padding:20px}
+  *{
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body{
+    height:auto !important;
+    overflow:visible !important;
+    background:#080c14 !important;
+  }
+
+  .topbar,
+  .lp,
+  .rp-bar,
+  .pub-panel{
+    display:none !important;
+  }
+
+  .app-body,
+  .rp,
+  .rp-body,
+  #report-output{
+    display:block !important;
+    height:auto !important;
+    overflow:visible !important;
+    background:#080c14 !important;
+  }
+
+  #empty-state{
+    display:none !important;
+  }
+
+  .report-wrap{
+    max-width:860px !important;
+    margin:0 auto !important;
+    padding:24px 28px 60px !important;
+    background:#080c14 !important;
+  }
+
+  .r-section,
+  .r-kj-box,
+  .actor-row,
+  .driver-row,
+  .scenario-card,
+  .impl-card,
+  .rec-item{
+    break-inside:avoid;
+    page-break-inside:avoid;
+  }
+
+  a{
+    color:inherit !important;
+    text-decoration:none !important;
+  }
 }
 </style>
 </head>
@@ -260,7 +311,7 @@ body{font-family:var(--body);background:var(--bg);color:var(--text);
   <a href="/hub" class="tb-btn">← Hub</a>
   <button class="tb-btn" id="save-btn" onclick="saveAnalysis()" style="display:none">☁ Save</button>
   <button class="tb-btn" onclick="openPublish()" id="publish-btn" style="display:none">⬆ Publish</button>
-  <button class="tb-btn" onclick="window.print()">⬇ PDF</button>
+  <button class="tb-btn" onclick="downloadPDF()">⬇ PDF</button>
   <button class="gen-btn" id="gen-btn" onclick="generateAnalysis()">
     <span id="gen-label">Generate Analysis</span>
   </button>
@@ -755,6 +806,23 @@ function copyLink(){
 function showPubMsg(msg,type){
   const el = document.getElementById('pub-msg');
   el.textContent=msg; el.className='pub-msg '+type; el.style.display='block';
+}
+
+function downloadPDF(){
+  const report = document.getElementById('report-output');
+  const empty = document.getElementById('empty-state');
+
+  if(!report || report.style.display === 'none'){
+    alert('Generate an analysis first before downloading the PDF.');
+    return;
+  }
+
+  if(empty) empty.style.display = 'none';
+  report.style.display = 'block';
+
+  setTimeout(() => {
+    window.print();
+  }, 250);
 }
 </script>
 </body>
