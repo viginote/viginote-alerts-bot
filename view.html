@@ -1030,13 +1030,14 @@ body.vgn-deep-analysis-view .content-wrap{max-width:920px!important;margin:0 aut
 .da-actor-role{font-family:var(--da-serif);font-size:.95rem;color:var(--da-text2);flex:1;line-height:1.5}
 .da-actor-meta{display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0}
 .da-cap,.da-driver-dir,.da-sc-type,.da-rec-priority{font-family:var(--da-mono);font-size:8px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:2px;text-transform:uppercase}
+.da-driver-dir{display:inline-flex;align-items:center;justify-content:center;align-self:start;width:auto;min-width:92px;max-width:132px;height:auto;line-height:1.3;white-space:nowrap;padding:6px 10px}
 .da-cap-high,.da-dir-int,.da-sc-pess,.da-pri-imm{background:rgba(239,68,68,.12);color:var(--da-critical);border:1px solid rgba(239,68,68,.2)}
 .da-cap-med,.da-dir-stab,.da-pri-short{background:rgba(245,158,11,.1);color:var(--da-medium);border:1px solid rgba(245,158,11,.2)}
 .da-cap-low,.da-dir-weak,.da-sc-opt{background:rgba(34,197,94,.1);color:var(--da-low);border:1px solid rgba(34,197,94,.2)}
 .da-sc-base,.da-pri-med{background:rgba(59,130,246,.12);color:var(--da-blue);border:1px solid rgba(59,130,246,.2)}
 .da-actor-traj{font-family:var(--da-mono);font-size:8px;color:var(--da-text3)}
-.da-driver-row{background:var(--da-bg2);border:1px solid var(--da-border);border-radius:5px;padding:12px 16px;margin-bottom:8px;display:flex;gap:12px}
-.da-driver-name{font-family:var(--da-sans);font-size:12px;font-weight:700;color:var(--da-text);min-width:130px;flex-shrink:0}
+.da-driver-row{background:var(--da-bg2);border:1px solid var(--da-border);border-radius:5px;padding:12px 16px;margin-bottom:8px;display:grid;grid-template-columns:minmax(190px,1fr) auto minmax(0,2.2fr);gap:18px;align-items:start}
+.da-driver-name{font-family:var(--da-sans);font-size:12px;font-weight:700;color:var(--da-text);min-width:0;line-height:1.35}
 .da-driver-desc{font-family:var(--da-serif);font-size:.95rem;color:var(--da-text2);line-height:1.6;flex:1}
 .da-scenario-card{border:1px solid var(--da-border);border-radius:6px;overflow:hidden;background:var(--da-bg2)}
 .da-scenario-head{padding:12px 16px;display:flex;align-items:center;gap:12px}
@@ -1062,7 +1063,8 @@ body.vgn-deep-analysis-view .content-wrap{max-width:920px!important;margin:0 aut
 @media(max-width:760px){
   body.vgn-deep-analysis-view .content-wrap{padding:24px 14px 60px!important}
   .da-title{font-size:1.7rem}
-  .da-actor-row,.da-driver-row,.da-scenario-head,.da-rec-item{flex-direction:column}
+  .da-actor-row,.da-scenario-head,.da-rec-item{flex-direction:column}
+  .da-driver-row{grid-template-columns:1fr;gap:8px}
   .da-actor-name,.da-driver-name{min-width:0}
   .da-impl-grid{grid-template-columns:1fr}
 }
@@ -1072,6 +1074,7 @@ body.vgn-deep-analysis-view .content-wrap{max-width:920px!important;margin:0 aut
   body.vgn-deep-analysis-view .content-wrap{max-width:100%!important;padding:0 28px 40px!important;margin:0!important}
   .da-report-wrap{max-width:100%!important;margin:0!important;padding:0!important}
   .da-section,.da-kj-box,.da-actor-row,.da-driver-row,.da-scenario-card,.da-impl-card,.da-rec-item{break-inside:avoid;page-break-inside:avoid}
+  .da-driver-row{display:grid!important;grid-template-columns:minmax(180px,1fr) auto minmax(0,2.2fr)!important;align-items:start!important}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   @page{size:A4;margin:0.5in 0.6in}
 }`;
@@ -1210,9 +1213,7 @@ body.vgn-deep-analysis-view .content-wrap{max-width:920px!important;margin:0 aut
       + '</div></div>';
   }
 
-  if(g.linkedin_post){
-    html += '<div class="da-section"><div class="da-section-head">LinkedIn Post</div><div class="da-li-box"><div class="da-li-text">'+txt(g.linkedin_post)+'</div></div></div>';
-  }
+  // Client-facing view intentionally excludes LinkedIn/social captions.
 
   html += '<div class="da-footer"><span>© Viginote Intelligence '+(new Date().getFullYear())+'</span><span>Confidential Analytical Product · Not for Redistribution</span></div>';
   html += '</div>';
