@@ -335,6 +335,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
         <span class="nav-icon">&#x1F4CA;</span>
         <span class="nav-label">Weekly Digest</span>
       </button>
+      <button class="nav-item" id="nav-deep" onclick="switchPanel('deep')">
+        <span class="nav-icon">&#x1F52C;</span>
+        <span class="nav-label">Deep Analysis</span>
+      </button>
     </div>
 
     <span class="sb-label">Distribution</span>
@@ -381,6 +385,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
           <div class="dc-icon">&#x1F4CA;</div>
           <div class="dc-name">Weekly Digest</div>
           <div class="dc-desc">Compile a weekly intelligence digest across all regions</div>
+        </div>
+        <div class="dash-card dc-purple" onclick="window.open('/deep-analysis','_blank')">
+          <div class="dc-icon">&#x1F52C;</div>
+          <div class="dc-name">Deep Analysis</div>
+          <div class="dc-desc">Generate structured strategic assessments, actor profiles and scenarios</div>
         </div>
         <div class="dash-card dc-green" onclick="switchPanel('deliverables')">
           <div class="dc-icon">&#x1F4EC;</div>
@@ -457,6 +466,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
     <!-- DIGEST — opens in new tab, placeholder shown -->
     <div class="ws-frame-panel" id="panel-digest"></div>
 
+    <!-- DEEP ANALYSIS — opens in new tab, placeholder shown -->
+    <div class="ws-frame-panel" id="panel-deep"></div>
+
     <!-- DELIVERABLES PANEL -->
     <div id="panel-deliverables">
       <div class="del-head">
@@ -524,14 +536,29 @@ var allDeliverables = [];
 var currentDelFilter = 'all';
 var publishingId = null;
 
+var STREAM_DEF = {
+  geographic: { label: '🌍 Geographic', color: '#3b82f6', bg: 'rgba(59,130,246,.10)', border: 'rgba(59,130,246,.25)' },
+  maritime:   { label: '⚓ Maritime',   color: '#06b6d4', bg: 'rgba(6,182,212,.10)',  border: 'rgba(6,182,212,.25)' },
+  cyber:      { label: '💻 Cyber',      color: '#a855f7', bg: 'rgba(168,85,247,.10)', border: 'rgba(168,85,247,.25)' },
+  economic:   { label: '📊 Economic',   color: '#f59e0b', bg: 'rgba(245,158,11,.10)', border: 'rgba(245,158,11,.25)' },
+  political:  { label: '🗳 Political',  color: '#f97316', bg: 'rgba(249,115,22,.10)', border: 'rgba(249,115,22,.25)' },
+  executive:  { label: '🛡 Executive',  color: '#22c55e', bg: 'rgba(34,197,94,.10)',  border: 'rgba(34,197,94,.25)' }
+};
+function streamDef(stream){ return STREAM_DEF[stream || 'geographic'] || STREAM_DEF.geographic; }
+function streamChipStyle(stream){
+  var st = streamDef(stream);
+  return 'color:'+st.color+';background:'+st.bg+';border-color:'+st.border;
+}
+
 // Studios that open in a new tab (avoids iframe cookie issues)
 var PANEL_SRCS = {
   linkedin: '/dashboard',
   brief:    '/brief',
   assessment: '/assessment',
-  digest:   '/digest'
+  digest:   '/digest',
+  deep:     '/deep-analysis'
 };
-var EXTERNAL_PANELS = ['linkedin','brief','assessment','digest'];
+var EXTERNAL_PANELS = ['linkedin','brief','assessment','digest','deep'];
 
 // ── TIME ──────────────────────────────────────────────────────────────────
 function updateTime(){
@@ -548,7 +575,7 @@ updateTime(); setInterval(updateTime, 30000);
 function showStudioPlaceholder(name){
   var p = document.getElementById('panel-'+name);
   if(!p) return;
-  var icons = {linkedin:'📰',brief:'📋',assessment:'🗺',digest:'📊'};
+  var icons = {linkedin:'📰',brief:'📋',assessment:'🗺',digest:'📊',deep:'🔬'};
   var icon = icons[name] || '📄';
   var label = name.charAt(0).toUpperCase()+name.slice(1);
   var src = PANEL_SRCS[name] || '/'+name;
@@ -842,7 +869,8 @@ function renderAdminFeed(){
     var locs = (ents.locs || ents.locations || []).slice(0,2).join(' · ');
     var corr = (a.source_count||1) >= 2;
     var selected = _selectedAdminAlertId === a.id ? ' selected' : '';
-    var streamLabel = a.stream ? String(a.stream).replace(/_/g,' ') : 'geographic';
+    var stDef = streamDef(a.stream);
+    var streamLabel = stDef.label;
     return '<div class="admin-feed-card'+selected+'" id="admin-feed-card-'+a.id+'" onclick="selectAdminFeedAlert('+a.id+')">'
       +'<div class="af-top">'
         +'<div class="af-sev" style="'+adminSevStyle(s.cl)+'">'+s.l+'</div>'
@@ -855,7 +883,7 @@ function renderAdminFeed(){
         +'<div class="af-precis">'+escapeHtml(a.precis||a.summary||'No summary available yet.')+'</div>'
         +'<div class="af-meta">'
           +'<span class="af-domain">'+escapeHtml(a.source_domain||a.source_dom||'source pending')+'</span>'
-          +'<span class="af-chip">'+escapeHtml(streamLabel)+'</span>'
+          +'<span class="af-chip" style="'+streamChipStyle(a.stream)+'">'+escapeHtml(streamLabel)+'</span>'
           +(corr?'<span class="af-chip corr">&#x2726; '+escapeHtml(String(a.source_count))+' SRC</span>':'')
           +(locs?'<span class="af-chip loc">&#x1F4CD; '+escapeHtml(locs)+'</span>':'')
         +'</div>'
@@ -887,7 +915,7 @@ function selectAdminFeedAlert(id){
     +'<strong>Region</strong> '+escapeHtml((a.region||'').replace(/_/g,' '))+'<br>'
     +(a.country?'<strong>Country</strong> '+escapeHtml(a.country)+'<br>':'')
     +'<strong>Score</strong> '+escapeHtml(String(a.score||0))+'/12<br>'
-    +'<strong>Stream</strong> '+escapeHtml(a.stream||'geographic')+'<br>'
+    +'<strong>Stream</strong> '+escapeHtml(streamDef(a.stream).label)+'<br>'
     +(corr?'<strong>Corroboration</strong> '+escapeHtml(String(a.source_count))+' independent sources<br>':'')
     +(locs.length?'<strong>Locations</strong> '+escapeHtml(locs.join(' · '))+'<br>':'')
     +(orgs.length?'<strong>Entities</strong> '+escapeHtml(orgs.slice(0,6).join(' · ')):'');
