@@ -809,20 +809,102 @@ function showPubMsg(msg,type){
 }
 
 function downloadPDF(){
-  const report = document.getElementById('report-output');
-  const empty = document.getElementById('empty-state');
+  const reportBody = document.getElementById('report-body');
+  const reportOutput = document.getElementById('report-output');
 
-  if(!report || report.style.display === 'none'){
+  if(!reportBody || !reportOutput || reportOutput.style.display === 'none' || !reportBody.innerHTML.trim()){
     alert('Generate an analysis first before downloading the PDF.');
     return;
   }
 
-  if(empty) empty.style.display = 'none';
-  report.style.display = 'block';
+  // Open a clean print document instead of printing the app shell.
+  // This prevents the Hub/admin layout height from clipping the report to one page.
+  const styles = Array.from(document.querySelectorAll('style'))
+    .map(style => style.innerHTML)
+    .join('\n');
 
-  setTimeout(() => {
-    window.print();
-  }, 250);
+  const printWin = window.open('', '_blank', 'width=1100,height=900');
+  if(!printWin){
+    alert('Popup blocked. Allow popups for this site, then try PDF again.');
+    return;
+  }
+
+  printWin.document.open();
+  printWin.document.write(`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>VigiNote Deep Analysis PDF</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+${styles}
+
+@page{
+  size: A4;
+  margin: 10mm;
+}
+
+html, body{
+  height:auto !important;
+  min-height:0 !important;
+  overflow:visible !important;
+  position:static !important;
+  background:#080c14 !important;
+}
+
+body{
+  display:block !important;
+}
+
+.print-only-report{
+  display:block !important;
+  height:auto !important;
+  overflow:visible !important;
+  background:#080c14 !important;
+}
+
+.report-wrap{
+  max-width:860px !important;
+  margin:0 auto !important;
+  padding:0 0 28px !important;
+  background:#080c14 !important;
+}
+
+.r-header,
+.r-kj-box,
+.r-section{
+  break-inside:auto !important;
+  page-break-inside:auto !important;
+}
+
+.actor-row,
+.driver-row,
+.scenario-card,
+.impl-card,
+.rec-item,
+.gap-item{
+  break-inside:avoid !important;
+  page-break-inside:avoid !important;
+}
+
+*{
+  -webkit-print-color-adjust:exact !important;
+  print-color-adjust:exact !important;
+}
+</style>
+</head>
+<body>
+  <div class="print-only-report">
+    <div class="report-wrap">${reportBody.innerHTML}</div>
+  </div>
+<script>
+window.onload = function(){
+  setTimeout(function(){ window.print(); }, 500);
+};
+<\/script>
+</body>
+</html>`);
+  printWin.document.close();
 }
 </script>
 </body>
