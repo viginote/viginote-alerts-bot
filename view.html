@@ -215,7 +215,7 @@ function init(){
   }
 
   // Update view bar
-  var typeLabels={brief:'Intelligence Brief',assessment:'Location Assessment',digest:'Weekly Digest'};
+  var typeLabels={brief:'Intelligence Brief',assessment:'Location Assessment',digest:'Weekly Digest','deep-analysis':'Deep Analysis'};
   document.getElementById('vb-type').textContent=(typeLabels[DATA.type]||DATA.type).toUpperCase();
   document.getElementById('vb-expiry').textContent=DATA.time_remaining||'';
   document.title='VigiNote — '+(DATA.title||typeLabels[DATA.type]||'Intelligence');
@@ -225,6 +225,7 @@ function init(){
   wrap.style.display='block';
 
   if(DATA.type==='brief') renderBrief(wrap, DATA.content);
+  else if(isDeepAnalysisContent(DATA.content)) renderDeepAnalysis(wrap, DATA.content);
   else if(DATA.type==='assessment') renderAssessment(wrap, DATA.content);
   else if(DATA.type==='digest') renderDigest(wrap, DATA.content);
   else wrap.innerHTML='<pre style="color:#94a3b8;font-family:monospace;font-size:11px">'+JSON.stringify(DATA.content,null,2)+'</pre>';
@@ -962,6 +963,261 @@ body.vgn-direct-digest-view .stat-callout{background:#111827!important;border-co
   html+='© Viginote '+(new Date().getFullYear())+' · Confidential · Not for Redistribution</div>';
   html+='</div>';
   wrap.innerHTML=html;
+}
+
+
+// ── DEEP ANALYSIS RENDERER ─────────────────────────────────────────────────
+function isDeepAnalysisContent(g){
+  if(!g || typeof g !== 'object') return false;
+  return !!(
+    g.key_judgements ||
+    g.executive_summary && (g.key_actors || g.drivers || g.scenarios || g.implications || g.intelligence_gaps) ||
+    g.analysis_type ||
+    g.outlook
+  );
+}
+
+function renderDeepAnalysis(wrap, g){
+  g = g || {};
+  document.body.classList.add('vgn-deep-analysis-view');
+  document.getElementById('vb-type').textContent = 'DEEP ANALYSIS';
+
+  var styleId = 'vgn-deep-analysis-style';
+  var oldStyle = document.getElementById(styleId);
+  if(oldStyle) oldStyle.remove();
+
+  var style = document.createElement('style');
+  style.id = styleId;
+  style.textContent = `
+:root{
+  --da-bg:#080c14;--da-bg2:#0e1420;--da-bg3:#111827;--da-bg4:#151d2e;
+  --da-border:#1e2d4a;--da-border2:#243558;
+  --da-text:#e2e8f0;--da-text2:#94a3b8;--da-text3:#64748b;--da-text4:#334155;
+  --da-blue:#3b82f6;--da-blue-dim:#1d4ed8;--da-blue-pale:rgba(59,130,246,0.1);
+  --da-low:#22c55e;--da-critical:#ef4444;--da-medium:#f59e0b;--da-high:#f97316;
+  --da-serif:'Cormorant Garamond',Georgia,serif;
+  --da-sans:'Barlow Condensed',sans-serif;
+  --da-body:'Barlow',sans-serif;
+  --da-mono:'JetBrains Mono',monospace;
+}
+body.vgn-deep-analysis-view{background:var(--da-bg)!important;color:var(--da-text)!important;font-family:var(--da-body)!important;}
+body.vgn-deep-analysis-view .content-wrap{max-width:920px!important;margin:0 auto!important;padding:40px 32px 80px!important;background:var(--da-bg)!important;}
+.da-report-wrap{max-width:860px;margin:0 auto;padding:0 0 40px}
+.da-header{background:var(--da-bg2);border:1px solid var(--da-border);margin-bottom:24px}
+.da-header-top{background:var(--da-bg);padding:20px 28px;display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.da-org{font-family:var(--da-sans);font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--da-blue)}
+.da-class{font-family:var(--da-mono);font-size:9px;color:var(--da-text3);margin-top:4px}
+.da-date{font-family:var(--da-mono);font-size:9px;color:var(--da-text3);text-align:right;line-height:2}
+.da-class-bar{background:var(--da-blue-dim);padding:5px 28px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.da-class-text{font-family:var(--da-mono);font-size:8px;font-weight:700;letter-spacing:2px;color:#fff;text-transform:uppercase}
+.da-type-bar{padding:16px 28px 20px;border-top:1px solid var(--da-border)}
+.da-type-label{font-family:var(--da-mono);font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--da-blue);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.da-type-label::before{content:'';width:20px;height:1px;background:var(--da-blue)}
+.da-title{font-family:var(--da-serif);font-size:2.25rem;font-weight:600;color:var(--da-text);line-height:1.2}
+.da-note{font-family:var(--da-mono);font-size:9px;color:var(--da-text3);padding:9px 14px;background:rgba(255,255,255,.02);border:1px solid var(--da-border);border-radius:4px;margin-bottom:20px;font-style:italic}
+.da-kj-box{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-left:3px solid var(--da-blue);padding:18px 22px;margin-bottom:24px}
+.da-kj-label{font-family:var(--da-mono);font-size:8px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--da-blue);margin-bottom:12px}
+.da-kj-item{display:flex;gap:10px;margin-bottom:8px;font-family:var(--da-serif);font-size:1rem;color:var(--da-text);line-height:1.6}
+.da-kj-num{font-family:var(--da-mono);font-size:9px;color:var(--da-blue);flex-shrink:0;margin-top:3px;width:22px}
+.da-section{margin-bottom:28px}
+.da-section-head{font-family:var(--da-sans);font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--da-text2);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--da-border);display:flex;align-items:center;gap:10px}
+.da-section-head::before{content:'';width:14px;height:1px;background:var(--da-blue)}
+.da-body-text{font-family:var(--da-serif);font-size:1rem;color:var(--da-text2);line-height:1.85}
+.da-body-text p+p{margin-top:12px}
+.da-actors-grid,.da-scenarios-grid,.da-rec-list,.da-gap-list{display:flex;flex-direction:column;gap:8px}
+.da-actor-row{background:var(--da-bg2);border:1px solid var(--da-border);border-radius:5px;padding:12px 16px;display:flex;gap:14px;align-items:flex-start}
+.da-actor-name{font-family:var(--da-sans);font-size:13px;font-weight:700;color:var(--da-text);min-width:140px;flex-shrink:0}
+.da-actor-role{font-family:var(--da-serif);font-size:.95rem;color:var(--da-text2);flex:1;line-height:1.5}
+.da-actor-meta{display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0}
+.da-cap,.da-driver-dir,.da-sc-type,.da-rec-priority{font-family:var(--da-mono);font-size:8px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:2px;text-transform:uppercase}
+.da-cap-high,.da-dir-int,.da-sc-pess,.da-pri-imm{background:rgba(239,68,68,.12);color:var(--da-critical);border:1px solid rgba(239,68,68,.2)}
+.da-cap-med,.da-dir-stab,.da-pri-short{background:rgba(245,158,11,.1);color:var(--da-medium);border:1px solid rgba(245,158,11,.2)}
+.da-cap-low,.da-dir-weak,.da-sc-opt{background:rgba(34,197,94,.1);color:var(--da-low);border:1px solid rgba(34,197,94,.2)}
+.da-sc-base,.da-pri-med{background:rgba(59,130,246,.12);color:var(--da-blue);border:1px solid rgba(59,130,246,.2)}
+.da-actor-traj{font-family:var(--da-mono);font-size:8px;color:var(--da-text3)}
+.da-driver-row{background:var(--da-bg2);border:1px solid var(--da-border);border-radius:5px;padding:12px 16px;margin-bottom:8px;display:flex;gap:12px}
+.da-driver-name{font-family:var(--da-sans);font-size:12px;font-weight:700;color:var(--da-text);min-width:130px;flex-shrink:0}
+.da-driver-desc{font-family:var(--da-serif);font-size:.95rem;color:var(--da-text2);line-height:1.6;flex:1}
+.da-scenario-card{border:1px solid var(--da-border);border-radius:6px;overflow:hidden;background:var(--da-bg2)}
+.da-scenario-head{padding:12px 16px;display:flex;align-items:center;gap:12px}
+.da-scenario-name{font-family:var(--da-sans);font-size:13px;font-weight:700;color:var(--da-text);flex:1}
+.da-scenario-prob{font-family:var(--da-mono);font-size:9px;color:var(--da-text3)}
+.da-scenario-body{padding:10px 16px 14px;background:rgba(255,255,255,.02)}
+.da-scenario-desc{font-family:var(--da-serif);font-size:.95rem;color:var(--da-text2);line-height:1.7;margin-bottom:10px}
+.da-triggers{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.da-trigger{font-family:var(--da-mono);font-size:9px;padding:3px 8px;border-radius:3px;background:rgba(255,255,255,.04);border:1px solid var(--da-border2);color:var(--da-text3)}
+.da-impl-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.da-impl-card{background:var(--da-bg2);border:1px solid var(--da-border);border-radius:5px;padding:12px 14px}
+.da-impl-label{font-family:var(--da-mono);font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--da-blue);margin-bottom:6px}
+.da-impl-text{font-family:var(--da-serif);font-size:.9rem;color:var(--da-text2);line-height:1.65}
+.da-rec-item{display:flex;gap:12px;align-items:flex-start;padding:10px 14px;background:var(--da-bg2);border:1px solid var(--da-border);border-radius:5px}
+.da-rec-content{flex:1}
+.da-rec-action{font-family:var(--da-sans);font-size:13px;font-weight:600;color:var(--da-text);margin-bottom:3px}
+.da-rec-rationale{font-family:var(--da-serif);font-size:.88rem;color:var(--da-text3);line-height:1.5}
+.da-gap-item{font-family:var(--da-mono);font-size:10px;color:var(--da-text3);padding:7px 12px;background:rgba(255,255,255,.03);border:1px solid var(--da-border);border-radius:4px;display:flex;gap:8px;align-items:flex-start}
+.da-gap-item::before{content:'?';color:var(--da-medium);font-weight:700;flex-shrink:0}
+.da-li-box{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:6px;padding:16px 18px}
+.da-li-text{font-family:var(--da-mono);font-size:11px;color:var(--da-text2);line-height:1.8;white-space:pre-wrap;word-break:break-word}
+.da-footer{margin-top:32px;padding-top:16px;border-top:1px solid var(--da-border);font-family:var(--da-mono);font-size:9px;color:var(--da-text4);letter-spacing:1.5px;text-transform:uppercase;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+@media(max-width:760px){
+  body.vgn-deep-analysis-view .content-wrap{padding:24px 14px 60px!important}
+  .da-title{font-size:1.7rem}
+  .da-actor-row,.da-driver-row,.da-scenario-head,.da-rec-item{flex-direction:column}
+  .da-actor-name,.da-driver-name{min-width:0}
+  .da-impl-grid{grid-template-columns:1fr}
+}
+@media print{
+  body.vgn-deep-analysis-view .view-bar{display:none!important}
+  body.vgn-deep-analysis-view{background:#080c14!important;color:#e2e8f0!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  body.vgn-deep-analysis-view .content-wrap{max-width:100%!important;padding:0 28px 40px!important;margin:0!important}
+  .da-report-wrap{max-width:100%!important;margin:0!important;padding:0!important}
+  .da-section,.da-kj-box,.da-actor-row,.da-driver-row,.da-scenario-card,.da-impl-card,.da-rec-item{break-inside:avoid;page-break-inside:avoid}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  @page{size:A4;margin:0.5in 0.6in}
+}`;
+  document.head.appendChild(style);
+
+  function txt(t){ return String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+  function paras(t){
+    if(!t) return '';
+    return String(t).split(/\n+/).filter(function(p){return p.trim();}).map(function(p){return '<p>'+txt(p)+'</p>';}).join('');
+  }
+  function arr(v){ return Array.isArray(v) ? v : (v ? [v] : []); }
+
+  var typeLabels = {strategic:'Strategic Intelligence Assessment',threat_actor:'Threat Actor Profile',sitrep:'Situation Report',scenario:'Scenario Analysis'};
+  var typeIcons  = {strategic:'🎯',threat_actor:'🕵',sitrep:'📡',scenario:'🔀'};
+  var currentType = g.analysis_type || g.type || 'strategic';
+  var typeLabel = typeLabels[currentType] || 'Strategic Intelligence Assessment';
+  var typeIcon = typeIcons[currentType] || '🎯';
+  var title = g.title || g.subject || DATA.title || 'Intelligence Assessment';
+  var date = g.date || g.assessment_date || new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase();
+
+  function capClass(v){
+    v = String(v || 'MEDIUM').toUpperCase();
+    if(v === 'HIGH') return 'da-cap-high';
+    if(v === 'LOW') return 'da-cap-low';
+    return 'da-cap-med';
+  }
+  function dirClass(v){
+    v = String(v || 'STABLE').toUpperCase();
+    if(v === 'INTENSIFYING') return 'da-dir-int';
+    if(v === 'WEAKENING') return 'da-dir-weak';
+    return 'da-dir-stab';
+  }
+  function scClass(v){
+    v = String(v || 'BASELINE').toUpperCase();
+    if(v === 'OPTIMISTIC') return 'da-sc-opt';
+    if(v === 'PESSIMISTIC') return 'da-sc-pess';
+    return 'da-sc-base';
+  }
+  function priClass(v){
+    v = String(v || 'MEDIUM_TERM').toUpperCase();
+    if(v === 'IMMEDIATE') return 'da-pri-imm';
+    if(v === 'SHORT_TERM') return 'da-pri-short';
+    return 'da-pri-med';
+  }
+
+  var html = '<div class="da-report-wrap">';
+
+  html += '<div class="da-header">'
+    + '<div class="da-header-top"><div><div class="da-org">VIGINOTE INTELLIGENCE</div>'
+    + '<div class="da-class">'+txt(g.classification || 'VIGINOTE INTELLIGENCE — CLIENT CONFIDENTIAL')+'</div></div>'
+    + '<div class="da-date"><strong>DATE:</strong> '+txt(date)+'<br><strong>SUBJECT:</strong> '+txt(g.subject || '')+'<br><strong>HORIZON:</strong> '+txt(g.time_horizon || g.horizon || '')+'</div></div>'
+    + '<div class="da-class-bar"><span class="da-class-text">'+txt(g.classification || 'CLIENT CONFIDENTIAL')+'</span><span class="da-class-text">'+typeIcon+' '+txt(typeLabel)+'</span></div>'
+    + '<div class="da-type-bar"><div class="da-type-label">'+txt(typeLabel)+'</div><div class="da-title">'+txt(title)+'</div></div>'
+    + '</div>';
+
+  if(g.analyst_note){
+    html += '<div class="da-note">ℹ '+txt(g.analyst_note)+'</div>';
+  }
+
+  if(arr(g.key_judgements).length){
+    html += '<div class="da-kj-box"><div class="da-kj-label">● Key Judgements</div>'
+      + arr(g.key_judgements).map(function(kj,i){return '<div class="da-kj-item"><span class="da-kj-num">KJ'+(i+1)+'</span><span>'+txt(kj)+'</span></div>';}).join('')
+      + '</div>';
+  }
+
+  if(g.executive_summary){
+    html += '<div class="da-section"><div class="da-section-head">Executive Summary</div><div class="da-body-text">'+paras(g.executive_summary)+'</div></div>';
+  }
+  if(g.background){
+    html += '<div class="da-section"><div class="da-section-head">Background & Context</div><div class="da-body-text">'+paras(g.background)+'</div></div>';
+  }
+  if(g.current_situation){
+    html += '<div class="da-section"><div class="da-section-head">Current Situation</div><div class="da-body-text">'+paras(g.current_situation)+'</div></div>';
+  }
+
+  if(arr(g.key_actors).length){
+    html += '<div class="da-section"><div class="da-section-head">Key Actors</div><div class="da-actors-grid">'
+      + arr(g.key_actors).map(function(a){
+        return '<div class="da-actor-row"><div class="da-actor-name">'+txt(a.name||'')+'</div>'
+          + '<div class="da-actor-role">'+txt(a.role||'')+(a.intent?'<br><em style="color:var(--da-text3);font-size:.88rem">Intent: '+txt(a.intent)+'</em>':'')+'</div>'
+          + '<div class="da-actor-meta"><span class="da-cap '+capClass(a.capability)+'">'+txt(a.capability||'MEDIUM')+'</span>'
+          + '<span class="da-actor-traj">↗ '+txt(a.trajectory||'STABLE')+'</span></div></div>';
+      }).join('') + '</div></div>';
+  }
+
+  if(arr(g.drivers).length){
+    html += '<div class="da-section"><div class="da-section-head">Key Drivers</div>'
+      + arr(g.drivers).map(function(d){
+        return '<div class="da-driver-row"><div class="da-driver-name">'+txt(d.driver||d.name||'')+'</div>'
+          + '<span class="da-driver-dir '+dirClass(d.direction)+'">'+txt(d.direction||'STABLE')+'</span>'
+          + '<div class="da-driver-desc">'+txt(d.description||'')+'</div></div>';
+      }).join('') + '</div>';
+  }
+
+  if(arr(g.scenarios).length){
+    html += '<div class="da-section"><div class="da-section-head">Scenario Analysis</div><div class="da-scenarios-grid">'
+      + arr(g.scenarios).map(function(s){
+        return '<div class="da-scenario-card"><div class="da-scenario-head">'
+          + '<span class="da-sc-type '+scClass(s.type)+'">'+txt(s.type||'BASELINE')+'</span>'
+          + '<span class="da-scenario-name">'+txt(s.name||'')+'</span>'
+          + '<span class="da-scenario-prob">Probability: '+txt(s.probability||'MEDIUM')+'</span></div>'
+          + '<div class="da-scenario-body"><div class="da-scenario-desc">'+txt(s.description||'')+'</div>'
+          + (arr(s.triggers).length?'<div class="da-triggers">'+arr(s.triggers).map(function(t){return '<span class="da-trigger">▶ '+txt(t)+'</span>';}).join('')+'</div>':'')
+          + (s.implications?'<div style="font-family:var(--da-mono);font-size:10px;color:var(--da-text3);font-style:italic">Implication: '+txt(s.implications)+'</div>':'')
+          + '</div></div>';
+      }).join('') + '</div></div>';
+  }
+
+  if(g.outlook){
+    html += '<div class="da-section"><div class="da-section-head">Strategic Outlook</div><div class="da-body-text">'+paras(g.outlook)+'</div></div>';
+  }
+
+  if(g.implications && typeof g.implications === 'object'){
+    var im = g.implications;
+    html += '<div class="da-section"><div class="da-section-head">Implications</div><div class="da-impl-grid">'
+      + (im.operational?'<div class="da-impl-card"><div class="da-impl-label">Operational</div><div class="da-impl-text">'+txt(im.operational)+'</div></div>':'')
+      + (im.security?'<div class="da-impl-card"><div class="da-impl-label">Security</div><div class="da-impl-text">'+txt(im.security)+'</div></div>':'')
+      + (im.reputational?'<div class="da-impl-card"><div class="da-impl-label">Reputational</div><div class="da-impl-text">'+txt(im.reputational)+'</div></div>':'')
+      + (im.financial?'<div class="da-impl-card"><div class="da-impl-label">Financial</div><div class="da-impl-text">'+txt(im.financial)+'</div></div>':'')
+      + '</div></div>';
+  }
+
+  if(arr(g.recommendations).length){
+    html += '<div class="da-section"><div class="da-section-head">Recommendations</div><div class="da-rec-list">'
+      + arr(g.recommendations).map(function(r){
+        if(typeof r === 'string') return '<div class="da-rec-item"><span class="da-rec-priority da-pri-med">ACTION</span><div class="da-rec-content"><div class="da-rec-action">'+txt(r)+'</div></div></div>';
+        return '<div class="da-rec-item"><span class="da-rec-priority '+priClass(r.priority)+'">'+txt(String(r.priority||'MEDIUM_TERM').replace('_',' '))+'</span>'
+          + '<div class="da-rec-content"><div class="da-rec-action">'+txt(r.action||'')+'</div>'
+          + (r.rationale?'<div class="da-rec-rationale">'+txt(r.rationale)+'</div>':'')+'</div></div>';
+      }).join('') + '</div></div>';
+  }
+
+  if(arr(g.intelligence_gaps).length){
+    html += '<div class="da-section"><div class="da-section-head">Intelligence Gaps</div><div class="da-gap-list">'
+      + arr(g.intelligence_gaps).map(function(gap){return '<div class="da-gap-item">'+txt(gap)+'</div>';}).join('')
+      + '</div></div>';
+  }
+
+  if(g.linkedin_post){
+    html += '<div class="da-section"><div class="da-section-head">LinkedIn Post</div><div class="da-li-box"><div class="da-li-text">'+txt(g.linkedin_post)+'</div></div></div>';
+  }
+
+  html += '<div class="da-footer"><span>© Viginote Intelligence '+(new Date().getFullYear())+'</span><span>Confidential Analytical Product · Not for Redistribution</span></div>';
+  html += '</div>';
+
+  wrap.innerHTML = html;
 }
 
 init();
