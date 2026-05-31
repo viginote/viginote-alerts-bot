@@ -68,11 +68,11 @@ BASE_DIR      = pathlib.Path(__file__).parent
 _CLIENTS_PATH = pathlib.Path(os.getenv("DB_PATH", "/data/viginote_v6.db")).parent / "clients.json"
 _ALL_REGIONS  = ["GLOBAL","MIDDLE_EAST","EUROPE","ASIA","WEST_EAST_AFRICA","SOUTHERN_AFRICA","SOUTH_AMERICA"]
 _TIER_LIMITS  = {
-    "monitor":    {"regions": 1, "watchlist": 3,  "briefs": 0},
-    "analyst":    {"regions": 2, "watchlist": 5,  "briefs": 2},
-    "operator":   {"regions": 4, "watchlist": 10, "briefs": 5},
-    "enterprise": {"regions": 7, "watchlist": -1, "briefs": -1},
-    "admin":      {"regions": 7, "watchlist": -1, "briefs": -1},
+    "monitor":    {"regions": 1, "streams": 1,  "watchlist": 3,  "briefs": 0},
+    "analyst":    {"regions": 2, "streams": 2,  "watchlist": 5,  "briefs": 2},
+    "operator":   {"regions": 4, "streams": 4,  "watchlist": 15, "briefs": 5},
+    "enterprise": {"regions": 7, "streams": 6,  "watchlist": -1, "briefs": -1},
+    "admin":      {"regions": 7, "streams": 6,  "watchlist": -1, "briefs": -1},
 }
 
 def _load_clients() -> dict:
@@ -317,6 +317,10 @@ async def page_dashboard(request: Request):
 @app.get("/assessment", response_class=HTMLResponse)
 async def page_assessment(request: Request):
     return _serve("assessment.html")
+
+@app.get("/deep-analysis", response_class=HTMLResponse)
+async def page_deep_analysis(request: Request):
+    return _serve("deep-analysis.html")
 
 @app.get("/digest", response_class=HTMLResponse)
 async def page_digest(request: Request):
@@ -573,7 +577,7 @@ class ClientProfile(BaseModel):
     tier:            str = "analyst"
     regions:         list[str] = []
     countries:       list[str] = []
-    streams:         list[str] = []
+    streams:         list[str] = ["geographic"]
     watchlist:       list[str] = []
     brief_allowance: int = 2
     label:           str = ""
@@ -589,17 +593,27 @@ async def upsert_client(req: ClientProfile, request: Request):
     limits = _TIER_LIMITS.get(req.tier, _TIER_LIMITS["analyst"])
     regions = req.regions if req.tier in ("admin","enterprise") else req.regions[:limits["regions"]]
     watchlist = req.watchlist if limits["watchlist"] == -1 else req.watchlist[:limits["watchlist"]]
+    # Enforce stream limits
+    all_streams = ["geographic","maritime","cyber","economic","political","executive"]
+    if req.tier in ("admin","enterprise"):
+        streams = all_streams
+    else:
+        streams = [s for s in (req.streams or ["geographic"]) if s in all_streams]
+        streams = streams[:limits.get("streams", 2)]
+    if "geographic" not in streams:
+        streams = ["geographic"] + streams
+
     clients[ukey] = {
-    "password":        req.password,
-    "tier":            req.tier,
-    "regions":         regions,
-    "countries":       req.countries,
-    "streams":         req.streams if req.streams else ["geographic"],
-    "watchlist":       watchlist,
-    "brief_allowance": req.brief_allowance if limits["briefs"] == -1 else min(req.brief_allowance, limits["briefs"]),
-    "briefs_used":     clients.get(ukey, {}).get("briefs_used", 0),
-    "label":           req.label or req.username.replace("_"," ").title(),
-}
+        "password":        req.password,
+        "tier":            req.tier,
+        "regions":         regions,
+        "countries":       req.countries or [],
+        "streams":         streams,
+        "watchlist":       watchlist,
+        "brief_allowance": req.brief_allowance if limits["briefs"] == -1 else min(req.brief_allowance, limits["briefs"]),
+        "briefs_used":     clients.get(ukey, {}).get("briefs_used", 0),
+        "label":           req.label or req.username.replace("_"," ").title(),
+    }
     _save_clients(clients)
     return {"status": "ok", "username": ukey, "profile": clients[ukey]}
 
@@ -1281,10 +1295,161 @@ Fill every field accurately for {req.location}. Return ONLY the JSON object."""
 # =======================
 # AI — WEEKLY DIGEST
 # =======================
+class DeepAnalysisRequest(BaseModel):
+    subject:      str
+    analysis_type: str = "strategic"   # strategic | threat_actor | sitrep | scenario
+    time_horizon: str = "current"      # current | 30d | 90d | 12m
+    depth:        str = "full"         # summary | full
+    client_context: str = ""           # optional client exposure context
+    hours:        int = 168
+
 class DigestRequest(BaseModel):
     hours: int = 168
     region: Optional[str] = None
     min_score: int = 5
+
+@app.post("/ai/deep-analysis")
+async def ai_deep_analysis(req: DeepAnalysisRequest):
+    if not ANTHROPIC_KEY:
+        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
+
+    now_str = datetime.now(timezone.utc).strftime("%d %B %Y")
+
+    # Pull relevant alerts from DB for context
+    alert_context = ""
+    try:
+        conn = get_conn()
+        rows = [row_to_dict(r) for r in query_alerts(conn, days=max(1, req.hours // 24), limit=300)]
+        subj_lower = req.subject.lower()
+        subj_words = [w for w in subj_lower.replace(",","").replace("-"," ").split() if len(w) > 3]
+        matched = []
+        for r in rows:
+            text = f"{r.get('title','')} {r.get('precis','')} {json.dumps(r.get('entities',{}))}".lower()
+            if any(w in text for w in subj_words):
+                matched.append(r)
+        if matched:
+            alert_context = f"\n\nRELEVANT LIVE INTELLIGENCE ({len(matched)} alerts from Viginote feeds):\n"
+            for a in matched[:15]:
+                alert_context += (
+                    f"- [{a.get('region','')} | Score {a.get('score',0)}] "
+                    f"{a.get('title','')} — {a.get('precis','')}\n"
+                )
+    except Exception as e:
+        print(f"[DEEP ANALYSIS DB] {e}")
+
+    type_instructions = {
+        "strategic":     "Produce a Strategic Intelligence Assessment covering geopolitical context, power dynamics, key actors, threat drivers, and strategic outlook.",
+        "threat_actor":  "Produce a Threat Actor Profile covering the actor's history, ideology, capabilities, modus operandi, current activity, and threat trajectory.",
+        "sitrep":        "Produce a Situation Report (SITREP) covering the current ground situation, recent developments, operational impact, and immediate outlook.",
+        "scenario":      "Produce a Scenario Analysis covering the current baseline, then three scenarios (optimistic, baseline, pessimistic) with probability assessments and trigger indicators for each.",
+    }
+    horizon_labels = {
+        "current": "current situation",
+        "30d":     "30-day outlook",
+        "90d":     "90-day outlook",
+        "12m":     "12-month strategic outlook",
+    }
+
+    client_ctx = f"\nClient context: {req.client_context}" if req.client_context else ""
+    type_instr = type_instructions.get(req.analysis_type, type_instructions["strategic"])
+    horizon_lbl = horizon_labels.get(req.time_horizon, "current situation")
+
+    prompt = f"""You are a senior intelligence analyst at a professional geopolitical risk firm, with deep expertise in conflict analysis, political risk, and operational security. Today is {now_str}.
+
+TASK: {type_instr}
+
+SUBJECT: {req.subject}
+TIME HORIZON: {horizon_lbl}
+DEPTH: {req.depth}{client_ctx}{alert_context}
+
+Write with analytical precision. Use the active voice. Avoid hedging language where the intelligence picture is clear. Cite specific actors, dates, locations and indicators where relevant. This is a professional intelligence product — not a news summary.
+
+Return ONLY a valid JSON object with these exact keys:
+
+{{
+  "title": "Analytical title for this product",
+  "subject": "{req.subject}",
+  "analysis_type": "{req.analysis_type}",
+  "time_horizon": "{horizon_lbl}",
+  "date": "{now_str}",
+  "classification": "VIGINOTE INTELLIGENCE — CLIENT CONFIDENTIAL",
+  "analyst_note": "One sentence on the analytical basis and key uncertainties.",
+  "key_judgements": [
+    "Key Judgement 1 — specific, assessable statement",
+    "Key Judgement 2 — specific, assessable statement",
+    "Key Judgement 3 — specific, assessable statement"
+  ],
+  "executive_summary": "Three paragraphs. Paragraph 1: current situation. Paragraph 2: key drivers and dynamics. Paragraph 3: outlook and implications.",
+  "background": "Two paragraphs of essential context — history, structural factors, and what has changed to make this subject analytically significant now.",
+  "current_situation": "Three paragraphs on the current ground truth — what is happening, who is doing it, and what it means operationally.",
+  "key_actors": [
+    {{"name": "Actor name", "role": "One sentence role description", "capability": "HIGH/MEDIUM/LOW", "intent": "One sentence on current intent", "trajectory": "ESCALATING/STABLE/DECLINING"}},
+    {{"name": "Actor name", "role": "One sentence", "capability": "HIGH/MEDIUM/LOW", "intent": "One sentence", "trajectory": "ESCALATING/STABLE/DECLINING"}},
+    {{"name": "Actor name", "role": "One sentence", "capability": "MEDIUM", "intent": "One sentence", "trajectory": "STABLE"}}
+  ],
+  "drivers": [
+    {{"driver": "Driver name", "description": "Two sentences explaining this driver and why it matters.", "direction": "INTENSIFYING/STABLE/WEAKENING"}},
+    {{"driver": "Driver name", "description": "Two sentences.", "direction": "INTENSIFYING/STABLE/WEAKENING"}},
+    {{"driver": "Driver name", "description": "Two sentences.", "direction": "STABLE"}}
+  ],
+  "scenarios": [
+    {{"name": "Scenario name", "type": "OPTIMISTIC/BASELINE/PESSIMISTIC", "probability": "LOW/MEDIUM/HIGH", "description": "Two sentences describing this scenario.", "triggers": ["Trigger indicator 1", "Trigger indicator 2"], "implications": "One sentence on what this means for operations."}},
+    {{"name": "Scenario name", "type": "BASELINE", "probability": "HIGH", "description": "Two sentences.", "triggers": ["Trigger 1", "Trigger 2"], "implications": "One sentence."}},
+    {{"name": "Scenario name", "type": "PESSIMISTIC", "probability": "MEDIUM", "description": "Two sentences.", "triggers": ["Trigger 1", "Trigger 2"], "implications": "One sentence."}}
+  ],
+  "outlook": "Two paragraphs. Paragraph 1: the 30-90 day trajectory. Paragraph 2: the longer-term strategic direction and what would change the assessment.",
+  "implications": {{
+    "operational": "Two sentences on operational risk implications.",
+    "security": "Two sentences on security implications.",
+    "reputational": "One sentence on reputational/regulatory risk.",
+    "financial": "One sentence on financial/economic exposure."
+  }},
+  "recommendations": [
+    {{"priority": "IMMEDIATE", "action": "Specific recommended action", "rationale": "One sentence why."}},
+    {{"priority": "SHORT_TERM", "action": "Specific recommended action", "rationale": "One sentence why."}},
+    {{"priority": "SHORT_TERM", "action": "Specific recommended action", "rationale": "One sentence why."}},
+    {{"priority": "MEDIUM_TERM", "action": "Specific recommended action", "rationale": "One sentence why."}}
+  ],
+  "intelligence_gaps": ["Gap 1 — what we don't know and why it matters", "Gap 2", "Gap 3"],
+  "sources": "Open-source intelligence, Viginote real-time feeds, open-source geopolitical analysis.",
+  "linkedin_post": "Write a 120-word LinkedIn post presenting a key finding from this analysis as a thought leadership piece. Professional tone. End with: 'Full analysis available to Viginote subscribers. viginote.com/access' and 3 relevant hashtags."
+}}
+
+Fill every field with genuine analytical content. Return ONLY the JSON object."""
+
+    try:
+        async with httpx.AsyncClient(timeout=180.0) as client:
+            resp = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={"x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01",
+                         "content-type": "application/json"},
+                json={"model": "claude-haiku-4-5-20251001", "max_tokens": 8000,
+                      "messages": [{"role": "user", "content": prompt}]},
+            )
+        resp.raise_for_status()
+        raw = resp.json()["content"][0]["text"].strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"): raw = raw[4:]
+        raw = raw.strip()
+        try:
+            result = json.loads(raw)
+        except json.JSONDecodeError:
+            for i in range(len(raw), 0, -1):
+                if raw[i-1] == '}':
+                    try:
+                        result = json.loads(raw[:i])
+                        break
+                    except json.JSONDecodeError:
+                        continue
+            else:
+                raise HTTPException(status_code=500, detail="Deep analysis parse error.")
+        return {"status": "ok", "generated": result}
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Deep analysis error: {str(e)}")
 
 @app.post("/ai/digest")
 async def ai_digest(req: DigestRequest):
