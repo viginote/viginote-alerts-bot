@@ -262,11 +262,14 @@ app = FastAPI(
     version="2.0.0",
 )
 
+_allowed_origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()] or ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["GET", "POST"],
+    allow_origins=_allowed_origins,
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    allow_credentials=True,
 )
 
 _conn = None
@@ -300,6 +303,28 @@ def _serve(filename: str) -> HTMLResponse:
 def _admin_redirect():
     return RedirectResponse(url="/admin/login", status_code=302)
 
+def _client_username_from_request(request: Request) -> str | None:
+    """Return authenticated client username from feed token/cookie/header, if present."""
+    tok = _token_from_request(request)
+    return _verify_token(tok) if tok else None
+
+def _require_admin(request: Request):
+    """Raise 403 unless the request has a valid admin session."""
+    if not _verify_admin(request):
+        raise HTTPException(status_code=403, detail="Admin only.")
+
+def _require_admin_or_client(request: Request) -> str | None:
+    """Allow admin or authenticated client. Returns client username, or None for admin."""
+    if _verify_admin(request):
+        return None
+    uname = _client_username_from_request(request)
+    if not uname:
+        raise HTTPException(status_code=401, detail="Authentication required.")
+    return uname
+
+def _is_admin_request(request: Request) -> bool:
+    return _verify_admin(request)
+
 @app.get("/", response_class=HTMLResponse)
 async def page_root(request: Request):
     if not _verify_admin(request): return _admin_redirect()
@@ -312,23 +337,27 @@ async def page_hub(request: Request):
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def page_dashboard(request: Request):
+    if not _verify_admin(request): return _admin_redirect()
     return _serve("dashboard.html")
 
 @app.get("/assessment", response_class=HTMLResponse)
 async def page_assessment(request: Request):
+    if not _verify_admin(request): return _admin_redirect()
     return _serve("assessment.html")
 
 @app.get("/deep-analysis", response_class=HTMLResponse)
 async def page_deep_analysis(request: Request):
+    if not _verify_admin(request): return _admin_redirect()
     return _serve("deep-analysis.html")
 
 @app.get("/digest", response_class=HTMLResponse)
 async def page_digest(request: Request):
+    if not _verify_admin(request): return _admin_redirect()
     return _serve("digest.html")
 
 @app.get("/brief", response_class=HTMLResponse)
 async def page_brief(request: Request):
-    # Page is accessible — AI generation endpoint has its own auth
+    if not _verify_admin(request): return _admin_redirect()
     return _serve("brief.html")
 
 @app.get("/client", response_class=HTMLResponse)
@@ -362,7 +391,7 @@ async def deliverable_save(req: SaveDeliverableRequest, request: Request):
     uname = _verify_token(tok) if tok else None
     if not _verify_admin(request) and not uname:
         raise HTTPException(status_code=403, detail="Authentication required.")
-    if req.type not in ("brief", "assessment", "digest"):
+    if req.type not in ("brief", "assessment", "digest", "deep-analysis", "deep_analysis"):
         raise HTTPException(status_code=400, detail="Invalid type.")
     rec = save_deliverable(
         dtype=req.type,
@@ -531,8 +560,9 @@ async def auth_logout(token: str):
     return {"status": "ok"}
 
 @app.get("/auth/debug")
-async def auth_debug():
-    """Debug endpoint — check clients config status without exposing passwords."""
+async def auth_debug(request: Request):
+    """Admin — check clients config status without exposing passwords."""
+    _require_admin(request)
     clients_on_disk = _CLIENTS_PATH.exists()
     clients = _load_clients()
     feed_users_env = os.getenv("FEED_USERS", "")
@@ -547,8 +577,9 @@ async def auth_debug():
     }
 
 @app.get("/auth/sessions")
-async def auth_sessions():
-    """Admin endpoint — shows active sessions."""
+async def auth_sessions(request: Request):
+    """Admin — shows active client sessions."""
+    _require_admin(request)
     return {
         "active_sessions": len(_feed_sessions),
         "sessions": [
@@ -750,7 +781,7 @@ async def admin_auth(req: AdminLoginRequest, response: Response):
         max_age=43200,
         httponly=True,
         samesite="lax",
-        secure=False,   # works on both HTTP and HTTPS
+        secure=(os.getenv("ADMIN_COOKIE_SECURE", "true").lower() != "false"),
     )
     print(f"[ADMIN] Login ts={int(time.time())} sessions={len(_admin_sessions)}")
     return {"redirect": "/hub"}
@@ -775,7 +806,12 @@ async def page_portal(request: Request):
 # INGEST (from bot)
 # =======================
 @app.post("/ingest", status_code=201)
-def ingest(alert: dict):
+def ingest(alert: dict, request: Request):
+    ingest_token = os.getenv("INGEST_TOKEN", "")
+    if ingest_token:
+        supplied = request.headers.get("X-Ingest-Token") or request.query_params.get("token")
+        if supplied != ingest_token:
+            raise HTTPException(status_code=403, detail="Invalid ingest token.")
     conn = get_conn()
     cur  = conn.cursor()
     try:
@@ -824,6 +860,7 @@ def list_alerts(
     keyword:   Optional[str] = Query(None),
     entity:    Optional[str] = Query(None),
 ):
+    _require_admin_or_client(request)
     try: hours_i  = max(1, min(8760, int(hours))) if hours else 24
     except: hours_i = 24
     try: score_i  = max(0, int(min_score)) if min_score else 0
@@ -910,20 +947,28 @@ def list_alerts(
         return {"count": 0, "alerts": [], "error": str(e)}
 
 @app.get("/alerts/{alert_id}")
-def get_alert(alert_id: int):
+def get_alert(alert_id: int, request: Request):
+    _require_admin_or_client(request)
     conn = get_conn()
     row  = conn.execute("SELECT * FROM sent_log WHERE id=?", (alert_id,)).fetchone()
     if not row: raise HTTPException(status_code=404, detail="Alert not found")
     d = row_to_dict(dict(row))
+    if not _is_admin_request(request):
+        allowed_regions = _regions_for_request(request)
+        allowed_streams = _streams_for_request(request)
+        if d.get("region") not in allowed_regions or (d.get("stream") or "geographic") not in allowed_streams:
+            raise HTTPException(status_code=403, detail="Access denied.")
     # Return full article text for the article preview panel (no truncation)
     return d
 
 @app.get("/clusters")
 def get_clusters(
+    request: Request,
     region:      Optional[str] = Query(None),
     days:        int            = Query(3),
     min_sources: int            = Query(2),
 ):
+    _require_admin(request)
     conn = get_conn()
     try:
         clusters = query_clusters(conn, region=region, days=days, min_sources=min_sources)
@@ -933,11 +978,13 @@ def get_clusters(
 
 @app.get("/entities")
 def get_entities(
+    request: Request,
     region: Optional[str] = Query(None),
     hours:  int            = Query(168),
     etype:  str            = Query("locs"),
     limit:  int            = Query(20),
 ):
+    _require_admin(request)
     days = max(1, hours // 24)
     conn = get_conn()
     rows = query_alerts(conn, region=region, days=days, limit=500)
@@ -954,7 +1001,8 @@ def get_entities(
             "results": [{"name": n, "count": c} for n, c in ranked]}
 
 @app.get("/feed-health")
-def get_feed_health(min_failures: int = Query(3)):
+def get_feed_health(request: Request, min_failures: int = Query(3)):
+    _require_admin(request)
     conn = get_conn()
     bad  = unhealthy_feeds(conn, min_failures=min_failures)
     try:
@@ -969,10 +1017,12 @@ def get_feed_health(min_failures: int = Query(3)):
 
 @app.get("/briefing", response_class=PlainTextResponse)
 def get_briefing_md(
+    request: Request,
     hours:     int           = Query(24),
     region:    Optional[str] = Query(None),
     min_score: int           = Query(5),
 ):
+    _require_admin(request)
     days = max(1, hours // 24)
     conn = get_conn()
     rows = [row_to_dict(r) for r in query_alerts(conn, region=region, days=days,
@@ -1060,10 +1110,12 @@ def analytics_trajectory(
 
 @app.get("/analytics/diversity")
 def analytics_diversity(
+    request: Request,
     hours:  int            = Query(168),
     region: Optional[str]  = Query(None),
 ):
-    """Source diversity breakdown — for portal diversity card."""
+    """Source diversity breakdown — authenticated admin/client."""
+    _require_admin_or_client(request)
     days = max(1, hours // 24)
     conn = get_conn()
     rows = query_alerts(conn, region=region, days=days, limit=500)
@@ -1138,7 +1190,8 @@ class BriefingRequest(BaseModel):
     custom_title: Optional[str] = None
 
 @app.post("/ai/generate")
-async def ai_generate(req: BriefingRequest):
+async def ai_generate(req: BriefingRequest, request: Request):
+    _require_admin(request)
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
     if not req.alerts:
@@ -1209,7 +1262,8 @@ class AssessmentRequest(BaseModel):
     hours: int = 168
 
 @app.post("/ai/assessment")
-async def ai_assessment(req: AssessmentRequest):
+async def ai_assessment(req: AssessmentRequest, request: Request):
+    _require_admin(request)
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
 
@@ -1309,7 +1363,8 @@ class DigestRequest(BaseModel):
     min_score: int = 5
 
 @app.post("/ai/deep-analysis")
-async def ai_deep_analysis(req: DeepAnalysisRequest):
+async def ai_deep_analysis(req: DeepAnalysisRequest, request: Request):
+    _require_admin(request)
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
 
@@ -1452,7 +1507,8 @@ Fill every field with genuine analytical content. Return ONLY the JSON object.""
         raise HTTPException(status_code=500, detail=f"Deep analysis error: {str(e)}")
 
 @app.post("/ai/digest")
-async def ai_digest(req: DigestRequest):
+async def ai_digest(req: DigestRequest, request: Request):
+    _require_admin(request)
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
 
@@ -1558,7 +1614,8 @@ class ImageRequest(BaseModel):
     briefing_type: str = "morning"
 
 @app.post("/ai/image")
-async def ai_image(req: ImageRequest):
+async def ai_image(req: ImageRequest, request: Request):
+    _require_admin(request)
     region_str = ", ".join(req.regions[:3]) if req.regions else "global"
     combined   = (req.headline + " " + " ".join(req.organizations) + " " + " ".join(req.locations)).lower()
 
@@ -1637,7 +1694,8 @@ def health():
         return {"status":"degraded","error":str(e)}
 
 @app.post("/webhook/test")
-def webhook_test():
+def webhook_test(request: Request):
+    _require_admin(request)
     import requests as req
     token   = os.getenv("TELEGRAM_BOT_TOKEN","")
     chat_id = os.getenv("TELEGRAM_CHAT_ID","")
