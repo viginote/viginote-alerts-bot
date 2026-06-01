@@ -300,7 +300,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
       <div class="sb-stat"><div class="sbs-l">Alerts</div><div class="sbs-v" id="st-tot">&#x2014;</div></div>
       <div class="sb-stat"><div class="sbs-l">Critical</div><div class="sbs-v crit" id="st-crit">&#x2014;</div></div>
       <div class="sb-stat"><div class="sbs-l">High</div><div class="sbs-v high" id="st-high">&#x2014;</div></div>
-      <div class="sb-stat"><div class="sbs-l">Sources</div><div class="sbs-v grn">162</div></div>
+      <div class="sb-stat"><div class="sbs-l">Sources</div><div class="sbs-v grn" id="st-sources">&#x2014;</div></div>
     </div>
     <div class="sb-divider"></div>
 
@@ -641,21 +641,25 @@ function switchPanel(name){
 
 // ── LOAD STATS + RECENT ───────────────────────────────────────────────────
 function loadDashboard(){
-  fetch(API+'/alerts?hours=24&min_score=4&limit=100')
+  fetch(API+'/alerts?hours=168&min_score=4&limit=500')
   .then(function(r){return r.json();})
   .then(function(d){
     var alerts = d.alerts||[];
     var crit = alerts.filter(function(a){return a.is_critical||a.score>=9;}).length;
     var high = alerts.filter(function(a){return a.score>=7&&a.score<9&&!a.is_critical;}).length;
+    var uniqueSources = new Set(alerts.map(function(a){
+      return a.source_domain || a.source_dom;
+    }).filter(Boolean)).size;
     document.getElementById('st-tot').textContent  = alerts.length;
     document.getElementById('st-crit').textContent = crit;
     document.getElementById('st-high').textContent = high;
+    document.getElementById('st-sources').textContent = uniqueSources;
     document.getElementById('feed-badge').textContent = alerts.length;
 
     var top = alerts.slice(0,6);
     if(!top.length){
       document.getElementById('recent-list').innerHTML =
-        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3);padding:12px 0">No alerts in the last 24 hours.</div>';
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3);padding:12px 0">No alerts in the last 7 days.</div>';
       return;
     }
     function sevInfo(s,c){
@@ -842,6 +846,7 @@ function loadAdminFeed(){
   .then(function(d){
     _adminAlerts = d.alerts||[];
     renderAdminFeed();
+    loadDashboard();
   })
   .catch(function(e){
     list.innerHTML = '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--critical);padding:20px;text-align:center">Error loading feed: '+escapeHtml(e.message)+'</div>';
@@ -1235,7 +1240,7 @@ function showCfMsg(msg,type){
 
 // ── BOOT ──────────────────────────────────────────────────────────────────
 loadDashboard();
-setInterval(loadDashboard, 120000);
+setInterval(loadDashboard, 60000);
 </script>
 </body>
 </html>
