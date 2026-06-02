@@ -182,6 +182,43 @@ def _make_admin_token() -> str:
 
 _ADMIN_SESSIONS_PATH = pathlib.Path(os.getenv("DB_PATH", "/data/viginote_v6.db")).parent / "admin_sessions.json"
 
+_AUDIT_LOG_PATH = pathlib.Path(os.getenv("DB_PATH", "/data/viginote_v6.db")).parent / "audit_log.jsonl"
+
+def _audit(request: Request | None, action: str, meta: dict | None = None):
+    """Append a lightweight admin audit event to /data/audit_log.jsonl."""
+    try:
+        _AUDIT_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        event = {
+            "ts": int(time.time()),
+            "iso": datetime.now(timezone.utc).isoformat(),
+            "action": action,
+            "meta": meta or {},
+        }
+        if request is not None:
+            token = request.cookies.get("vgn_admin")
+            event["admin_session"] = token[:10] if token else None
+            event["ip"] = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (request.client.host if request.client else None)
+            event["user_agent"] = request.headers.get("user-agent", "")[:180]
+        with _AUDIT_LOG_PATH.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(event, ensure_ascii=False) + "\n")
+    except Exception as e:
+        print(f"[AUDIT ERROR] {e}")
+
+def _read_audit(limit: int = 100) -> list[dict]:
+    try:
+        if not _AUDIT_LOG_PATH.exists():
+            return []
+        lines = _AUDIT_LOG_PATH.read_text(encoding="utf-8").splitlines()[-max(1, min(500, limit)):]
+        out = []
+        for line in lines:
+            try:
+                out.append(json.loads(line))
+            except Exception:
+                pass
+        return list(reversed(out))
+    except Exception:
+        return []
+
 def _load_admin_sessions() -> dict:
     """Load persisted admin sessions from disk."""
     try:
@@ -400,6 +437,7 @@ async def deliverable_save(req: SaveDeliverableRequest, request: Request):
         clients=req.clients,
         one_off=req.one_off,
     )
+    _audit(request, "deliverable_save", {"id": rec.get("id"), "type": req.type, "title": req.title, "clients": req.clients, "one_off": req.one_off})
     return {
         "id":      rec["id"],
         "token":   rec["token"],
@@ -465,6 +503,7 @@ async def deliverable_publish(del_id: str, req: PublishRequest, request: Request
     rec = publish_to_clients(del_id, req.clients)
     if not rec:
         raise HTTPException(status_code=404, detail="Deliverable not found.")
+    _audit(request, "deliverable_publish", {"id": del_id, "clients": req.clients})
     return {"id": del_id, "clients": rec["clients"], "view_url": f"/view/{rec['token']}"}
 
 @app.delete("/deliverables/{del_id}")
@@ -473,6 +512,7 @@ async def deliverable_delete(del_id: str, request: Request):
     if not _verify_admin(request):
         raise HTTPException(status_code=403, detail="Admin only.")
     if delete_deliverable(del_id):
+        _audit(request, "deliverable_delete", {"id": del_id})
         return {"status": "deleted"}
     raise HTTPException(status_code=404, detail="Deliverable not found.")
 
@@ -589,6 +629,12 @@ async def auth_sessions(request: Request):
         ]
     }
 
+@app.get("/admin/audit")
+async def admin_audit(request: Request, limit: int = Query(100)):
+    """Admin — recent audit trail."""
+    _require_admin(request)
+    return {"events": _read_audit(limit), "count": len(_read_audit(limit))}
+
 @app.get("/admin/clients")
 async def list_clients(request: Request):
     """Admin — list all client profiles (passwords redacted)."""
@@ -646,6 +692,7 @@ async def upsert_client(req: ClientProfile, request: Request):
         "label":           req.label or req.username.replace("_"," ").title(),
     }
     _save_clients(clients)
+    _audit(request, "client_upsert", {"username": ukey, "tier": req.tier, "regions": regions, "streams": streams})
     return {"status": "ok", "username": ukey, "profile": clients[ukey]}
 
 @app.delete("/admin/clients/{username}")
@@ -658,6 +705,7 @@ async def delete_client(username: str, request: Request):
         raise HTTPException(status_code=404, detail="Client not found.")
     del clients[username]
     _save_clients(clients)
+    _audit(request, "client_delete", {"username": username})
     return {"status": "deleted", "username": username}
 
 @app.get("/auth/profile")
@@ -760,12 +808,13 @@ class AdminLoginRequest(BaseModel):
     password: str
 
 @app.post("/admin/auth")
-async def admin_auth(req: AdminLoginRequest, response: Response):
+async def admin_auth(req: AdminLoginRequest, request: Request, response: Response):
     pw = _admin_password()
     if not pw:
         raise HTTPException(status_code=503, detail="ADMIN_PASSWORD not configured.")
     if req.password != pw:
         print(f"[ADMIN] Failed login attempt ts={int(time.time())}")
+        _audit(request, "admin_login_failed")
         raise HTTPException(status_code=401, detail="Incorrect password.")
     token = _make_admin_token()
     created = time.time()
@@ -784,10 +833,12 @@ async def admin_auth(req: AdminLoginRequest, response: Response):
         secure=(os.getenv("ADMIN_COOKIE_SECURE", "true").lower() != "false"),
     )
     print(f"[ADMIN] Login ts={int(time.time())} sessions={len(_admin_sessions)}")
+    _audit(request, "admin_login_success")
     return {"redirect": "/hub"}
 
 @app.post("/admin/logout")
-async def admin_logout(response: Response):
+async def admin_logout(request: Request, response: Response):
+    _audit(request, "admin_logout")
     response.delete_cookie("vgn_admin")
     return RedirectResponse(url="/admin/login", status_code=302)
 
@@ -808,10 +859,11 @@ async def page_portal(request: Request):
 @app.post("/ingest", status_code=201)
 def ingest(alert: dict, request: Request):
     ingest_token = os.getenv("INGEST_TOKEN", "")
-    if ingest_token:
-        supplied = request.headers.get("X-Ingest-Token") or request.query_params.get("token")
-        if supplied != ingest_token:
-            raise HTTPException(status_code=403, detail="Invalid ingest token.")
+    if not ingest_token:
+        raise HTTPException(status_code=403, detail="External ingestion disabled. Set INGEST_TOKEN to enable this endpoint.")
+    supplied = request.headers.get("X-Ingest-Token") or request.query_params.get("token")
+    if supplied != ingest_token:
+        raise HTTPException(status_code=403, detail="Invalid ingest token.")
     conn = get_conn()
     cur  = conn.cursor()
     try:
@@ -1192,6 +1244,7 @@ class BriefingRequest(BaseModel):
 @app.post("/ai/generate")
 async def ai_generate(req: BriefingRequest, request: Request):
     _require_admin(request)
+    _audit(request, "ai_generate_brief", {"alert_count": len(req.alerts), "briefing_type": req.briefing_type})
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
     if not req.alerts:
@@ -1264,6 +1317,7 @@ class AssessmentRequest(BaseModel):
 @app.post("/ai/assessment")
 async def ai_assessment(req: AssessmentRequest, request: Request):
     _require_admin(request)
+    _audit(request, "ai_generate_assessment", {"location": req.location, "mode": req.mode, "hours": req.hours})
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
 
@@ -1365,6 +1419,7 @@ class DigestRequest(BaseModel):
 @app.post("/ai/deep-analysis")
 async def ai_deep_analysis(req: DeepAnalysisRequest, request: Request):
     _require_admin(request)
+    _audit(request, "ai_generate_deep_analysis", {"subject": req.subject, "analysis_type": req.analysis_type, "time_horizon": req.time_horizon})
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
 
@@ -1509,6 +1564,7 @@ Fill every field with genuine analytical content. Return ONLY the JSON object.""
 @app.post("/ai/digest")
 async def ai_digest(req: DigestRequest, request: Request):
     _require_admin(request)
+    _audit(request, "ai_generate_digest", {"hours": req.hours, "region": req.region, "min_score": req.min_score})
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
 
@@ -1616,6 +1672,7 @@ class ImageRequest(BaseModel):
 @app.post("/ai/image")
 async def ai_image(req: ImageRequest, request: Request):
     _require_admin(request)
+    _audit(request, "ai_generate_image", {"headline": req.headline[:120], "regions": req.regions})
     region_str = ", ".join(req.regions[:3]) if req.regions else "global"
     combined   = (req.headline + " " + " ".join(req.organizations) + " " + " ".join(req.locations)).lower()
 
