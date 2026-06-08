@@ -375,7 +375,7 @@ select.ip-input{cursor:pointer}
 </div>
 
 <script>
-const API_BASE=window.location.origin;
+const API=window.location.origin;
 function selectMode(radio){document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('selected'));radio.closest('.mode-card').classList.add('selected');document.getElementById('hours-section').style.display=radio.value!=='ai'?'block':'none'}
 function quickLoad(loc){document.getElementById('loc-input').value=loc}
 function riskBadge(level){const l=(level||'MEDIUM').toUpperCase();return`<span class="risk-badge risk-${l}"><span class="dot"></span>${l}</span>`}
@@ -440,7 +440,7 @@ async function generateAssessment(){
   const steps=['ps1','ps2','ps3','ps4','ps5'];let step=0;
   const si=setInterval(()=>{if(step>0)document.getElementById(steps[step-1]).classList.replace('active','done');if(step<steps.length){document.getElementById(steps[step]).classList.add('active');step++}},14000/steps.length);
   try{
-    const resp=await fetch(`${API_BASE}/ai/assessment`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location,event:event||null,mode,hours})});
+    const resp=await fetch(`${API}/ai/assessment`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location,event:event||null,mode,hours})});
     const data=await resp.json();clearInterval(si);
     if(!resp.ok)throw new Error(data.detail||'Assessment failed');
     if(!data.generated){alert(data.message||'No data returned.');return}
