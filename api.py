@@ -827,7 +827,7 @@ def list_alerts(
     except: hours_i = 24
     try: score_i  = max(0, int(min_score)) if min_score else 0
     except: score_i = 0
-    try: limit_i  = max(1, min(5000, int(limit))) if limit else 500
+    try: limit_i  = max(1, min(5000, int(limit))) if limit else 5000
     except: limit_i = 100
     try: tier_i   = int(tier) if tier and tier not in ("ALL","") else None
     except: tier_i = None
@@ -873,7 +873,7 @@ def list_alerts(
     if entity and "entities_json" in cols:
         sql += " AND entities_json LIKE ?"; params.append(f"%{entity}%")
 
-    sql += " ORDER BY score DESC, ts DESC LIMIT ?"
+    sql += " ORDER BY ts DESC, score DESC LIMIT ?"
     params.append(limit_i)
 
     try:
@@ -1410,7 +1410,7 @@ CTA: "Full brief available to subscribers. Enquiries: info@viginote.com" """
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Flash brief error: {str(e)}")
 @app.post("/ai/deep-analysis")
-async def ai_deep_analysis(req: DeepAnalysisRequest):
+async def ai_deep_analysis(req: DeepAnalysisRequest, request: Request):
     if not _verify_admin(request): raise HTTPException(status_code=403, detail="Admin access required.")
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
@@ -1421,7 +1421,7 @@ async def ai_deep_analysis(req: DeepAnalysisRequest):
     alert_context = ""
     try:
         conn = get_conn()
-        rows = [row_to_dict(r) for r in query_alerts(conn, days=max(1, req.hours // 24), limit=300)]
+        rows = [row_to_dict(r) for r in query_alerts(conn, days=max(1, req.hours // 24), limit=1000)]
         subj_lower = req.subject.lower()
         subj_words = [w for w in subj_lower.replace(",","").replace("-"," ").split() if len(w) > 3]
         # Require at least 2 keyword matches to avoid spurious context pollution
@@ -1476,6 +1476,9 @@ CRITICAL ACCURACY RULES — FOLLOW STRICTLY:
 7. When in doubt about a specific fact, omit it or note it as unverified rather than stating it confidently.
 
 This is a professional intelligence product that will be delivered to paying clients. Factual errors damage credibility and may affect real-world decisions. Accuracy is more important than completeness.
+
+TOPIC-BRIEF FORMAT REQUIREMENT:
+If the subject is a topic written by the analyst rather than a specific alert, structure the analysis as an intricate professional intelligence brief. Do not write a generic essay. Use the exact subject as the analytical anchor, define the intelligence question, separate confirmed reporting from assessment, and clearly state assumptions and intelligence gaps.
 
 Return ONLY a valid JSON object with these exact keys:
 
@@ -1536,7 +1539,7 @@ Fill every field with genuine analytical content. Return ONLY the JSON object.""
                 "https://api.anthropic.com/v1/messages",
                 headers={"x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01",
                          "content-type": "application/json"},
-                json={"model": "claude-haiku-4-5-20251001", "max_tokens": 8000,
+                json={"model": ANTHROPIC_MODEL, "max_tokens": 8000,
                       "messages": [{"role": "user", "content": prompt}]},
             )
         resp.raise_for_status()
