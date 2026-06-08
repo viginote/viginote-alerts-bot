@@ -63,6 +63,37 @@ ANTHROPIC_KEY   = os.getenv("ANTHROPIC_API_KEY", "")
 ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
 OPENAI_KEY      = os.getenv("OPENAI_API_KEY", "")
 
+# Public URL used for links shared outside the admin workspace.
+# Set this in Render Environment Variables:
+# PUBLIC_BASE_URL=https://intel.viginote.com
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
+
+def _public_base_url(request: Request | None = None) -> str:
+    """Return the branded public base URL for published deliverables."""
+    if PUBLIC_BASE_URL:
+        return PUBLIC_BASE_URL
+    if request is not None:
+        return str(request.base_url).rstrip("/")
+    return ""
+
+def _view_path(token: str) -> str:
+    return f"/view/{token}"
+
+def _public_view_url(token: str, request: Request | None = None) -> str:
+    base = _public_base_url(request)
+    return f"{base}{_view_path(token)}" if base else _view_path(token)
+
+def _attach_public_urls(rec: dict, request: Request | None = None) -> dict:
+    """Attach branded view URL fields without changing stored content."""
+    if not rec:
+        return rec
+    token = rec.get("token", "")
+    if token:
+        rec["view_path"] = _view_path(token)
+        rec["view_url"] = _public_view_url(token, request)
+        rec["public_view_url"] = rec["view_url"]
+    return rec
+
 # ── CLIENT PROFILE SYSTEM ────────────────────────────────────────────────────
 BASE_DIR      = pathlib.Path(__file__).parent
 _CLIENTS_PATH = pathlib.Path(os.getenv("DB_PATH", "/data/viginote_v6.db")).parent / "clients.json"
@@ -370,11 +401,14 @@ async def deliverable_save(req: SaveDeliverableRequest, request: Request):
         clients=req.clients,
         one_off=req.one_off,
     )
+    _attach_public_urls(rec, request)
     return {
-        "id":      rec["id"],
-        "token":   rec["token"],
-        "view_url": f"/view/{rec['token']}",
-        "expires": time_remaining(rec),
+        "id":              rec["id"],
+        "token":           rec["token"],
+        "view_path":       rec["view_path"],
+        "view_url":        rec["view_url"],
+        "public_view_url": rec["public_view_url"],
+        "expires":         time_remaining(rec),
     }
 
 @app.get("/deliverables")
@@ -390,6 +424,7 @@ async def deliverables_list(
     for item in items:
         item["time_remaining"] = time_remaining(item)
         item["expired"] = is_expired(item)
+        _attach_public_urls(item, request)
     return {"deliverables": items, "count": len(items)}
 
 @app.get("/deliverables/client")
@@ -404,6 +439,7 @@ async def deliverables_for_client(request: Request):
         item["time_remaining"] = time_remaining(item)
         item["expired"] = is_expired(item)
         item["viewed"] = uname in item.get("viewed_by", {})
+        _attach_public_urls(item, request)
     return {"deliverables": items, "count": len(items)}
 
 @app.get("/deliverables/{del_id}")
@@ -417,11 +453,13 @@ async def deliverable_get(del_id: str, request: Request):
     # Check access
     if _verify_admin(request):
         mark_viewed(del_id)
+        _attach_public_urls(rec, request)
         return rec
     tok = _token_from_request(request)
     uname = _verify_token(tok) if tok else None
     if uname and uname in rec.get("clients", []):
         mark_viewed(del_id, uname)
+        _attach_public_urls(rec, request)
         return rec
     raise HTTPException(status_code=403, detail="Access denied.")
 
@@ -435,7 +473,14 @@ async def deliverable_publish(del_id: str, req: PublishRequest, request: Request
     rec = publish_to_clients(del_id, req.clients)
     if not rec:
         raise HTTPException(status_code=404, detail="Deliverable not found.")
-    return {"id": del_id, "clients": rec["clients"], "view_url": f"/view/{rec['token']}"}
+    _attach_public_urls(rec, request)
+    return {
+        "id":              del_id,
+        "clients":         rec["clients"],
+        "view_path":       rec["view_path"],
+        "view_url":        rec["view_url"],
+        "public_view_url": rec["public_view_url"],
+    }
 
 @app.delete("/deliverables/{del_id}")
 async def deliverable_delete(del_id: str, request: Request):
@@ -453,6 +498,7 @@ async def view_deliverable_data(token: str, request: Request):
     if not rec or is_expired(rec):
         raise HTTPException(status_code=404, detail="Not found or expired.")
     mark_viewed(rec["id"])
+    _attach_public_urls(rec, request)
     return rec
 @app.get("/view/{token}", response_class=HTMLResponse)
 async def view_deliverable(token: str, request: Request):
@@ -475,6 +521,7 @@ async def view_deliverable(token: str, request: Request):
             mark_viewed(rec["id"])
     else:
         mark_viewed(rec["id"])
+    _attach_public_urls(rec, request)
     # Serve the view page with data embedded
     view_html = _serve("view.html")
     # Inject the deliverable data
@@ -483,6 +530,19 @@ async def view_deliverable(token: str, request: Request):
         json.dumps(rec).replace("</", "<\\/")
     )
     return HTMLResponse(content=injected)
+
+
+@app.get("/brief/{token}", response_class=HTMLResponse)
+async def view_brief_alias(token: str, request: Request):
+    return await view_deliverable(token, request)
+
+@app.get("/assessment-view/{token}", response_class=HTMLResponse)
+async def view_assessment_alias(token: str, request: Request):
+    return await view_deliverable(token, request)
+
+@app.get("/digest-view/{token}", response_class=HTMLResponse)
+async def view_digest_alias(token: str, request: Request):
+    return await view_deliverable(token, request)
 
 
 @app.post("/auth/login")
@@ -1137,7 +1197,7 @@ class BriefingRequest(BaseModel):
     custom_title: Optional[str] = None
 
 @app.post("/ai/generate")
-async def ai_generate(req: BriefingRequest):
+async def ai_generate(req: BriefingRequest, request: Request):
     if not _verify_admin(request): raise HTTPException(status_code=403, detail="Admin access required.")
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
@@ -1209,7 +1269,7 @@ class AssessmentRequest(BaseModel):
     hours: int = 168
 
 @app.post("/ai/assessment")
-async def ai_assessment(req: AssessmentRequest):
+async def ai_assessment(req: AssessmentRequest, request: Request):
     if not _verify_admin(request): raise HTTPException(status_code=403, detail="Admin access required.")
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
@@ -1568,7 +1628,7 @@ Fill every field with genuine analytical content. Return ONLY the JSON object.""
         raise HTTPException(status_code=500, detail=f"Deep analysis error: {str(e)}")
 
 @app.post("/ai/digest")
-async def ai_digest(req: DigestRequest):
+async def ai_digest(req: DigestRequest, request: Request):
     if not _verify_admin(request): raise HTTPException(status_code=403, detail="Admin access required.")
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
