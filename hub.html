@@ -753,6 +753,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
 
 <script>
 var API = window.location.origin;
+var PUBLIC_BASE_URL = 'https://intel.viginote.com';
+function brandedViewUrl(raw, token){
+  if(raw && /^https?:\/\//i.test(raw)) return raw.replace(/^https?:\/\/[^\/]+/i, PUBLIC_BASE_URL);
+  if(raw && raw.charAt(0)==='/') return PUBLIC_BASE_URL + raw;
+  if(token) return PUBLIC_BASE_URL + '/view/' + token;
+  return raw || '';
+}
 var currentPanel = 'dashboard';
 var allDeliverables = [];
 var currentDelFilter = 'all';
@@ -1025,7 +1032,7 @@ async function openPubModal(delId, title){
     if(!dr.ok) throw new Error(dd.detail||'Could not load deliverable');
     var existingClients = dd.clients||[];
     var linkEl=document.getElementById('pm-link');
-    linkEl.textContent=API+'/view/'+(dd.token||'');
+    linkEl.textContent = brandedViewUrl(dd.public_view_url || dd.view_url, dd.token);
     linkEl.classList.add('show');
     if(!clients.length){
       list.innerHTML='<div style="font-family:monospace;font-size:10px;color:var(--text3);text-align:center;padding:10px">No clients yet. Add via Client Manager.</div>';
@@ -1052,7 +1059,12 @@ async function confirmPublish(){
     var r = await fetch(API+'/deliverables/'+publishingId+'/publish',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({clients:selected})});
     var d = await r.json();
     if(!r.ok) throw new Error(d.detail||'Publish failed');
-    showPmMsg('Published to '+selected.length+' client'+(selected.length!==1?'s':'')+'. Active immediately.','ok');
+    var linkEl = document.getElementById('pm-link');
+    if(linkEl){
+      linkEl.textContent = brandedViewUrl(d.public_view_url || d.view_url, d.token);
+      linkEl.classList.add('show');
+    }
+    showPmMsg('Published to '+selected.length+' client'+(selected.length!==1?'s':'')+'. Active immediately. Copy the branded link above.','ok');
     setTimeout(function(){closePubModal();loadDeliverables();},2500);
   }catch(e){showPmMsg('Error: '+e.message,'err');}
 }
