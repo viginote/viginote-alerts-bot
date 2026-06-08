@@ -514,7 +514,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
             <option value="critical">Critical only</option>
             <option value="high">High+</option>
           </select>
-          <select id="feed-hrs" onchange="loadAdminFeed()" style="padding:4px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text)"><option value="24">24h</option><option value="168">7 days</option><option value="336">14 days</option><option value="720" selected>30 days</option><option value="2160">90 days</option></select>
+          <select id="feed-hrs" onchange="loadAdminFeed()" style="padding:4px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text)"><option value="24">24h</option><option value="168">7 days</option><option value="336">14 days</option><option value="720">30 days</option><option value="2160">90 days</option><option value="8760" selected>All time</option></select>
           <button onclick="loadAdminFeed()" style="padding:4px 10px;background:transparent;border:1px solid var(--border2);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);cursor:pointer">↺</button>
         </div>
       </div>
@@ -610,7 +610,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
             <select id="fb-hrs" onchange="loadFlashAlerts()"
               style="width:100%;padding:6px 10px;background:var(--bg3);border:1px solid var(--border2);
               border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text);
-              outline:none;margin-bottom:8px"><option value="24">Last 24 hours</option><option value="168">Last 7 days</option><option value="720">Last 30 days</option><option value="2160" selected>Last 90 days</option></select>
+              outline:none;margin-bottom:8px"><option value="24">Last 24 hours</option><option value="168">Last 7 days</option><option value="720">Last 30 days</option><option value="2160">Last 90 days</option><option value="8760" selected>All time</option></select>
             <button onclick="loadFlashAlerts()"
               style="width:100%;padding:7px;background:transparent;border:1px solid var(--border2);
               border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);
