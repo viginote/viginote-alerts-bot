@@ -14,6 +14,11 @@ from typing import Optional
 _BASE = pathlib.Path(os.getenv("DB_PATH", "/data/viginote_v6.db")).parent
 _DELIVERABLES_DIR = _BASE / "deliverables"
 
+# Public branded URL for deliverable links.
+# Set this in Render Environment Variables:
+# PUBLIC_BASE_URL=https://intel.viginote.com
+_PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/")
+
 TYPES = {"brief", "assessment", "digest"}
 
 # View token expiry — subscribers: 30 days, one-off: 7 days
@@ -35,6 +40,42 @@ def _make_token() -> str:
 
 def _path(del_id: str) -> pathlib.Path:
     return _DELIVERABLES_DIR / f"{del_id}.json"
+
+
+def _view_path(token: str) -> str:
+    """Relative path for viewing a deliverable."""
+    return f"/view/{token}"
+
+
+def _public_view_url(token: str) -> str:
+    """
+    Branded public URL for sharing deliverables.
+
+    If PUBLIC_BASE_URL is set, returns:
+      https://intel.viginote.com/view/<token>
+
+    If not set, falls back to the relative path:
+      /view/<token>
+    """
+    path = _view_path(token)
+    if _PUBLIC_BASE_URL:
+        return f"{_PUBLIC_BASE_URL}{path}"
+    return path
+
+
+def _with_urls(rec: dict) -> dict:
+    """
+    Ensure both new and legacy deliverable records expose usable view URLs.
+    This keeps old saved reports working after the PUBLIC_BASE_URL patch.
+    """
+    if not rec:
+        return rec
+    token = rec.get("token")
+    if token:
+        rec["view_path"] = _view_path(token)
+        rec["view_url"] = _public_view_url(token)
+        rec["public_view_url"] = _public_view_url(token)
+    return rec
 
 
 # ── SAVE ─────────────────────────────────────────────────────────────────────
@@ -68,6 +109,9 @@ def save_deliverable(
         "type":       dtype,
         "title":      title,
         "token":      token,
+        "view_path":  _view_path(token),
+        "view_url":   _public_view_url(token),
+        "public_view_url": _public_view_url(token),
         "created_at": now,
         "expires_at": now + (expiry_days * 86400),
         "content":    content,
@@ -77,6 +121,7 @@ def save_deliverable(
         "view_count": 0,
     }
 
+    record = _with_urls(record)
     _path(del_id).write_text(json.dumps(record, indent=2))
     return record
 
@@ -88,7 +133,7 @@ def get_deliverable(del_id: str) -> dict | None:
     if not p.exists():
         return None
     try:
-        return json.loads(p.read_text())
+        return _with_urls(json.loads(p.read_text()))
     except Exception:
         return None
 
@@ -100,7 +145,7 @@ def get_by_token(token: str) -> dict | None:
         try:
             rec = json.loads(p.read_text())
             if rec.get("token") == token:
-                return rec
+                return _with_urls(rec)
         except Exception:
             continue
     return None
@@ -116,7 +161,7 @@ def list_deliverables(
     records = []
     for p in sorted(_DELIVERABLES_DIR.glob("*.json"), reverse=True):
         try:
-            rec = json.loads(p.read_text())
+            rec = _with_urls(json.loads(p.read_text()))
             if dtype and rec.get("type") != dtype:
                 continue
             if client and client not in rec.get("clients", []):
@@ -142,6 +187,7 @@ def publish_to_clients(del_id: str, usernames: list[str]) -> dict | None:
     for u in usernames:
         existing.add(u)
     rec["clients"] = list(existing)
+    rec = _with_urls(rec)
     _path(del_id).write_text(json.dumps(rec, indent=2))
     return rec
 
@@ -152,6 +198,7 @@ def remove_client(del_id: str, username: str) -> dict | None:
     if not rec:
         return None
     rec["clients"] = [c for c in rec.get("clients", []) if c != username]
+    rec = _with_urls(rec)
     _path(del_id).write_text(json.dumps(rec, indent=2))
     return rec
 
@@ -165,6 +212,7 @@ def mark_viewed(del_id: str, username: str | None = None) -> None:
     rec["view_count"] = rec.get("view_count", 0) + 1
     if username:
         rec.setdefault("viewed_by", {})[username] = int(time.time())
+    rec = _with_urls(rec)
     _path(del_id).write_text(json.dumps(rec, indent=2))
 
 
