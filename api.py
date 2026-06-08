@@ -828,7 +828,7 @@ def list_alerts(
     except: hours_i = 24
     try: score_i  = max(0, int(min_score)) if min_score else 0
     except: score_i = 0
-    try: limit_i  = max(1, min(500, int(limit))) if limit else 100
+    try: limit_i  = max(1, min(5000, int(limit))) if limit else 100
     except: limit_i = 100
     try: tier_i   = int(tier) if tier and tier not in ("ALL","") else None
     except: tier_i = None
