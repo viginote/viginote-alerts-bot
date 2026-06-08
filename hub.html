@@ -1123,7 +1123,7 @@ function renderAdminFeed(){
     var lbl = sevLabel(a);
     var ss = sevStyle(cl);
     var streamCol = (a.stream&&a.stream!=='geographic'&&streamColors[a.stream]) ? streamColors[a.stream] : null;
-    var tierTag = a.source_tier ? '<span class="af-tag" style="background:rgba(59,130,246,.1);color:var(--blue);border:1px solid rgba(59,130,246,.2)">'+(a.source_tier).toUpperCase()+'</span>' : '';
+    var tierTag = a.source_tier ? '<span class="af-tag" style="background:rgba(59,130,246,.1);color:var(--blue);border:1px solid rgba(59,130,246,.2)">'+({0:'WIRE',1:'REGIONAL',2:'LOCAL'}[a.source_tier]||'')+'</span>' : '';
     var streamTag = streamCol ? '<span class="af-stream-dot" style="background:'+streamCol+'"></span>' : '';
 
     return '<div class="af-card" id="afc-'+i+'" onclick="openFeedDrawer('+i+')">'
