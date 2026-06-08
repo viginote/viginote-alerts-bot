@@ -553,7 +553,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
         <span class="ws-frame-title">📰 LinkedIn Briefing Studio</span>
         <span class="ws-frame-path">/dashboard</span>
       </div>
-      <iframe class="ws-iframe" id="frame-linkedin" src="" title="LinkedIn Studio"></iframe>
+      <iframe class="ws-iframe" id="frame-linkedin" src="/dashboard" title="LinkedIn Studio"></iframe>
     </div>
 
     <!-- BRIEF STUDIO iframe -->
@@ -562,7 +562,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
         <span class="ws-frame-title">📋 Client Brief Studio</span>
         <span class="ws-frame-path">/brief</span>
       </div>
-      <iframe class="ws-iframe" id="frame-brief" src="" title="Brief Studio"></iframe>
+      <iframe class="ws-iframe" id="frame-brief" src="/brief" title="Brief Studio"></iframe>
     </div>
 
     <!-- ASSESSMENT iframe -->
@@ -571,7 +571,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
         <span class="ws-frame-title">🗺 Location Assessment</span>
         <span class="ws-frame-path">/assessment</span>
       </div>
-      <iframe class="ws-iframe" id="frame-assessment" src="" title="Location Assessment"></iframe>
+      <iframe class="ws-iframe" id="frame-assessment" src="/assessment" title="Location Assessment"></iframe>
     </div>
 
     <!-- DIGEST iframe -->
@@ -580,15 +580,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
         <span class="ws-frame-title">📊 Weekly Intelligence Digest</span>
         <span class="ws-frame-path">/digest</span>
       </div>
-      <iframe class="ws-iframe" id="frame-digest" src="" title="Weekly Digest"></iframe>
+      <iframe class="ws-iframe" id="frame-digest" src="/digest" title="Weekly Digest"></iframe>
     </div>
 
     <div class="ws-frame-panel" id="panel-deep">
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:var(--text3);text-align:center;padding:40px">
-        <div style="font-size:36px">🔬</div>
-        <div style="font-size:13px;color:var(--text2);font-family:'Syne',sans-serif;font-weight:700">Deep Analysis</div>
-        <div style="font-size:11px;line-height:1.7">Opened in a new tab.</div>
+      <div class="ws-frame-bar">
+        <span class="ws-frame-title">🔬 Deep Analysis</span>
+        <span class="ws-frame-path">/deep-analysis</span>
       </div>
+      <iframe class="ws-iframe" id="frame-deep" src="/deep-analysis" title="Deep Analysis"></iframe>
     </div>
 
     <!-- FLASH BRIEF PANEL -->
@@ -817,9 +817,9 @@ function switchPanel(name){
 
   currentPanel = name;
 
-  // LinkedIn only opens externally
+  // LinkedIn opens externally only. Operational studios are embedded inline.
   if(name === 'linkedin'){
-    window.open(PANEL_SRCS['linkedin'], '_blank');
+    window.open(PANEL_SRCS.linkedin, '_blank');
     var extPanel = document.getElementById('panel-linkedin');
     if(extPanel){
       extPanel.style.display='flex';
@@ -831,7 +831,7 @@ function switchPanel(name){
     return;
   }
 
-  // Studio panels load as iframes inline
+  // Studio panels load as same-origin iframes inline.
   var IFRAME_PANELS = ['brief','assessment','digest','deep'];
   if(IFRAME_PANELS.indexOf(name) >= 0){
     var iPanel = document.getElementById('panel-'+name);
@@ -839,21 +839,18 @@ function switchPanel(name){
       iPanel.style.display='flex';
       iPanel.style.flexDirection='column';
       iPanel.style.height='100%';
+      iPanel.style.overflow='hidden';
       iPanel.classList.add('active');
-      // Inject iframe (replace any stale content)
-      if(!iPanel.querySelector('iframe')){
-        var src = PANEL_SRCS[name] || '/'+name;
-        iPanel.innerHTML =
-          '<iframe src="'+src+'"'
-          +' style="flex:1;border:none;width:100%;height:100%;min-height:0;background:var(--bg)"'
-          +' allow="clipboard-write"'
-          +' sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals">'
-          +'</iframe>';
+      var frame = iPanel.querySelector('iframe');
+      var src = PANEL_SRCS[name] || '/'+name;
+      if(!frame){
+        iPanel.innerHTML = '<iframe class="ws-iframe" src="'+src+'" title="'+name+'" style="flex:1;border:none;width:100%;height:100%;min-height:0;background:var(--bg)"></iframe>';
+      }else if(!frame.getAttribute('src') || frame.getAttribute('src') !== src){
+        frame.setAttribute('src', src);
       }
     }
     return;
   }
-
 
   // Show internal panel
   var showPanel = document.getElementById('panel-'+name);
@@ -878,11 +875,29 @@ function switchPanel(name){
 
 
 // ── LOAD STATS + RECENT ───────────────────────────────────────────────────
+function _vgnTsValue(a){
+  var raw = a && (a.ts || a.timestamp || a.created_at || a.ts_iso || a.date);
+  if(typeof raw === 'number') return raw > 1000000000000 ? raw : raw*1000;
+  if(typeof raw === 'string'){
+    var n = Number(raw);
+    if(!isNaN(n) && n > 0) return n > 1000000000000 ? n : n*1000;
+    var d = Date.parse(raw);
+    if(!isNaN(d)) return d;
+  }
+  return 0;
+}
+function _vgnNewestFirst(a,b){ return _vgnTsValue(b) - _vgnTsValue(a); }
+function _vgnEscape(v){
+  return String(v == null ? '' : v)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
 function loadDashboard(){
-  fetch(API+'/alerts?hours=168&min_score=4&limit=100')
+  fetch(API+'/alerts?hours=2160&min_score=1&limit=5000&_=' + Date.now(), {cache:'no-store', credentials:'include'})
   .then(function(r){return r.json();})
   .then(function(d){
-    var alerts = d.alerts||[];
+    var alerts = (d.alerts || d.items || d.results || []).sort(_vgnNewestFirst);
     var crit = alerts.filter(function(a){return a.is_critical||a.score>=9;}).length;
     var high = alerts.filter(function(a){return a.score>=7&&a.score<9&&!a.is_critical;}).length;
     document.getElementById('st-tot').textContent = alerts.length;
@@ -890,16 +905,15 @@ function loadDashboard(){
     document.getElementById('st-high').textContent = high;
     document.getElementById('feed-badge').textContent = alerts.length;
 
-    // Recent alerts
     var top = alerts.slice(0,6);
     if(!top.length){
       document.getElementById('recent-list').innerHTML =
-        '<div style="font-family:monospace;font-size:11px;color:var(--text3);padding:12px 0">No alerts in the last 24 hours.</div>';
+        '<div style="font-family:monospace;font-size:11px;color:var(--text3);padding:12px 0">No alerts found for the selected period.</div>';
       return;
     }
     function sevInfo(s,c){return c||s>=9?{cl:'crit',l:'CRITICAL'}:s>=7?{cl:'high',l:'HIGH'}:{cl:'med',l:'MEDIUM'};}
     function fmtTs(ts){
-      try{var d=typeof ts==='number'?new Date(ts*1000):new Date(ts);
+      try{var d=new Date(_vgnTsValue({ts:ts}));
         return d.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC';
       }catch(e){return '';}
     }
@@ -907,14 +921,16 @@ function loadDashboard(){
       var s=sevInfo(a.score,a.is_critical);
       return '<a href="#" class="ra-row" onclick="switchPanel(\'feed\');return false">'
         +'<span class="ra-sev '+s.cl+'">'+s.l+'</span>'
-        +'<span class="ra-title">'+(a.title||'')+'</span>'
-        +'<span class="ra-meta">'+(a.region||'').replace(/_/g,' ')+' · '+fmtTs(a.ts_iso||a.ts)+'</span>'
+        +'<span class="ra-title">'+_vgnEscape(a.title||'')+'</span>'
+        +'<span class="ra-meta">'+_vgnEscape((a.region||'').replace(/_/g,' '))+' · '+fmtTs(a.ts_iso||a.ts||a.created_at)+'</span>'
         +'</a>';
     }).join('');
-  }).catch(function(){});
+  }).catch(function(e){
+    var el=document.getElementById('recent-list');
+    if(el) el.innerHTML='<div style="font-family:monospace;font-size:11px;color:var(--critical);padding:12px 0">Dashboard feed error: '+_vgnEscape(e.message)+'</div>';
+  });
 
-  // Load deliverables count
-  fetch(API+'/deliverables',{credentials:'include'})
+  fetch(API+'/deliverables',{credentials:'include',cache:'no-store'})
   .then(function(r){return r.json();})
   .then(function(d){
     var count=(d.deliverables||[]).length;
@@ -1066,16 +1082,16 @@ var _activeCardId = null;
 function loadAdminFeed(){
   var list = document.getElementById('admin-feed-list');
   if(!list) return;
-  list.innerHTML = '<div style="font-family:&quot;JetBrains Mono&quot;,monospace;font-size:11px;color:var(--text3);padding:20px;text-align:center">Loading…</div>';
-  var hrs = (document.getElementById('feed-hrs')||{value:'168'}).value;
-  fetch(API+'/alerts?hours='+hrs+'&min_score=1&limit=2000')
+  list.innerHTML = '<div style="font-family:&quot;JetBrains Mono&quot;,monospace;font-size:11px;color:var(--text3);padding:20px;text-align:center">Loading latest intelligence feed…</div>';
+  var hrs = (document.getElementById('feed-hrs')||{value:'2160'}).value;
+  fetch(API+'/alerts?hours='+encodeURIComponent(hrs)+'&min_score=1&limit=5000&_='+Date.now(), {cache:'no-store', credentials:'include'})
   .then(function(r){return r.json();})
   .then(function(d){
-    _adminAlerts = d.alerts || d.items || d.results || [];
+    _adminAlerts = (d.alerts || d.items || d.results || []).sort(_vgnNewestFirst);
     renderAdminFeed();
   })
   .catch(function(e){
-    list.innerHTML = '<div style="font-family:&quot;JetBrains Mono&quot;,monospace;font-size:11px;color:var(--critical);padding:20px;text-align:center">Error: '+e.message+'</div>';
+    list.innerHTML = '<div style="font-family:&quot;JetBrains Mono&quot;,monospace;font-size:11px;color:var(--critical);padding:20px;text-align:center">Error loading feed: '+_vgnEscape(e.message)+'</div>';
   });
 }
 
@@ -1087,32 +1103,26 @@ function renderAdminFeed(){
     if(sev==='critical') return a.is_critical||a.score>=9;
     if(sev==='high')     return a.score>=7;
     return true;
-  });
+  }).sort(_vgnNewestFirst);
 
   var countEl = document.getElementById('feed-count');
-  if(countEl) countEl.textContent = Math.min(filtered.length,15) + ' shown / ' + filtered.length + ' alerts';
+  if(countEl) countEl.textContent = filtered.length + ' alerts loaded';
 
   if(!filtered.length){
     list.innerHTML = '<div style="font-family:&quot;JetBrains Mono&quot;,monospace;font-size:11px;color:var(--text3);padding:40px;text-align:center">No alerts for this filter.</div>';
     return;
   }
 
-  // Max 10 displayed — show most recent/highest scoring
   var displayed = filtered.slice(0,15);
 
-  function sevClass(a){
-    return (a.is_critical||a.score>=9)?'crit':a.score>=7?'high':a.score>=5?'med':'low';
-  }
-  function sevLabel(a){
-    return (a.is_critical||a.score>=9)?'CRITICAL':a.score>=7?'HIGH':a.score>=5?'MEDIUM':'LOW';
-  }
+  function sevClass(a){ return (a.is_critical||a.score>=9)?'crit':a.score>=7?'high':a.score>=5?'med':'low'; }
+  function sevLabel(a){ return (a.is_critical||a.score>=9)?'CRITICAL':a.score>=7?'HIGH':a.score>=5?'MEDIUM':'LOW'; }
   function sevStyle(cl){
-    var s = {crit:'background:#7f1d1d;color:#fca5a5',high:'background:#7c2d12;color:#fdba74',
-             med:'background:#1e3a8a;color:#93c5fd',low:'background:#14532d;color:#86efac'};
+    var s = {crit:'background:#7f1d1d;color:#fca5a5',high:'background:#7c2d12;color:#fdba74',med:'background:#1e3a8a;color:#93c5fd',low:'background:#14532d;color:#86efac'};
     return s[cl]||s.med;
   }
-  function fmtTs(ts){
-    try{var d=typeof ts==='number'?new Date(ts*1000):new Date(ts);
+  function fmtTs(a){
+    try{var d=new Date(_vgnTsValue(a));
       return d.toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC';
     }catch(e){return '';}
   }
@@ -1123,25 +1133,23 @@ function renderAdminFeed(){
     var lbl = sevLabel(a);
     var ss = sevStyle(cl);
     var streamCol = (a.stream&&a.stream!=='geographic'&&streamColors[a.stream]) ? streamColors[a.stream] : null;
-    var tierTag = a.source_tier ? '<span class="af-tag" style="background:rgba(59,130,246,.1);color:var(--blue);border:1px solid rgba(59,130,246,.2)">'+({0:'WIRE',1:'REGIONAL',2:'LOCAL'}[a.source_tier]||'')+'</span>' : '';
+    var tierTag = a.source_tier ? '<span class="af-tag" style="background:rgba(59,130,246,.1);color:var(--blue);border:1px solid rgba(59,130,246,.2)">TIER '+_vgnEscape(a.source_tier)+'</span>' : '';
     var streamTag = streamCol ? '<span class="af-stream-dot" style="background:'+streamCol+'"></span>' : '';
 
     return '<div class="af-card" id="afc-'+i+'" onclick="openFeedDrawer('+i+')">'
-      // Flag row
       +'<div class="af-flag">'
         +'<div class="af-sev" style="'+ss+'">'+lbl+'</div>'
-        +'<div class="af-region">'+(a.region||'').replace(/_/g,' ')+'</div>'
-        +'<div class="af-score">SCR '+(a.score||'—')+'</div>'
-        +'<div class="af-ts">'+fmtTs(a.ts_iso||a.ts)+'</div>'
+        +'<div class="af-region">'+_vgnEscape((a.region||'').replace(/_/g,' '))+'</div>'
+        +'<div class="af-score">SCR '+_vgnEscape(a.score||'—')+'</div>'
+        +'<div class="af-ts">'+fmtTs(a)+'</div>'
       +'</div>'
-      // Body
       +'<div class="af-body">'
-        +'<div class="af-title">'+(a.title||'')+'</div>'
+        +'<div class="af-title">'+_vgnEscape(a.title||'Untitled alert')+'</div>'
         +'<div class="af-foot">'
           +streamTag
-          +'<span class="af-source">'+(a.source_domain||a.source_dom||'')+'</span>'
+          +'<span class="af-source">'+_vgnEscape(a.source_domain||a.source_dom||'source pending')+'</span>'
           +tierTag
-          +(a.country?'<span class="af-source" style="margin-left:4px;color:var(--blue)">🌍 '+(a.country)+'</span>':'')
+          +(a.country?'<span class="af-source" style="margin-left:4px;color:var(--blue)">🌍 '+_vgnEscape(a.country)+'</span>':'')
         +'</div>'
       +'</div>'
       +'</div>';
@@ -1149,7 +1157,7 @@ function renderAdminFeed(){
 
   if(filtered.length > 15){
     list.innerHTML += '<div style="font-family:&quot;JetBrains Mono&quot;,monospace;font-size:10px;color:var(--text3);text-align:center;padding:12px;border-top:1px solid var(--border)">'
-      +'Showing 15 of '+filtered.length+' alerts — use filters to narrow</div>';
+      +'Showing newest 15 of '+filtered.length+' alerts — use filters to narrow</div>';
   }
 }
 
@@ -1428,10 +1436,10 @@ function loadFlashAlerts(){
   if(!list) return;
   list.innerHTML = '<div style="font-family:&quot;JetBrains Mono&quot;,monospace;font-size:10px;color:var(--text3);padding:16px;text-align:center">Loading…</div>';
   var hrs = (document.getElementById('fb-hrs')||{value:'168'}).value;
-  fetch(API+'/alerts?hours='+hrs+'&min_score=1&limit=2000')
+  fetch(API+'/alerts?hours='+hrs+'&min_score=1&limit=5000&_='+Date.now(), {cache:'no-store', credentials:'include'})
   .then(function(r){return r.json();})
   .then(function(d){
-    _fbAlerts = d.alerts||[];
+    _fbAlerts = (d.alerts || d.items || d.results || []).sort(_vgnNewestFirst);
     _fbSelected.clear();
     renderFlashAlerts();
     updateFbSelCount();
