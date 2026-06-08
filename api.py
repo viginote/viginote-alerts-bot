@@ -1424,10 +1424,12 @@ async def ai_deep_analysis(req: DeepAnalysisRequest):
         rows = [row_to_dict(r) for r in query_alerts(conn, days=max(1, req.hours // 24), limit=300)]
         subj_lower = req.subject.lower()
         subj_words = [w for w in subj_lower.replace(",","").replace("-"," ").split() if len(w) > 3]
+        # Require at least 2 keyword matches to avoid spurious context pollution
         matched = []
         for r in rows:
             text = f"{r.get('title','')} {r.get('precis','')} {json.dumps(r.get('entities',{}))}".lower()
-            if any(w in text for w in subj_words):
+            match_count = sum(1 for w in subj_words if w in text)
+            if match_count >= min(2, len(subj_words)):
                 matched.append(r)
         if matched:
             alert_context = f"\n\nRELEVANT LIVE INTELLIGENCE ({len(matched)} alerts from Viginote feeds):\n"
@@ -1456,7 +1458,7 @@ async def ai_deep_analysis(req: DeepAnalysisRequest):
     type_instr = type_instructions.get(req.analysis_type, type_instructions["strategic"])
     horizon_lbl = horizon_labels.get(req.time_horizon, "current situation")
 
-    prompt = f"""You are a senior intelligence analyst at a professional geopolitical risk firm, with deep expertise in conflict analysis, political risk, and operational security. Today is {now_str}.
+    prompt = f"""You are a senior intelligence analyst at Viginote, a professional geopolitical risk intelligence firm. Today is {now_str}.
 
 TASK: {type_instr}
 
@@ -1464,7 +1466,16 @@ SUBJECT: {req.subject}
 TIME HORIZON: {horizon_lbl}
 DEPTH: {req.depth}{client_ctx}{alert_context}
 
-Write with analytical precision. Use the active voice. Avoid hedging language where the intelligence picture is clear. Cite specific actors, dates, locations and indicators where relevant. This is a professional intelligence product — not a news summary.
+CRITICAL ACCURACY RULES — FOLLOW STRICTLY:
+1. Only assert facts you are certain about. If uncertain, say so explicitly ("reportedly", "according to open sources", "unconfirmed").
+2. Do NOT fabricate specific numbers, dates, locations, casualty figures, or named individuals unless they appear in the alert context above.
+3. If the alert context above contains relevant intelligence, use it as your PRIMARY source and cite it.
+4. If the alert context is sparse or absent, acknowledge the intelligence gap rather than filling it with speculation.
+5. Never confuse or conflate different events, countries, or actors because of superficial keyword similarity.
+6. Verify logical consistency: if the subject is an event (e.g. FIFA World Cup 2026), your analysis must reflect accurate facts about that event — host nations, dates, participating parties.
+7. When in doubt about a specific fact, omit it or note it as unverified rather than stating it confidently.
+
+This is a professional intelligence product that will be delivered to paying clients. Factual errors damage credibility and may affect real-world decisions. Accuracy is more important than completeness.
 
 Return ONLY a valid JSON object with these exact keys:
 
