@@ -312,27 +312,22 @@ async def page_hub(request: Request):
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def page_dashboard(request: Request):
-    if not _verify_admin(request): return _admin_redirect()
     return _serve("dashboard.html")
 
 @app.get("/assessment", response_class=HTMLResponse)
 async def page_assessment(request: Request):
-    if not _verify_admin(request): return _admin_redirect()
     return _serve("assessment.html")
 
 @app.get("/deep-analysis", response_class=HTMLResponse)
 async def page_deep_analysis(request: Request):
-    if not _verify_admin(request): return _admin_redirect()
     return _serve("deep-analysis.html")
 
 @app.get("/digest", response_class=HTMLResponse)
 async def page_digest(request: Request):
-    if not _verify_admin(request): return _admin_redirect()
     return _serve("digest.html")
 
 @app.get("/brief", response_class=HTMLResponse)
 async def page_brief(request: Request):
-    if not _verify_admin(request): return _admin_redirect()
     return _serve("brief.html")
 
 @app.get("/client", response_class=HTMLResponse)
@@ -1142,7 +1137,7 @@ class BriefingRequest(BaseModel):
     custom_title: Optional[str] = None
 
 @app.post("/ai/generate")
-async def ai_generate(req: BriefingRequest, request: Request):
+async def ai_generate(req: BriefingRequest):
     if not _verify_admin(request): raise HTTPException(status_code=403, detail="Admin access required.")
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
@@ -1214,7 +1209,7 @@ class AssessmentRequest(BaseModel):
     hours: int = 168
 
 @app.post("/ai/assessment")
-async def ai_assessment(req: AssessmentRequest, request: Request):
+async def ai_assessment(req: AssessmentRequest):
     if not _verify_admin(request): raise HTTPException(status_code=403, detail="Admin access required.")
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
@@ -1415,7 +1410,7 @@ CTA: "Full brief available to subscribers. Enquiries: info@viginote.com" """
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Flash brief error: {str(e)}")
 @app.post("/ai/deep-analysis")
-async def ai_deep_analysis(req: DeepAnalysisRequest, request: Request):
+async def ai_deep_analysis(req: DeepAnalysisRequest):
     if not _verify_admin(request): raise HTTPException(status_code=403, detail="Admin access required.")
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
@@ -1559,7 +1554,7 @@ Fill every field with genuine analytical content. Return ONLY the JSON object.""
         raise HTTPException(status_code=500, detail=f"Deep analysis error: {str(e)}")
 
 @app.post("/ai/digest")
-async def ai_digest(req: DigestRequest, request: Request):
+async def ai_digest(req: DigestRequest):
     if not _verify_admin(request): raise HTTPException(status_code=403, detail="Admin access required.")
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
