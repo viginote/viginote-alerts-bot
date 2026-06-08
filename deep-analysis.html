@@ -744,7 +744,7 @@ async function autoSave(g, subject){
     if(d.id){
       _savedId = d.id; _savedToken = d.token;
       document.getElementById('save-btn').textContent = '☁ Saved';
-      document.getElementById('pub-link-url').textContent = API+'/view/'+d.token;
+      document.getElementById('pub-link-url').textContent = d.view_url || (API+'/view/'+d.token);
       document.getElementById('pub-link-box').classList.add('show');
     }
   }catch(e){ console.log('Save error:', e); }
