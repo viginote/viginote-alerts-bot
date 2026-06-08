@@ -23,7 +23,7 @@ from viginote.scoring import severity_score, source_tier
 
 UA          = os.getenv("USER_AGENT", "VigiNoteAlertsBot/1.2 (+https://viginote.com)")
 POLL_LIMIT  = int(os.getenv("POLL_LIMIT", "25"))
-SIM_THRESHOLD      = int(os.getenv("SIM_THRESHOLD", "72"))  # catch same story from multiple sources
+SIM_THRESHOLD      = int(os.getenv("SIM_THRESHOLD", "78"))  # catch same story, allow genuine new developmentsrom multiple sources
 SEVERITY_THRESHOLD = int(os.getenv("SEVERITY_THRESHOLD", "5"))
 CRITICAL_THRESHOLD = int(os.getenv("CRITICAL_THRESHOLD", "8"))
 MAX_PER_SOURCE_RUN = int(os.getenv("MAX_PER_SOURCE_RUN", "1"))
@@ -197,7 +197,7 @@ def collect_candidates(
             dupes = sum(1 for t in recent if fuzz.token_set_ratio(raw_title, t) >= SIM_THRESHOLD)
             if dupes >= MAX_PER_CLUSTER:
                 continue
-        elif keyword_overlap_duplicate(raw_title, recent, min_overlap=4):
+        elif keyword_overlap_duplicate(raw_title, recent, min_overlap=5):
             # Same story rephrased — seen in recent DB titles
             continue
 
@@ -206,7 +206,7 @@ def collect_candidates(
             continue
 
         # Within-run keyword overlap guard — catches rephrased same-story duplicates
-        if keyword_overlap_duplicate(raw_title, candidate_titles):
+        if keyword_overlap_duplicate(raw_title, candidate_titles, min_overlap=4):
             continue
 
         dom = domain_of(link)
