@@ -514,13 +514,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
             <option value="critical">Critical only</option>
             <option value="high">High+</option>
           </select>
-          <select id="feed-hrs" onchange="loadAdminFeed()" style="padding:4px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text)">
-            <option value="24">24h</option>
-            <option value="168">7 days</option>
-            <option value="336">14 days</option>
-            <option value="720" selected>30 days</option>
-            <option value="2160">90 days</option>
-          </select>
+          <select id="feed-hrs" onchange="loadAdminFeed()" style="padding:4px 8px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text)"><option value="24">24h</option><option value="168">7 days</option><option value="336">14 days</option><option value="720" selected>30 days</option><option value="2160">90 days</option></select>
           <button onclick="loadAdminFeed()" style="padding:4px 10px;background:transparent;border:1px solid var(--border2);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);cursor:pointer">↺</button>
         </div>
       </div>
@@ -616,12 +610,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
             <select id="fb-hrs" onchange="loadFlashAlerts()"
               style="width:100%;padding:6px 10px;background:var(--bg3);border:1px solid var(--border2);
               border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text);
-              outline:none;margin-bottom:8px">
-              <option value="24">Last 24 hours</option>
-              <option value="168">Last 7 days</option>
-              <option value="720">Last 30 days</option>
-              <option value="2160" selected>Last 90 days</option>
-            </select>
+              outline:none;margin-bottom:8px"><option value="24">Last 24 hours</option><option value="168">Last 7 days</option><option value="720">Last 30 days</option><option value="2160" selected>Last 90 days</option></select>
             <button onclick="loadFlashAlerts()"
               style="width:100%;padding:7px;background:transparent;border:1px solid var(--border2);
               border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);
@@ -636,6 +625,19 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
             <button class="fb-platform-btn on" id="fbp-linkedin" onclick="setFbPlatform('linkedin',this)">💼 LinkedIn</button>
             <button class="fb-platform-btn" id="fbp-telegram" onclick="setFbPlatform('telegram',this)">✈ Telegram</button>
             <button class="fb-platform-btn" id="fbp-twitter" onclick="setFbPlatform('twitter',this)">𝕏 Twitter</button>
+            <!-- Style toggle -->
+            <div style="display:flex;border:1px solid var(--border2);border-radius:5px;overflow:hidden;flex-shrink:0">
+              <button id="fb-style-personal" onclick="setFbStyle('personal',this)"
+                style="padding:5px 11px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;
+                letter-spacing:.5px;cursor:pointer;border:none;background:var(--blue-dim);color:#fff;transition:all .15s">
+                👤 Personal
+              </button>
+              <button id="fb-style-corporate" onclick="setFbStyle('corporate',this)"
+                style="padding:5px 11px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;
+                letter-spacing:.5px;cursor:pointer;border:none;background:transparent;color:var(--text3);transition:all .15s">
+                🏢 Corporate
+              </button>
+            </div>
             <!-- Tone -->
             <select id="fb-tone" class="fb-tone-sel">
               <option value="professional">Professional</option>
@@ -661,10 +663,24 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
                 <div class="fb-post-text" id="fb-post-text" contenteditable="true"></div>
                 <div class="fb-char-count" id="fb-char-count"></div>
               </div>
+              <div id="fb-comment-box" style="display:none;margin-bottom:10px;
+                background:rgba(59,130,246,.05);border:1px solid rgba(59,130,246,.15);
+                border-radius:5px;padding:10px 12px">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;
+                  letter-spacing:1.5px;color:var(--blue);margin-bottom:6px;text-transform:uppercase">
+                  📌 Paste as first comment — tags orgs without hurting reach
+                </div>
+                <div id="fb-comment-text" style="font-family:'JetBrains Mono',monospace;
+                  font-size:10px;color:var(--text2);line-height:1.6;white-space:pre-wrap"></div>
+                <button onclick="copyFirstComment()"
+                  style="margin-top:8px;padding:4px 12px;border:1px solid rgba(59,130,246,.3);
+                  border-radius:3px;background:transparent;font-family:'JetBrains Mono',monospace;
+                  font-size:9px;color:var(--blue);cursor:pointer">📋 Copy comment</button>
+              </div>
               <div class="fb-actions">
-                <button class="fb-action-btn fb-copy" onclick="copyFlashBrief()">📋 Copy</button>
+                <button class="fb-action-btn fb-copy" onclick="copyFlashBrief()">📋 Copy post</button>
                 <button class="fb-action-btn fb-regen" onclick="generateFlashBrief()">↺ Regenerate</button>
-                <button class="fb-action-btn fb-save-del" onclick="saveFlashAsDeliverable()">☁ Save to Deliverables</button>
+                <button class="fb-action-btn fb-save-del" onclick="saveFlashAsDeliverable()">☁ Save</button>
               </div>
             </div>
           </div>
@@ -834,12 +850,13 @@ function switchPanel(name){
     if(fp){fp.style.height='100%';fp.style.overflow='hidden';fp.style.flexDirection='column';}
     loadAdminFeed();
   }
+  if(name==='flash') loadFlashAlerts();
 }
 
 
 // ── LOAD STATS + RECENT ───────────────────────────────────────────────────
 function loadDashboard(){
-  fetch(API+'/alerts?hours=168&min_score=4&limit=100')
+  fetch(API+'/alerts?hours='+hrs+'&min_score=1&limit=2000')
   .then(function(r){return r.json();})
   .then(function(d){
     var alerts = d.alerts||[];
@@ -1028,7 +1045,7 @@ function loadAdminFeed(){
   if(!list) return;
   list.innerHTML = '<div style="font-family:&quot;JetBrains Mono&quot;,monospace;font-size:11px;color:var(--text3);padding:20px;text-align:center">Loading…</div>';
   var hrs = (document.getElementById('feed-hrs')||{value:'168'}).value;
-  fetch(API+'/alerts?hours='+hrs+'&min_score=1&limit=15')
+  fetch(API+'/alerts?hours='+hrs+'&min_score=1&limit=2000')
   .then(function(r){return r.json();})
   .then(function(d){
     _adminAlerts = d.alerts || d.items || d.results || [];
@@ -1385,6 +1402,7 @@ function showCfMsg(msg,type){
 var _fbAlerts = [];
 var _fbSelected = new Set();
 var _fbPlatform = 'linkedin';
+var _fbStyle = 'personal';
 
 function loadFlashAlerts(){
   var list = document.getElementById('fb-alert-list');
@@ -1478,8 +1496,8 @@ async function generateFlashBrief(){
       body: JSON.stringify({
         alerts: selected,
         platform: _fbPlatform,
-        tone: tone,
-        cta: 'viginote.com/access'
+        style: _fbStyle,
+        tone: tone
       })
     });
     var d = await r.json();
@@ -1504,7 +1522,15 @@ async function generateFlashBrief(){
     var pbCls = {linkedin:'fb-pb-linkedin',telegram:'fb-pb-telegram',twitter:'fb-pb-twitter'};
     var pbTxt = {linkedin:'💼 LINKEDIN',telegram:'✈ TELEGRAM',twitter:'𝕏 TWITTER'};
     badge.className = 'fb-platform-badge '+(pbCls[_fbPlatform]||'fb-pb-linkedin');
-    badge.textContent = pbTxt[_fbPlatform]||'LINKEDIN';
+    badge.textContent = (pbTxt[_fbPlatform]||'LINKEDIN')+' · '+(_fbStyle==='personal'?'👤 PERSONAL':'🏢 CORPORATE');
+
+    // First comment box
+    var commentBox  = document.getElementById('fb-comment-box');
+    var commentText = document.getElementById('fb-comment-text');
+    if(g.first_comment && commentBox && commentText){
+      commentText.textContent = g.first_comment;
+      commentBox.style.display = 'block';
+    } else if(commentBox){ commentBox.style.display = 'none'; }
 
     // Post text (editable)
     var postEl = document.getElementById('fb-post-text');
@@ -1566,6 +1592,27 @@ async function saveFlashAsDeliverable(){
       if(btn){ btn.textContent='✓ Saved'; setTimeout(function(){btn.textContent='☁ Save to Deliverables';},2500); }
     }
   }catch(e){ alert('Save error: '+e.message); }
+}
+
+// ── STYLE TOGGLE ─────────────────────────────────────────────────────────
+function setFbStyle(style, el){
+  _fbStyle = style;
+  ['fb-style-personal','fb-style-corporate'].forEach(function(id){
+    var b = document.getElementById(id);
+    if(!b) return;
+    b.style.background = 'transparent';
+    b.style.color = 'var(--text3)';
+  });
+  if(el){ el.style.background = 'var(--blue-dim)'; el.style.color = '#fff'; }
+}
+
+function copyFirstComment(){
+  var el = document.getElementById('fb-comment-text');
+  if(!el) return;
+  navigator.clipboard.writeText(el.textContent||el.innerText).then(function(){
+    var btn = document.querySelector('#fb-comment-box button');
+    if(btn){ btn.textContent='✓ Copied!'; setTimeout(function(){btn.textContent='📋 Copy comment';},2000); }
+  });
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────
