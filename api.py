@@ -312,23 +312,27 @@ async def page_hub(request: Request):
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def page_dashboard(request: Request):
+    if not _verify_admin(request): return _admin_redirect()
     return _serve("dashboard.html")
 
 @app.get("/assessment", response_class=HTMLResponse)
 async def page_assessment(request: Request):
+    if not _verify_admin(request): return _admin_redirect()
     return _serve("assessment.html")
 
 @app.get("/deep-analysis", response_class=HTMLResponse)
 async def page_deep_analysis(request: Request):
+    if not _verify_admin(request): return _admin_redirect()
     return _serve("deep-analysis.html")
 
 @app.get("/digest", response_class=HTMLResponse)
 async def page_digest(request: Request):
+    if not _verify_admin(request): return _admin_redirect()
     return _serve("digest.html")
 
 @app.get("/brief", response_class=HTMLResponse)
 async def page_brief(request: Request):
-    # Page is accessible — AI generation endpoint has its own auth
+    if not _verify_admin(request): return _admin_redirect()
     return _serve("brief.html")
 
 @app.get("/client", response_class=HTMLResponse)
@@ -1139,6 +1143,7 @@ class BriefingRequest(BaseModel):
 
 @app.post("/ai/generate")
 async def ai_generate(req: BriefingRequest):
+    if not _verify_admin(request): raise HTTPException(status_code=403, detail="Admin access required.")
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
     if not req.alerts:
@@ -1210,6 +1215,7 @@ class AssessmentRequest(BaseModel):
 
 @app.post("/ai/assessment")
 async def ai_assessment(req: AssessmentRequest):
+    if not _verify_admin(request): raise HTTPException(status_code=403, detail="Admin access required.")
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
 
@@ -1310,6 +1316,7 @@ class DigestRequest(BaseModel):
 
 @app.post("/ai/flash-brief")
 async def ai_flash_brief(request: Request):
+    if not _verify_admin(request): raise HTTPException(status_code=403, detail="Admin access required.")
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
 
@@ -1384,6 +1391,7 @@ The post field should be the complete, publication-ready text. Fill char_count w
 
 @app.post("/ai/deep-analysis")
 async def ai_deep_analysis(req: DeepAnalysisRequest):
+    if not _verify_admin(request): raise HTTPException(status_code=403, detail="Admin access required.")
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
 
@@ -1527,6 +1535,7 @@ Fill every field with genuine analytical content. Return ONLY the JSON object.""
 
 @app.post("/ai/digest")
 async def ai_digest(req: DigestRequest):
+    if not _verify_admin(request): raise HTTPException(status_code=403, detail="Admin access required.")
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
 
@@ -1632,7 +1641,8 @@ class ImageRequest(BaseModel):
     briefing_type: str = "morning"
 
 @app.post("/ai/image")
-async def ai_image(req: ImageRequest):
+async def ai_image(req: ImageRequest, request: Request):
+    if not _verify_admin(request): raise HTTPException(status_code=403, detail="Admin access required.")
     region_str = ", ".join(req.regions[:3]) if req.regions else "global"
     combined   = (req.headline + " " + " ".join(req.organizations) + " " + " ".join(req.locations)).lower()
 
