@@ -879,7 +879,7 @@ function switchPanel(name){
 
 // ── LOAD STATS + RECENT ───────────────────────────────────────────────────
 function loadDashboard(){
-  fetch(API+'/alerts?hours='+hrs+'&min_score=1&limit=2000')
+  fetch(API+'/alerts?hours=168&min_score=4&limit=100')
   .then(function(r){return r.json();})
   .then(function(d){
     var alerts = d.alerts||[];
@@ -1428,7 +1428,7 @@ function loadFlashAlerts(){
   if(!list) return;
   list.innerHTML = '<div style="font-family:&quot;JetBrains Mono&quot;,monospace;font-size:10px;color:var(--text3);padding:16px;text-align:center">Loading…</div>';
   var hrs = (document.getElementById('fb-hrs')||{value:'168'}).value;
-  fetch(API+'/alerts?hours='+hrs+'&min_score=1&limit=15')
+  fetch(API+'/alerts?hours='+hrs+'&min_score=1&limit=2000')
   .then(function(r){return r.json();})
   .then(function(d){
     _fbAlerts = d.alerts||[];
