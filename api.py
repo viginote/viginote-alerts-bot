@@ -1323,8 +1323,8 @@ async def ai_flash_brief(request: Request):
     body     = await request.json()
     alerts   = body.get("alerts", [])
     platform = body.get("platform", "linkedin")
+    style    = body.get("style", "personal")
     tone     = body.get("tone", "professional")
-    cta      = body.get("cta", "viginote.com/access")
     now_str  = datetime.now(timezone.utc).strftime("%d %B %Y")
 
     if not alerts:
@@ -1332,42 +1332,68 @@ async def ai_flash_brief(request: Request):
 
     alert_lines = ""
     for a in alerts[:3]:
-        alert_lines += f"- [{a.get('region','').replace('_',' ')} | Score {a.get('score',0)} | {a.get('stream','geographic').upper()}] {a.get('title','')}\n  Summary: {a.get('precis','')}\n"
+        region = a.get('region','').replace('_',' ')
+        score  = a.get('score', 0)
+        stream = a.get('stream','geographic').upper()
+        title  = a.get('title','')
+        precis = a.get('precis','')
+        alert_lines += f"- [{region} | Score {score} | {stream}] {title}\n  Summary: {precis}\n"
 
-    platform_instructions = {
-        "linkedin": "Write for LinkedIn. 150-200 words. Use line breaks for readability. Professional but direct tone. Include 4-5 relevant hashtags at the end. Structure: hook line → intelligence context → key implication → CTA.",
-        "telegram": "Write for Telegram. 100-130 words. Use emoji sparingly (1-2 max). Bold key terms with **bold**. Structure: 🔴/🟠 severity emoji + region → key development → what it means → CTA link.",
-        "twitter":  "Write for X/Twitter. Max 280 characters. One punchy intelligence statement. Include region, severity indicator, and CTA link. No hashtags unless space allows."
+    platform_rules = {
+        "linkedin": {"length":"150-220 words","format":"Line breaks every 2-3 lines. Short punchy paragraphs. Hashtags each on separate lines at end.","start":"Use 🔴 for critical/high, 🟠 for medium."},
+        "telegram": {"length":"80-120 words","format":"Bold key terms with **bold**. Bullets with →. Compact.","start":"🔴 REGION — TYPE at top."},
+        "twitter":  {"length":"Max 260 characters","format":"Single punchy statement. One hashtag max.","start":"🔴/🟠/🟡 to open."}
+    }
+    p = platform_rules.get(platform, platform_rules["linkedin"])
+
+    style_personal = """Write in first-person for a named analyst's personal LinkedIn feed.
+Voice: "Here's what I'm tracking right now..." / "In my assessment..." / "This is worth watching."
+Feel: Human, credible, direct. A professional sharing insight, not a press release.
+Opening: First-person hook showing the analyst's perspective.
+CTA: "Follow for daily intelligence updates." or "Enquiries: info@viginote.com" """
+
+    style_corporate = """Write in third-person brand voice for the Viginote Intelligence company page.
+Voice: "Viginote Intelligence reports..." / "Viginote Assessment:" / "Viginote is monitoring..."
+Feel: Authoritative, institutional. The brand speaking.
+Opening: Lead with the intelligence finding.
+CTA: "Full brief available to subscribers. Enquiries: info@viginote.com" """
+
+    tone_mod = {
+        "professional": "Precise and measured. State facts, draw implications. No sensationalism.",
+        "urgent":       "Elevated urgency appropriate to a fast-moving situation. Still professional, not alarmist.",
+        "analytical":   "Lead with the analytical insight. Show the so-what, not just the what."
     }
 
-    tone_instructions = {
-        "professional": "Senior intelligence analyst voice. Precise, authoritative, no sensationalism.",
-        "urgent":       "Elevated urgency appropriate to a breaking development. Still professional — not alarmist.",
-        "analytical":   "Analytical and measured. Lead with insight, not just facts."
-    }
+    style_text = style_personal if style == "personal" else style_corporate
+    tone_text  = tone_mod.get(tone, tone_mod["professional"])
 
-    prompt = f"""You are a senior intelligence analyst at Viginote, a professional geopolitical risk intelligence firm. Today is {now_str}.
-
-TASK: Draft a flash intelligence brief for {platform.upper()} based on the following alerts.
-
-ALERTS:
-{alert_lines}
-
-PLATFORM INSTRUCTIONS: {platform_instructions.get(platform, platform_instructions['linkedin'])}
-TONE: {tone_instructions.get(tone, tone_instructions['professional'])}
-CTA: End with a call to action pointing to: {cta}
-
-Return ONLY a JSON object:
-{{
-  "post": "The complete post text ready to publish",
-  "headline": "5-8 word headline summarising the intelligence",
-  "hook": "The first sentence — the scroll-stopper",
-  "hashtags": ["tag1","tag2","tag3"],
-  "char_count": 0,
-  "platform": "{platform}"
-}}
-
-The post field should be the complete, publication-ready text. Fill char_count with the actual character count of the post field."""
+    prompt = (
+        f"You are producing a flash intelligence brief for Viginote Intelligence. Today is {now_str}.\n\n"
+        f"ALERT DATA:\n{alert_lines}\n"
+        f"PLATFORM: {platform.upper()}\n"
+        f"LENGTH: {p['length']}\n"
+        f"FORMAT: {p['format']}\n"
+        f"OPENING: {p['start']}\n\n"
+        f"STYLE ({style.upper()}):\n{style_text}\n\n"
+        f"TONE: {tone_text}\n\n"
+        "HASHTAGS: Include 5-6 at the end of the post. Must include the specific region/country, "
+        "relevant stream tags (FieldSecurity/MaritimeSecurity/CyberSecurity etc), and general tags "
+        "like IntelligenceAnalysis, GeopoliticalRisk, RiskManagement, OpenSourceIntelligence. "
+        "Each hashtag on its own line at the very end.\n\n"
+        "FIRST COMMENT: Suggest relevant organisations to tag in the first comment (not post body) "
+        "— pick from UNHCR, MSF, NRC, IRC, WFP, OCHA, Maersk, BIMCO, Control Risks etc based on relevance.\n\n"
+        'Return ONLY valid JSON:\n'
+        '{\n'
+        '  "post": "Complete publication-ready post with hashtags at end",\n'
+        '  "headline": "6-9 word headline of the intelligence finding",\n'
+        '  "hook": "Opening line only",\n'
+        '  "hashtags": ["Tag1","Tag2","Tag3","Tag4","Tag5"],\n'
+        '  "first_comment": "First comment with org tags e.g. Relevant to @UNHCR @MSF teams in [region].",\n'
+        f'  "style": "{style}",\n'
+        f'  "platform": "{platform}",\n'
+        '  "char_count": 0\n'
+        '}'
+    )
 
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
@@ -1375,7 +1401,7 @@ The post field should be the complete, publication-ready text. Fill char_count w
                 "https://api.anthropic.com/v1/messages",
                 headers={"x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01",
                          "content-type": "application/json"},
-                json={"model": "claude-haiku-4-5-20251001", "max_tokens": 1500,
+                json={"model": "claude-haiku-4-5-20251001", "max_tokens": 2000,
                       "messages": [{"role": "user", "content": prompt}]},
             )
         resp.raise_for_status()
@@ -1388,7 +1414,6 @@ The post field should be the complete, publication-ready text. Fill char_count w
         return {"status": "ok", "generated": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Flash brief error: {str(e)}")
-
 @app.post("/ai/deep-analysis")
 async def ai_deep_analysis(req: DeepAnalysisRequest):
     if not _verify_admin(request): raise HTTPException(status_code=403, detail="Admin access required.")
