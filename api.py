@@ -508,17 +508,11 @@ async def view_deliverable(token: str, request: Request):
         return HTMLResponse("<html><body style='background:#080c14;color:#ef4444;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;font-size:16px'>Deliverable not found or link has expired.</body></html>", status_code=404)
     if is_expired(rec):
         return HTMLResponse("<html><body style='background:#080c14;color:#ef4444;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;font-size:16px'>This link has expired.</body></html>", status_code=410)
-    # For subscriber deliverables, require login (check cookie)
-    if not rec.get("one_off"):
-        tok = _token_from_request(request)
-        uname = _verify_token(tok) if tok else None
-        if not uname and not _verify_admin(request):
-            # Redirect to client login with return URL
-            return RedirectResponse(url=f"/client?view={token}", status_code=302)
-        if uname:
-            mark_viewed(rec["id"], uname)
-        else:
-            mark_viewed(rec["id"])
+    # Token is the credential — anyone with the link can view
+    tok = _token_from_request(request)
+    uname = _verify_token(tok) if tok else None
+    if uname:
+        mark_viewed(rec["id"], uname)
     else:
         mark_viewed(rec["id"])
     _attach_public_urls(rec, request)
