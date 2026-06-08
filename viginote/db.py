@@ -171,7 +171,7 @@ def daily_count(conn) -> int:
 def recent_titles(conn, days=3) -> list[str]:
     cutoff = int((datetime.now(timezone.utc) - timedelta(days=days)).timestamp())
     rows = conn.execute(
-        "SELECT title FROM sent_log WHERE ts>=? ORDER BY ts DESC LIMIT 500", (cutoff,)
+        "SELECT title FROM sent_log WHERE ts>=? ORDER BY ts DESC LIMIT 1000", (cutoff,)
     ).fetchall()
     return [r["title"] for r in rows]
 
