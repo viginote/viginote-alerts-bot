@@ -55,7 +55,7 @@ MAX_ALERTS_PER_DAY = int(os.getenv("MAX_ALERTS_PER_DAY", "18"))
 MIN_GAP_SECONDS    = int(os.getenv("MIN_GAP_SECONDS", "90"))
 QUIET_SPEC         = os.getenv("QUIET_HOURS_UTC", "")
 MIN_PER_REGION     = int(os.getenv("MIN_PER_REGION", "1"))
-CRITICAL_THRESHOLD = int(os.getenv("CRITICAL_THRESHOLD", "8"))
+CRITICAL_THRESHOLD = int(os.getenv("CRITICAL_THRESHOLD", "10"))
 NONCRIT_COOLDOWN   = int(os.getenv("NONCRITICAL_COOLDOWN_SECONDS", "1500"))
 FEED_SHUFFLE       = os.getenv("FEED_SHUFFLE", "1") == "1"
 DEDUPE_DAYS        = int(os.getenv("DEDUPE_DAYS", "7"))
