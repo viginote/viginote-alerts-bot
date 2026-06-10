@@ -169,77 +169,84 @@ FEEDS: dict[str, list[str]] = {
     # ── WEST / EAST AFRICA ───────────────────────────────────────────────────
     # Sudan, Somalia, Ethiopia, Nigeria, Sahel, DRC, Great Lakes, Horn
     "WEST_EAST_AFRICA": [
-        # International backbone
-        "https://feeds.bbci.co.uk/news/world/africa/rss.xml",
-        "https://rss.dw.com/rdf/rss-en-africa",
-        "https://allafrica.com/tools/rss/generate.php?pubid=pub00010510",
-        # Sudan
-        "https://sudantribune.com/spip.php?page=backend",
-        "https://www.sudanwarmonitor.com/feed",
-        "https://radiotamazuj.org/en/rss.xml",
-        # Somalia / Horn
-        "https://www.garoweonline.com/en/rss",
+        # ── LOCAL — Sudan ────────────────────────────────────────────
+        "https://sudantribune.com/feed/",
+        "https://www.sudanwarmonitor.com/feed/",
+        "https://www.dabangasudan.org/en/feed/",               # Radio Dabanga — Darfur
+        "https://radiotamazuj.org/en/rss.xml",                 # Radio Tamazuj — S.Sudan
+        # ── LOCAL — Somalia ──────────────────────────────────────────
+        "https://www.garoweonline.com/feed/",
         "https://www.shabelle.net/feed/",
-        "https://hiiraan.com/rss/news_en.xml",
+        "https://hiiraan.com/rss/index.aspx",
         "https://www.somalicurrent.com/feed/",
-        # Ethiopia
+        "https://www.horseedmedia.net/feed/",                  # Horseed Media — Somalia
+        # ── LOCAL — Ethiopia ─────────────────────────────────────────
         "https://addisstandard.com/feed/",
-        "https://www.ethpress.gov.et/feed",
-        # Nigeria / West Africa
+        "https://www.thereporterethiopia.com/feed/",           # The Reporter Ethiopia
+        "https://www.borkena.com/feed/",                       # Borkena — Ethiopia
+        # ── LOCAL — Nigeria ──────────────────────────────────────────
         "https://punchng.com/feed/",
-        "https://www.premiumtimesng.com/feed",
+        "https://www.premiumtimesng.com/feed/",
         "https://dailytrust.com/feed/",
         "https://www.vanguardngr.com/feed/",
-        # Sahel — specialist
-        "https://www.theafricareport.com/feed/",
-        "https://www.africaintelligence.com/feed",
-        # DRC / Great Lakes
-        "https://www.radiookapi.net/feed",
-        "https://www.kinshasatimes.cd/feed",
-        # East Africa regional
-        "https://www.theeastafrican.co.ke/feeds/rss",
+        "https://thecable.ng/feed/",                           # The Cable — Nigeria investigative
+        "https://www.channelstv.com/feed/",                    # Channels TV — Nigeria
+        # ── LOCAL — Kenya / East Africa ──────────────────────────────
         "https://nation.africa/rss",
-        "https://www.monitor.co.ug/rss",
+        "https://www.the-star.co.ke/rss",                      # The Star Kenya
+        "https://www.standardmedia.co.ke/rss/kenya.php",       # Standard Media Kenya
+        "https://www.monitor.co.ug/feed/",
         "https://www.thecitizen.co.tz/feed/",
-        # Security monitors
+        # ── LOCAL — DRC ──────────────────────────────────────────────
+        "https://www.radiookapi.net/feed/",
+        "https://www.kinshasatimes.cd/feed/",
+        "https://actualite.cd/feed/",                          # Actualite.cd — DRC
+        # ── LOCAL — Mali / Sahel ─────────────────────────────────────
+        "https://www.maliweb.net/feed/",                       # Maliweb — Mali
+        "https://www.studio-tamani.org/feed/",                 # Studio Tamani — Mali
+        # ── REGIONAL ─────────────────────────────────────────────────
+        "https://www.theafricareport.com/feed/",
+        "https://allafrica.com/tools/headlines/rdf/africa/headlines.rdf",
+        "https://www.theeastafrican.co.ke/rss",
         "https://acleddata.com/feed/",
         "https://reliefweb.int/updates/rss.xml",
-        "https://insightcrime.org/tag/west-africa/feed/",
-        "https://www.crisisgroup.org/rss",
+        "https://insightcrime.org/feed/",
+        "https://www.crisisgroup.org/rss.xml",
     ],
 
     # ── SOUTHERN AFRICA ──────────────────────────────────────────────────────
     # South Africa, Zimbabwe, Mozambique, SADC, crime, political instability
-    "SOUTHERN_AFRICA": [
-        # International backbone
-        "https://feeds.bbci.co.uk/news/world/africa/rss.xml",
-        # South Africa — diverse outlets
-        "https://www.dailymaverick.co.za/section/news/feed/",
+        "SOUTHERN_AFRICA": [
+        # ── LOCAL — South Africa ──────────────────────────────────────
+        "https://ewn.co.za/feed",
+        "https://www.sabcnews.com/sabcnews/feed/",
+        "https://www.iol.co.za/rss",
+        "https://www.dailymaverick.co.za/feed/",
         "https://www.groundup.org.za/feed/",
-        "https://ewn.co.za/RSS",
-        "https://www.news24.com/rss",
         "https://www.timeslive.co.za/rss/",
+        "https://www.news24.com/news24/rss",
+        "https://www.citizen.co.za/feed/",
         "https://newframe.com/feed/",
         "https://www.amabhungane.org/feed/",
-        # Zimbabwe
+        # ── LOCAL — Zimbabwe ─────────────────────────────────────────
         "https://www.newzimbabwe.com/feed/",
         "https://www.newsday.co.zw/feed/",
+        "https://nehandaradio.com/feed/",
+        "https://www.263chat.com/feed/",
         "https://zimbabwesituation.com/feed/",
         "https://www.zimlive.com/feed/",
-        # Mozambique
+        # ── LOCAL — Mozambique / Zambia / Malawi / Namibia / Botswana ──
         "https://www.clubofmozambique.com/feed/",
         "https://pinnaclenews.net/feed/",
-        # Zambia / Malawi / Botswana
         "https://www.lusakatimes.com/feed/",
         "https://malawi24.com/feed/",
-        "https://www.mmegi.bw/rss.php",
-        # Namibia / Angola
         "https://www.namibian.com.na/feed/",
-        "https://club-k.net/feed",
-        # Regional / security
-        "https://www.issafrica.org/iss-today/rss",
+        "https://www.mmegi.bw/feed/",
+        "https://club-k.net/rss.xml",
+        # ── REGIONAL ─────────────────────────────────────────────────
+        "https://www.issafrica.org/research/rss",
         "https://globalinitiative.net/feed/",
-        "https://insightcrime.org/tag/southern-africa/feed/",
+        "https://insightcrime.org/feed/",
     ],
 
     # ── SOUTH AMERICA ────────────────────────────────────────────────────────
