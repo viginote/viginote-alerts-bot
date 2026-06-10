@@ -660,21 +660,95 @@ async function generateBrief(){
       return `ALERT ${i+1}: ${a.title}\nRegion: ${a.region}\nScore: ${a.score} | Critical: ${a.is_critical?'Yes':'No'}\nSource: ${a.source_domain||a.source_dom||''} (tier ${a.source_tier||0})\nSummary: ${a.precis||''}\nLocations: ${(ents.locs||ents.locations||[]).join(', ')}\nOrganisations: ${(ents.orgs||ents.organizations||[]).join(', ')}\nArticle: ${(a.article_text||'').substring(0,600)}\n---`;
     }).join('\n');
 
-    const prompt = `You are a senior intelligence analyst at Viginote producing a formal ${typeLabels[briefType]} for ${clientName}.
+    // Brief-type specific analytical lenses
+    const briefTypeInstructions = {
+      geopolitical: {
+        lens: `GEOPOLITICAL ASSESSMENT LENS:
+This is a strategic intelligence assessment for senior decision-makers. Your analysis must:
+- Identify the key actors, their interests, and how they are likely to behave
+- Assess the balance of power dynamics and what is shifting
+- Project 3 scenarios: most likely trajectory, best case, worst case — each with specific trigger indicators
+- Analyst prediction: state your analytical judgement on what happens next with confidence level (HIGH/MEDIUM/LOW)`,
+        risk_vectors: `{"geopolitical_stability":"Assess the stability trajectory — is the situation escalating, plateauing or de-escalating? Name the indicators that support this assessment.","economic_exposure":"Direct and indirect economic implications — trade flows, investment climate, currency, sanctions, energy supply disruption","diplomatic_implications":"Bilateral and multilateral relationships affected — alliances strained, agreements at risk, negotiating leverage shifts. Name specific states and actors."}`,
+        recommendations: `["IMMEDIATE (0-72hrs): Specific action required NOW based on current threat picture — name what, who and why","SHORT-TERM (7-30 days): Operational adjustment — what to monitor, what to pre-position, what contingencies to activate","STRATEGIC (30-90 days): Policy and posture adjustment — how should long-term exposure be managed given this trajectory","SCENARIO TRIGGER: State the single intelligence indicator that would require immediate escalation of response"]`
+      },
+      travel: {
+        lens: `TRAVEL SECURITY ADVISORY LENS:
+This is a pre-travel or in-country security advisory for personnel and travel security managers. Your analysis must:
+- Give a clear GO / CAUTION / NO-GO assessment for the affected area with specific reasoning
+- Identify specific threat types: kidnap for ransom, civil unrest, criminal, terrorism, state-sponsored
+- Map high-risk zones vs lower-risk zones within the region where the intelligence supports it
+- Analyst prediction: state the likelihood of deterioration in the next 30 days and what would trigger it
+- Include specific tradecraft recommendations — behaviours, routes, comms protocols`,
+        risk_vectors: `{"personnel_safety":"Direct physical threat assessment for travellers and in-country staff — threat type, targeting pattern, assessed likelihood of incident","movement_and_access":"Specific route risks, checkpoint conditions, border crossings, airport security — what is open, what is restricted, what has changed","emergency_response":"Medical evacuation options, safe havens, emergency contacts, extraction routes — is current emergency infrastructure adequate for the threat level?"}`,
+        recommendations: `["PRE-TRAVEL: Specific briefing requirements, documentation, comms protocols and emergency contacts to establish BEFORE departure","IN-COUNTRY: Specific behavioural protocols — where to go, where to avoid, low-profile measures, check-in procedures, emergency actions","CONTINGENCY TRIGGER: Define the specific conditions under which managed withdrawal should be initiated and via what route","DUTY OF CARE: Documentation requirements to demonstrate reasonable precaution was taken — what must be on record"]`
+      },
+      corporate: {
+        lens: `CORPORATE SECURITY INTELLIGENCE LENS:
+This is an intelligence product for corporate security directors, risk committees and C-suite. Your analysis must:
+- Frame every finding in terms of direct business impact: operational continuity, financial exposure, reputational risk, regulatory compliance
+- Identify which business functions are most exposed: supply chain, personnel, assets, revenue streams, regulatory standing
+- Analyst prediction: assess probability × impact. State your confidence level and what would change the assessment.
+- Second-order effects: what does this mean for partners, counterparties and competitors in the same exposure zone?`,
+        risk_vectors: `{"operational_continuity":"Direct impact on business operations — facilities, supply chains, logistics, staff deployment, service delivery. Name specific exposure points.","financial_and_regulatory_exposure":"Sanctions exposure, compliance risk, insurance implications, revenue impact, counterparty risk in affected jurisdictions — quantify where possible","reputational_and_stakeholder_risk":"Reputational implications of continued operations — stakeholder scrutiny, ESG exposure, media risk. What questions will the board ask and what are the answers?"}`,
+        recommendations: `["BOARD BRIEFING: Key points for immediate executive notification — frame the exposure clearly, state the recommended position","OPERATIONAL REVIEW: Specific business functions to review now — supply chain diversification, staff protocols, asset protection measures","REGULATORY AND COMPLIANCE CHECK: Counterparties, jurisdictions and financial flows to screen immediately for sanctions and compliance exposure","SCENARIO THRESHOLD: Define the business continuity threshold — at what specific point does operational withdrawal or restructuring become necessary?"]`
+      },
+      osint: {
+        lens: `OSINT RESEARCH BRIEF LENS:
+This is an open-source intelligence research product demonstrating rigorous analytical methodology. Your analysis must:
+- Document the source landscape: which sources reported, what tier, what corroboration exists
+- Apply the analytical cycle clearly: collection → processing → analysis → dissemination
+- Distinguish between confirmed facts, single-source claims, and analyst inference — label each explicitly
+- Identify intelligence gaps: what do we NOT know that matters, and what collection would address it?
+- Analyst prediction: based on the available OSINT picture, state the most likely ground truth and your confidence level with specific reasoning`,
+        risk_vectors: `{"source_reliability":"Assessment of the source landscape — which reporting is corroborated, which is single-source, what are the known source biases and how do they affect confidence","information_gaps":"Critical unknowns — what information is absent, why it matters operationally, and what specific collection activities would close the gap","analytical_confidence":"Overall confidence assessment — HIGH/MEDIUM/LOW with specific reasoning. State exactly what would cause this assessment to change."}`,
+        recommendations: `["IMMEDIATE COLLECTION: Specific additional sources or collection activities that would improve confidence within 24 hours","MONITORING PRIORITIES: Key indicators to watch — what developments would confirm or refute the current assessment","ANALYTICAL CAVEATS: The conditions under which this assessment should be revised — scenario triggers and confidence thresholds","DISSEMINATION: Who needs this intelligence, in what format, and with what caveats attached — name the decision-makers to brief"]`
+      },
+      event: {
+        lens: `EVENT-SPECIFIC INTELLIGENCE BRIEF LENS:
+This is a time-bound intelligence product focused on a specific incident, event or development. Your analysis must:
+- Establish a clear timeline: what happened, in what sequence, with timestamps where the intelligence supports it
+- Assess whether this is an isolated incident or part of an escalating pattern — is the threat environment changing?
+- Identify the immediate, medium-term and long-term implications specific to this event
+- Analyst prediction: what is the most likely next development in this sequence? Name the escalation pathways and assign probability.
+- State the specific intelligence requirements for the next 24-48 hours to understand this event fully`,
+        risk_vectors: `{"immediate_impact":"Direct consequences of this specific event — operational disruption, personnel exposure, asset risk. What has changed in the past 24 hours?","pattern_and_trajectory":"Is this part of an escalating pattern? Compare to recent history — has frequency, severity or targeting changed? What does the trend indicate?","second_order_effects":"Downstream consequences — how does this event change the threat environment, alter actor behaviour, or affect ongoing operations in the area?"}`,
+        recommendations: `["IMMEDIATE (0-24hrs): Response to THIS specific event — what action is required right now and by whom","INTELLIGENCE REQUIREMENTS: The 3 most important questions to answer in the next 24 hours to understand this event fully","PATTERN MONITORING: Specific indicators to monitor for recurrence or escalation — define the tripwires and who monitors them","POSTURE REVIEW: What does this event reveal about the threat environment that should change standing protocols or assessments?"]`
+      }
+    };
 
-Date: ${dateStr}
-Ref: ${refInput}
-Region(s): ${regionStr}
-Alert count: ${selected.length}
+    const typeKey = briefType === 'geopolitical' ? 'geopolitical'
+      : briefType === 'travel' ? 'travel'
+      : briefType === 'corporate' ? 'corporate'
+      : briefType === 'osint' ? 'osint'
+      : 'event';
 
-INTELLIGENCE ALERTS:
+    const typeConfig = briefTypeInstructions[typeKey] || briefTypeInstructions.geopolitical;
+
+    const prompt = `You are a senior intelligence analyst at Viginote producing a ${typeLabels[briefType]} for ${clientName}. Today is ${dateStr}.
+
+BRIEF TYPE: ${typeLabels[briefType]}
+Ref: ${refInput} | Region(s): ${regionStr} | Analyst: Chad Frankal, Senior Intelligence Analyst · Viginote
+
+${typeConfig.lens}
+
+INTELLIGENCE ALERTS (${selected.length} alerts — the factual basis for this product):
 ${alertsText}
 
-Respond ONLY with this JSON object:
+ANALYTICAL STANDARDS — APPLY STRICTLY:
+- Never state the obvious. Every sentence must advance the analysis beyond what the alert already says.
+- Use probability language: "assessed with HIGH confidence", "probable", "unlikely but cannot be excluded"
+- Name specific actors, locations, organisations and dates where the intelligence supports it
+- Distinguish clearly between confirmed intelligence, single-source reporting, and analyst inference
+- Analyst prediction sections must deliver specific, falsifiable assessments — not vague hedging
+- Risk vectors must reflect THIS brief type and THIS specific situation — never generic boilerplate
+- Recommendations must be actionable, specific and appropriate for the ${typeLabels[briefType]} audience
 
-{"headline":"Clear specific headline for this brief (max 15 words)","deck":"One-sentence deck: what happened, why it matters, core implication (max 35 words)","type_label":"${typeLabels[briefType]} · ${regionStr}","key_judgement":"2-3 sentences. Most important analytical conclusion. Start with the assessment, give basis. Specific not vague.","risk_matrix":[{"label":"Primary risk category","subject":"Subject/area","level":"HIGH","bars":"■■■■","cell":"h"},{"label":"Secondary risk","subject":"Subject","level":"ELEVATED","bars":"■■■□","cell":"m"},{"label":"Tertiary risk","subject":"Subject","level":"MEDIUM","bars":"■■□□","cell":"e"}],"situational_overview":"2-3 paragraphs. What is happening, key actors, timeline. Factual. Each paragraph as separate string in array.","alert_summaries":[{"title":"Alert title","enhanced":"2-3 sentence enhanced analysis beyond the precis. Context, significance, implications.","region":"Region","source":"source.com","score":9,"risk":"CRITICAL"}],"risk_vectors":{"supply_chain":"Specific operational impact on supply chains or logistics","personnel":"Direct implications for people — travel, safety, protection posture","regulatory":"Sanctions risk, financial exposure, compliance considerations"},"assessment":"2 paragraphs. Your analytical view — what it means, what happens next. Use probability language. Second paragraph covers second-order implications. Each paragraph as separate string in array.","recommendations":["Immediate action — what to do in next 72 hours","Short-term action — next 30 days","Strategic action — next quarter"],"sources":"Source 1 · Source 2 · Source 3","source_reliability":"A-1 to B-2 (corroborated across multiple outlets)","byline_role":"Senior Intelligence Analyst — ${regionStr} Security & Risk · Viginote"}
+Respond ONLY with this exact JSON:
 
-Return ONLY the JSON. No markdown, no preamble.`;
+{"headline":"Sharp specific headline — states the core finding, not just the topic. Max 15 words.","deck":"One sentence: the single most important intelligence finding and its direct implication. Max 35 words.","type_label":"${typeLabels[briefType]} · ${regionStr}","key_judgement":"2-3 sentences. Lead with the analytical conclusion specific to the ${typeLabels[briefType]} perspective. State confidence level. Name the specific basis. This is what the analyst assesses — not what happened.","risk_matrix":[{"label":"Primary risk — specific to this situation and brief type","subject":"Named subject","level":"CRITICAL","bars":"■■■■","cell":"h"},{"label":"Secondary risk — specific","subject":"Named subject","level":"HIGH","bars":"■■■□","cell":"m"},{"label":"Tertiary risk — specific","subject":"Named subject","level":"MEDIUM","bars":"■■□□","cell":"e"}],"situational_overview":["Paragraph 1: What is happening — specific actors, locations, timeline. Factual foundation drawn from the alerts.","Paragraph 2: Why it is happening — drivers, motivations, structural factors. The analytical layer that explains the events.","Paragraph 3: ANALYST PREDICTION — What happens next. State 2-3 specific scenarios with probability assessment (HIGH/MEDIUM/LOW probability). Name the trigger indicator that would confirm each scenario. Be specific and falsifiable — not vague."],"alert_summaries":[{"title":"Alert title","enhanced":"2-3 sentences: go beyond the precis. Add context, name the significance, state the analytical implication a decision-maker would otherwise miss.","region":"Region","source":"source.com","score":9,"risk":"CRITICAL"}],"risk_vectors":${typeConfig.risk_vectors},"assessment":["Paragraph 1: The core analytical assessment through the ${typeLabels[briefType]} lens — what this means specifically for this audience. Use confidence language. Name actors and implications.","Paragraph 2: Second-order implications and 30-90 day trajectory. What changes if this continues vs if it resolves? End with the single most important thing this client needs to know and act on."],"recommendations":${typeConfig.recommendations},"sources":"${regionStr} open-source intelligence · Viginote real-time monitoring · ${selected.length} corroborated alerts","source_reliability":"Multi-source corroboration. Source tiers detailed in alert summaries above.","byline_role":"Senior Intelligence Analyst — ${regionStr} · ${typeLabels[briefType]} · Viginote"}
+
+Return ONLY the JSON. No markdown fences, no preamble. Every single field must reflect the ${typeLabels[briefType]} perspective and this specific intelligence picture — zero generic boilerplate.`;
 
     const resp = await fetch(`${API}/ai/generate`, {
       method:'POST',
