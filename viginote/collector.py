@@ -23,9 +23,9 @@ from viginote.scoring import severity_score, source_tier
 
 UA          = os.getenv("USER_AGENT", "VigiNoteAlertsBot/1.2 (+https://viginote.com)")
 POLL_LIMIT  = int(os.getenv("POLL_LIMIT", "25"))
-SIM_THRESHOLD      = int(os.getenv("SIM_THRESHOLD", "78"))  # catch same story, allow genuine new developmentsrom multiple sources
+SIM_THRESHOLD      = int(os.getenv("SIM_THRESHOLD", "85"))  # tight enough to catch rephrases, loose enough to allow genuine new angles
 SEVERITY_THRESHOLD = int(os.getenv("SEVERITY_THRESHOLD", "5"))
-CRITICAL_THRESHOLD = int(os.getenv("CRITICAL_THRESHOLD", "8"))
+CRITICAL_THRESHOLD = int(os.getenv("CRITICAL_THRESHOLD", "10"))
 MAX_PER_SOURCE_RUN = int(os.getenv("MAX_PER_SOURCE_RUN", "1"))
 MAX_PER_CLUSTER    = int(os.getenv("MAX_PER_CLUSTER", "1"))  # one alert per story cluster
 DEDUPE_DAYS        = int(os.getenv("DEDUPE_DAYS", "4"))  # extended to 4 days
@@ -185,6 +185,7 @@ def collect_candidates(
         link_h = hashlib.sha1((link or "").strip().lower().encode()).hexdigest()
         if link_h in seen_hash_this_run:
             continue
+        seen_hash_this_run.add(link_h)  # block URL immediately regardless of score
 
         h = make_title_hash(raw_title)
         if h in seen_hash_this_run:
@@ -212,6 +213,14 @@ def collect_candidates(
         dom = domain_of(link)
         if per_source_collected[dom] >= MAX_PER_SOURCE_RUN:
             continue
+
+        # Tier-priority dedup: if a lower-tier (local/regional) source already
+        # has this story, don't add higher-tier (wire) version of same story
+        current_tier = source_tier(dom)
+        if current_tier == 0:  # wire source
+            # Check if local or regional already has this story in candidates
+            if keyword_overlap_duplicate(raw_title, candidate_titles, min_overlap=3):
+                continue  # local/regional already got it
 
         text = fetch_article_text(link) or entry["summary"]
         score = severity_score(raw_title, text, region, feed_url)
