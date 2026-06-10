@@ -99,19 +99,56 @@ SOURCE_TIER_BONUS: dict[str, int] = {
     "timesofindia.indiatimes.com": 1,
     "timeslive.co.za":             1,
     "bangkokpost.com":             1,
+    # New local African sources — tier 2 (local)
+    "sabcnews.com":                2,
+    "groundup.org.za":            2,
+    "amabhungane.org":            2,
+    "nehandaradio.com":           2,
+    "263chat.com":                2,
+    "zimlive.com":                2,
+    "zimbabwesituation.com":      2,
+    "citizen.co.za":              2,
+    "iol.co.za":                  2,
+    "thecable.ng":                2,
+    "channelstv.com":             2,
+    "premiumtimesng.com":         2,
+    "the-star.co.ke":             2,
+    "dabangasudan.org":           2,
+    "sudanwarmonitor.com":        2,
+    "radiookapi.net":             2,
+    "kinshasatimes.cd":           2,
+    "actualite.cd":               2,
+    "horseedmedia.net":           2,
+    "hiiraan.com":                2,
+    "somalicurrent.com":          2,
+    "thereporterethiopia.com":    2,
+    "borkena.com":                2,
+    "maliweb.net":                2,
+    "studio-tamani.org":          2,
+    "pinnaclenews.net":           2,
+    "namibian.com.na":            2,
+    "club-k.net":                 2,
 }
 
 BASE_WEIGHTS = [
-    (r"\b(air ?strike|strike|shelling|artillery|missile|rocket|drone|uav|explosion|blast|bomb)\b", 3),
-    (r"\b(assassination|ambush|clash|firefight|shooting|mass shooting|attack|raid)\b", 3),
-    (r"\b(ceasefire|truce|hostage|kidnap|abduction)\b", 2),
-    (r"\b(military|troops|brigade|battalion|militia|rebels|insurgents|terrorists?)\b", 1),
-    (r"\b(coup|martial law|state of emergency|sanctions?|unrest|protests?|riots?)\b", 3),
-    (r"\b(blockade|border closure|evacuation|curfew)\b", 2),
-    (r"\b(earthquake|aftershock|tsunami|cyclone|hurricane|typhoon|tornado|floods?|wildfire|landslide|eruption|volcano)\b", 3),
-    (r"\b(famine|cholera|measles|outbreak|epidemic|pandemic|disease)\b", 2),
-    (r"\b(killed|dead|deaths|fatalities|casualties|wounded|injured)\b", 2),
-    (r"\b(massive|major|deadly|severe|devastating|worst)\b", 1),
+    # CRITICAL events — confirmed violence, mass casualties, major attacks (score 3-4)
+    (r"\b(mass shooting|suicide.?bomb|car.?bomb|assassination|massacre|genocide|ethnic.?cleansing)\b", 4),
+    (r"\b(air ?strike|shelling|artillery|missile.?strike|rocket.?attack|drone.?strike|blast|explosion)\b", 4),
+    (r"\b(coup|putsch|martial law|state of emergency|nuclear)\b", 3),
+    (r"\b(earthquake|tsunami|cyclone|hurricane|typhoon|eruption|volcano)\b", 3),
+    # HIGH events — significant security incidents (score 2)
+    (r"\b(ambush|firefight|raid|hostage|kidnap|abduction|attack|hijack|hijacking)\b", 2),
+    (r"\b(tanker.?attack|vessel.?attack|ship.?attack|maritime.?incident|seized.?vessel)\b", 3),
+    (r"\b(shooting|killed|dead|deaths|fatalities|casualties)\b", 2),
+    (r"\b(sanctions?|blockade|border closure|evacuation|curfew)\b", 2),
+    (r"\b(famine|cholera|ebola|outbreak|epidemic|pandemic)\b", 2),
+    (r"\b(ceasefire|truce|peace.?talks|collapse)\b", 2),
+    # MEDIUM events — elevated concern (score 1)
+    (r"\b(clash|clashes|unrest|protests?|riots?|demonstration)\b", 1),
+    (r"\b(military|troops|militia|rebels|insurgents|terrorists?)\b", 1),
+    (r"\b(wounded|injured|arrested|detained|missing)\b", 1),
+    (r"\b(floods?|wildfire|landslide|drought|famine)\b", 1),
+    (r"\b(deadly|devastating|severe|major|significant)\b", 1),
 ]
 
 BLACKLIST = re.compile(
@@ -121,12 +158,14 @@ BLACKLIST = re.compile(
 )
 
 AFRICA_BONUS = [
+    # Africa-specific high priority — genuine escalation signals
     (r"\b(coup|junta|putsch|martial law|state of emergency)\b", 2),
-    (r"\b(unrest|riots?|looting|clashes?|curfew)\b", 2),
-    (r"\b(cholera|measles|ebola|famine|drought|water shortage|outbreak)\b", 2),
-    (r"\b(cyclone|floods?|landslide|wildfire|earthquake)\b", 2),
-    (r"\b(cartel|gang|bandit|kidnap|abduction|extortion)\b", 2),
+    (r"\b(ebola|cholera|famine|severe.?drought)\b", 2),
+    (r"\b(mass.?shooting|mass.?killing|massacre)\b", 2),
+    # Moderate Africa signals
+    (r"\b(cartel|gang|bandit|kidnap|abduction)\b", 1),
     (r"\b(border closure|evacuation|IDPs?|refugees?)\b", 1),
+    # Removed: unrest/riots/clashes/floods (too common, over-triggers)
 ]
 
 
