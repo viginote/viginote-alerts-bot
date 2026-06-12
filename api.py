@@ -1217,10 +1217,18 @@ async def ai_generate(req: BriefingRequest, request: Request):
             f"Text: {(a.get('article_text','') or '')[:500]}\n---"
         )
 
+    # Inject type-specific lens and subject from IRE
+    type_instr_block = ""
+    if hasattr(req, 'type_instructions') and req.type_instructions:
+        type_instr_block = f"\n\nTYPE-SPECIFIC ANALYTICAL LENS — APPLY STRICTLY:\n{req.type_instructions}"
+    subject_block = ""
+    if hasattr(req, 'subject_context') and req.subject_context:
+        subject_block = f"\n\nINTELLIGENCE REQUIREMENT FROM CLIENT:\n{req.subject_context}"
+
     prompt = f"""You are a senior intelligence analyst at Viginote Intelligence — equivalent expertise to an MSc in International Relations, Geopolitics, Security Risk Management and OSINT methodology. You operate to the standards of Control Risks, Oxford Analytica and the International Crisis Group. Today is {now_str}.
 
 ANALYST STANDARDS — NON-NEGOTIABLE:
-Apply the Admiralty Scale to every source (reliability A-F, credibility 1-6). Use NATO probability language precisely. Apply ACH — consider competing hypotheses before settling on a conclusion. Distinguish explicitly between CONFIRMED INTELLIGENCE, SINGLE-SOURCE REPORTING and ANALYST INFERENCE. Identify intelligence gaps. Never produce boilerplate. Name actors, locations, dates specifically. Write in active voice. You assess implications — you do not summarise events.
+Apply the Admiralty Scale to every source (reliability A-F, credibility 1-6). Use NATO probability language precisely. Apply ACH — consider competing hypotheses before settling on a conclusion. Distinguish explicitly between CONFIRMED INTELLIGENCE, SINGLE-SOURCE REPORTING and ANALYST INFERENCE. Identify intelligence gaps. Never produce boilerplate. Name actors, locations, dates specifically. Write in active voice. You assess implications — you do not summarise events.{type_instr_block}{subject_block}
 
 You are writing the VigiNote {req.briefing_type.title()} Briefing for {now_str}.
 
@@ -1233,7 +1241,15 @@ Respond ONLY with a JSON object with these exact keys:
   "executive_summary": "2-3 paragraph professional intelligence executive summary (~200 words). Authoritative, factual, no speculation.",
   "alert_summaries": [{{"id": 1, "enhanced_summary": "2-3 sentence enhanced summary, more context than the original."}}],
   "linkedin_caption": "Compelling 120-150 word LinkedIn post. Start with a hook. Professional but engaging. 3-4 relevant hashtags at the end. Written as VigiNote.",
-  "thumbnail_headline": "Maximum 10 words. Punchy news-style hook for the thumbnail image card."
+  "thumbnail_headline": "Maximum 10 words. Punchy news-style hook for the thumbnail image card.",
+  "analyst_prediction": "Specific falsifiable analyst prediction — what happens next, probability and confidence level (HIGH/MEDIUM/LOW). Name the single most important indicator to watch.",
+  "scenarios": [
+    {{"type": "MOST LIKELY", "probability": "HIGH probability", "description": "2 sentences on the most likely trajectory.", "trigger": "The specific indicator that confirms this scenario."}},
+    {{"type": "WORST CASE", "probability": "LOW-MEDIUM probability", "description": "2 sentences on the worst case outcome.", "trigger": "The specific indicator that triggers worst case."}},
+    {{"type": "BEST CASE", "probability": "LOW probability", "description": "2 sentences on de-escalation.", "trigger": "The indicator that opens this pathway."}}
+  ],
+  "source_landscape": "Assessed source quality — tiers represented, corroboration level, key limitations.",
+  "intelligence_gaps": "Critical information absent from this assessment and why it matters operationally."
 }}
 
 Return ONLY the JSON. No preamble, no markdown fences."""
