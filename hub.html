@@ -467,6 +467,106 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
 .itr-trend-down{color:var(--low)}
 .itr-trend-stable{color:var(--medium)}
 
+
+/* ── TRAVEL SECURITY PACK ────────────────────────────────────────────── */
+.tsp-wrap{display:flex;flex-direction:column;height:100%;overflow-y:auto;padding:20px 24px}
+.tsp-header{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.tsp-title{font-family:var(--sans,'Syne',sans-serif);font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px}
+.tsp-sub{font-size:11px;color:var(--text3);line-height:1.6;max-width:700px}
+.tsp-form{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px 18px;margin-bottom:18px}
+.tsp-row{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.tsp-row:last-child{margin-bottom:0}
+.tsp-field{display:flex;flex-direction:column;gap:4px;min-width:140px}
+.tsp-field-wide{flex:2;min-width:200px}
+.tsp-label{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text4)}
+.tsp-input{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;
+  padding:7px 10px;color:var(--text);font-size:12px;font-family:var(--body);
+  outline:none;transition:border-color .15s}
+.tsp-input:focus{border-color:var(--blue)}
+.tsp-select{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;
+  padding:6px 10px;color:var(--text);font-family:var(--mono);font-size:10px;outline:none}
+.tsp-run-btn{padding:9px 22px;border-radius:5px;background:var(--blue-dim);border:none;
+  color:#fff;font-family:var(--mono);font-size:10px;font-weight:700;cursor:pointer;
+  white-space:nowrap;transition:background .15s}
+.tsp-run-btn:hover{background:var(--blue)}
+.tsp-run-btn:disabled{opacity:.5;cursor:not-allowed}
+.tsp-status{font-family:var(--mono);font-size:10px;color:var(--text3)}
+/* Advisory banner */
+.tsp-banner{display:flex;align-items:flex-start;gap:16px;padding:16px 20px;
+  border-radius:8px;margin-bottom:16px;border:1px solid}
+.tsp-banner.go{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3)}
+.tsp-banner.caution{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.3)}
+.tsp-banner.no-go{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3)}
+.tsp-advisory-label{font-family:var(--sans,'Syne',sans-serif);font-size:1.6rem;
+  font-weight:800;min-width:90px;flex-shrink:0;margin-top:2px}
+.tsp-banner.go .tsp-advisory-label{color:var(--low)}
+.tsp-banner.caution .tsp-advisory-label{color:var(--medium)}
+.tsp-banner.no-go .tsp-advisory-label{color:var(--critical)}
+.tsp-pack-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.tsp-advisory-rationale{font-size:12px;color:var(--text2);line-height:1.6}
+/* Sections */
+.tsp-section{margin-bottom:16px}
+.tsp-section-label{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--text4);padding-bottom:6px;
+  border-bottom:1px solid var(--border);margin-bottom:10px}
+.tsp-analyst-text{font-size:12px;color:var(--text2);line-height:1.8;
+  padding:12px 14px;background:var(--bg2);border:1px solid var(--border);
+  border-left:3px solid var(--blue);border-radius:0 5px 5px 0}
+/* Key risks */
+.tsp-risks{display:flex;flex-direction:column;gap:6px}
+.tsp-risk-row{display:flex;gap:10px;padding:10px 12px;background:var(--bg3);
+  border-radius:5px;border:1px solid var(--border)}
+.tsp-risk-rank{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--text4);flex-shrink:0;width:20px}
+.tsp-risk-cat{font-size:12px;font-weight:600;color:var(--text);min-width:160px;flex-shrink:0}
+.tsp-risk-level{font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 7px;
+  border-radius:2px;flex-shrink:0;height:fit-content;margin-top:2px}
+.tsp-risk-detail{font-size:11px;color:var(--text3);line-height:1.6;flex:1}
+/* Checklists */
+.tsp-two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.tsp-checklist{display:flex;flex-direction:column;gap:8px}
+.tsp-check-cat{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--blue);
+  margin-bottom:3px;letter-spacing:.5px}
+.tsp-check-item{display:flex;gap:7px;font-size:11px;color:var(--text3);
+  padding:3px 0;line-height:1.5}
+.tsp-check-item::before{content:'☐';color:var(--border2);flex-shrink:0;font-size:11px}
+/* Areas */
+.tsp-areas{display:flex;flex-direction:column;gap:5px}
+.tsp-area-row{padding:8px 12px;border-radius:4px;border:1px solid}
+.tsp-area-row.avoid{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.2)}
+.tsp-area-row.safe{background:rgba(34,197,94,.07);border-color:rgba(34,197,94,.2)}
+.tsp-area-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px}
+.tsp-area-reason{font-size:11px;color:var(--text3)}
+/* Contacts */
+.tsp-contacts{display:flex;flex-direction:column;gap:4px}
+.tsp-contact-row{display:flex;gap:10px;padding:7px 10px;background:var(--bg3);
+  border-radius:4px;border:1px solid var(--border)}
+.tsp-contact-key{font-family:var(--mono);font-size:9px;color:var(--text4);
+  min-width:120px;flex-shrink:0;text-transform:uppercase;font-weight:700}
+.tsp-contact-val{font-size:11px;color:var(--text2)}
+/* Extraction */
+.tsp-extraction{display:flex;flex-direction:column;gap:6px}
+.tsp-ext-row{padding:10px 12px;background:var(--bg3);border-radius:4px;
+  border:1px solid var(--border)}
+.tsp-ext-type{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:1px;
+  margin-bottom:3px}
+.tsp-ext-route{font-size:11px;color:var(--text2);margin-bottom:3px}
+.tsp-ext-note{font-size:10px;color:var(--text4);font-style:italic}
+/* Triggers */
+.tsp-triggers{display:flex;flex-direction:column;gap:5px}
+.tsp-trigger{display:flex;gap:8px;padding:8px 12px;background:rgba(239,68,68,.07);
+  border:1px solid rgba(239,68,68,.15);border-radius:4px;font-size:11px;color:var(--text2)}
+.tsp-trigger::before{content:'⚠';flex-shrink:0;color:var(--critical)}
+/* Doc text */
+.tsp-doc-text{font-size:12px;color:var(--text2);line-height:1.8;
+  padding:12px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:5px}
+/* Actions */
+.tsp-actions{display:flex;gap:8px;margin-top:12px;padding-top:12px;
+  border-top:1px solid var(--border)}
+.tsp-action-btn{padding:7px 14px;border-radius:4px;font-family:var(--mono);font-size:9px;
+  font-weight:700;letter-spacing:.5px;cursor:pointer;border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text3);transition:all .15s}
+.tsp-action-btn:hover{border-color:var(--blue);color:var(--blue)}
+
 </style>
 </head>
 <body>
@@ -549,6 +649,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
       <button class="nav-item" id="nav-tracker" onclick="switchPanel('tracker')">
         <span class="nav-icon">📈</span>
         <span class="nav-label">Incident Tracker</span>
+      </button>
+      <button class="nav-item" id="nav-travelpack" onclick="switchPanel('travelpack')">
+        <span class="nav-icon">✈️</span>
+        <span class="nav-label">Travel Security Pack</span>
       </button>
     </div>
 
@@ -957,6 +1061,158 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
     </div>
 
 
+    <!-- ── TRAVEL SECURITY PACK ─────────────────────────────────────── -->
+    <div id="panel-travelpack" class="ws-frame-panel">
+      <div class="tsp-wrap">
+
+        <div class="tsp-header">
+          <div class="tsp-header-left">
+            <div class="tsp-title">✈️ Travel Security Pack Generator</div>
+            <div class="tsp-sub">Generate a complete travel security pack — pre-travel checklist, in-country protocols, emergency contacts, extraction routes and duty of care documentation. Ready to deliver to travellers or security managers.</div>
+          </div>
+        </div>
+
+        <!-- Form -->
+        <div class="tsp-form">
+          <div class="tsp-row">
+            <div class="tsp-field tsp-field-wide">
+              <label class="tsp-label">Destination</label>
+              <input id="tsp-dest" class="tsp-input" placeholder="e.g. Nairobi, Kenya · Khartoum, Sudan · Dubai, UAE">
+            </div>
+            <div class="tsp-field">
+              <label class="tsp-label">Travel Purpose</label>
+              <select id="tsp-purpose" class="tsp-select">
+                <option value="business">Business Travel</option>
+                <option value="ngo">NGO / Field Deployment</option>
+                <option value="executive">Executive / VIP</option>
+                <option value="leisure">Leisure Travel</option>
+              </select>
+            </div>
+            <div class="tsp-field">
+              <label class="tsp-label">Duration</label>
+              <input id="tsp-duration" class="tsp-input" placeholder="e.g. 3-7 days" value="3-7 days">
+            </div>
+          </div>
+          <div class="tsp-row">
+            <div class="tsp-field tsp-field-wide">
+              <label class="tsp-label">Organisation / Client</label>
+              <input id="tsp-org" class="tsp-input" placeholder="e.g. MSF, Shell Group, Independent Consultant" value="Viginote Client">
+            </div>
+            <div class="tsp-field tsp-field-wide">
+              <label class="tsp-label">Traveller Profile</label>
+              <input id="tsp-profile" class="tsp-input" placeholder="e.g. Senior executive, Field team of 4, Solo analyst">
+            </div>
+            <div class="tsp-field">
+              <label class="tsp-label">Travel Date</label>
+              <input id="tsp-date" class="tsp-input" type="date">
+            </div>
+          </div>
+          <div class="tsp-row">
+            <div class="tsp-field" style="flex:1">
+              <label class="tsp-label">Specific Concerns (optional)</label>
+              <input id="tsp-concerns" class="tsp-input" placeholder="e.g. Large cash movements, sensitive meetings, recent civil unrest in destination">
+            </div>
+            <div class="tsp-field">
+              <label class="tsp-label">Alert Window</label>
+              <select id="tsp-hours" class="tsp-select">
+                <option value="168">7 days</option>
+                <option value="720" selected>30 days</option>
+                <option value="2160">90 days</option>
+              </select>
+            </div>
+          </div>
+          <div class="tsp-row" style="align-items:center;gap:12px">
+            <button id="tsp-run-btn" class="tsp-run-btn" onclick="runTravelPack()">
+              <span id="tsp-btn-text">✈️ Generate Travel Security Pack</span>
+            </button>
+            <div id="tsp-status" class="tsp-status"></div>
+          </div>
+        </div>
+
+        <!-- Result -->
+        <div id="tsp-result" style="display:none">
+
+          <!-- Advisory Banner -->
+          <div id="tsp-banner" class="tsp-banner">
+            <div id="tsp-advisory-label" class="tsp-advisory-label">GO</div>
+            <div>
+              <div id="tsp-pack-title" class="tsp-pack-title"></div>
+              <div id="tsp-advisory-rationale" class="tsp-advisory-rationale"></div>
+            </div>
+          </div>
+
+          <!-- Analyst Assessment -->
+          <div class="tsp-section">
+            <div class="tsp-section-label">ANALYST ASSESSMENT</div>
+            <div id="tsp-analyst" class="tsp-analyst-text"></div>
+          </div>
+
+          <!-- Key Risks -->
+          <div class="tsp-section">
+            <div class="tsp-section-label">KEY RISKS</div>
+            <div id="tsp-risks" class="tsp-risks"></div>
+          </div>
+
+          <!-- Two column: Pre-travel + In-country -->
+          <div class="tsp-two-col">
+            <div>
+              <div class="tsp-section-label">PRE-TRAVEL CHECKLIST</div>
+              <div id="tsp-pretrav" class="tsp-checklist"></div>
+            </div>
+            <div>
+              <div class="tsp-section-label">IN-COUNTRY PROTOCOLS</div>
+              <div id="tsp-incountry" class="tsp-checklist"></div>
+            </div>
+          </div>
+
+          <!-- Areas -->
+          <div class="tsp-two-col">
+            <div>
+              <div class="tsp-section-label">AREAS TO AVOID</div>
+              <div id="tsp-avoid" class="tsp-areas"></div>
+            </div>
+            <div>
+              <div class="tsp-section-label">LOWER RISK ZONES</div>
+              <div id="tsp-safe" class="tsp-areas"></div>
+            </div>
+          </div>
+
+          <!-- Emergency + Extraction -->
+          <div class="tsp-two-col">
+            <div>
+              <div class="tsp-section-label">EMERGENCY CONTACTS</div>
+              <div id="tsp-emergency" class="tsp-contacts"></div>
+            </div>
+            <div>
+              <div class="tsp-section-label">EXTRACTION ROUTES</div>
+              <div id="tsp-extraction" class="tsp-extraction"></div>
+            </div>
+          </div>
+
+          <!-- Escalation triggers -->
+          <div class="tsp-section">
+            <div class="tsp-section-label">ESCALATION TRIGGERS — ACT IMMEDIATELY IF:</div>
+            <div id="tsp-triggers" class="tsp-triggers"></div>
+          </div>
+
+          <!-- Duty of Care -->
+          <div class="tsp-section">
+            <div class="tsp-section-label">DUTY OF CARE NOTE</div>
+            <div id="tsp-doc" class="tsp-doc-text"></div>
+          </div>
+
+          <!-- Actions -->
+          <div class="tsp-actions">
+            <button class="tsp-action-btn" onclick="copyTsp()">📋 Copy as text</button>
+            <button class="tsp-action-btn" onclick="saveTspDeliverable()">☁ Save to Deliverables</button>
+            <button class="tsp-action-btn" onclick="runTravelPack()">↺ Regenerate</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
     <div id="panel-deliverables">
       <div class="del-head">
         <h2>📬 Deliverables</h2>
@@ -1147,6 +1403,7 @@ function switchPanel(name){
   if(name==='flash') loadFlashAlerts();
   if(name==='request') initIrePanel();
   if(name==='tracker') initTrackerPanel();
+  if(name==='travelpack') initTspPanel();
 }
 
 
@@ -2464,6 +2721,212 @@ function renderIncidentList(alerts){
   if(sorted.length > 100){
     list.innerHTML += '<div style="font-family:var(--mono);font-size:9px;color:var(--text4);text-align:center;padding:8px">Showing 100 of '+sorted.length+' incidents</div>';
   }
+}
+
+
+// ── TRAVEL SECURITY PACK ─────────────────────────────────────────────────
+var _tspLastResult = null;
+
+function initTspPanel(){
+  setTimeout(function(){ var el=document.getElementById('tsp-dest'); if(el) el.focus(); },100);
+}
+
+async function runTravelPack(){
+  var dest     = (document.getElementById('tsp-dest')||{value:''}).value.trim();
+  var purpose  = (document.getElementById('tsp-purpose')||{value:'business'}).value;
+  var duration = (document.getElementById('tsp-duration')||{value:'3-7 days'}).value;
+  var org      = (document.getElementById('tsp-org')||{value:'Viginote Client'}).value.trim();
+  var profile  = (document.getElementById('tsp-profile')||{value:''}).value.trim();
+  var date     = (document.getElementById('tsp-date')||{value:''}).value;
+  var concerns = (document.getElementById('tsp-concerns')||{value:''}).value.trim();
+  var hours    = (document.getElementById('tsp-hours')||{value:'720'}).value;
+  var btn      = document.getElementById('tsp-run-btn');
+  var btnText  = document.getElementById('tsp-btn-text');
+  var status   = document.getElementById('tsp-status');
+
+  if(!dest){ alert('Please enter a destination.'); return; }
+
+  btn.disabled = true;
+  btnText.textContent = '⏳ Generating pack...';
+  status.textContent  = 'Querying live intelligence and building your travel security pack...';
+  document.getElementById('tsp-result').style.display = 'none';
+
+  try {
+    var resp = await fetch(API+'/ai/travel-pack', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body: JSON.stringify({
+        destination: dest,
+        purpose: purpose,
+        duration: duration,
+        organisation: org,
+        traveller_profile: profile,
+        travel_date: date,
+        specific_concerns: concerns,
+        hours: parseInt(hours)
+      })
+    });
+
+    if(!resp.ok){
+      var err = await resp.json();
+      throw new Error(err.detail || 'Generation failed');
+    }
+
+    var data = await resp.json();
+    var g    = data.generated;
+    _tspLastResult = g;
+
+    // Render
+    renderTravelPack(g);
+    status.textContent = '✓ Pack ready — review, copy or save to deliverables.';
+    document.getElementById('tsp-result').style.display = 'block';
+    document.getElementById('tsp-result').scrollIntoView({behavior:'smooth',block:'start'});
+
+  } catch(err){
+    status.textContent = '✗ ' + err.message;
+    console.error('Travel pack error:', err);
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = '✈️ Generate Travel Security Pack';
+  }
+}
+
+function renderTravelPack(g){
+  // Advisory banner
+  var advisory = (g.overall_advisory||'CAUTION').toUpperCase();
+  var banner   = document.getElementById('tsp-banner');
+  var cls      = advisory==='GO'?'go':advisory==='NO-GO'||advisory==='NO GO'?'no-go':'caution';
+  banner.className = 'tsp-banner '+cls;
+  document.getElementById('tsp-advisory-label').textContent = advisory;
+  document.getElementById('tsp-pack-title').textContent     = g.pack_title||('Travel Security Pack: '+(g.destination||''));
+  document.getElementById('tsp-advisory-rationale').textContent = g.advisory_rationale||'';
+
+  // Analyst assessment
+  document.getElementById('tsp-analyst').textContent = g.analyst_assessment||'';
+
+  // Key risks
+  var riskCol = {'CRITICAL':'var(--critical)','HIGH':'var(--high)','MEDIUM':'var(--medium)','LOW':'var(--text3)'};
+  var risks   = (g.key_risks||[]);
+  document.getElementById('tsp-risks').innerHTML = risks.map(function(r){
+    var col = riskCol[r.level]||'var(--text3)';
+    return '<div class="tsp-risk-row">'
+      +'<span class="tsp-risk-rank">#'+r.rank+'</span>'
+      +'<span class="tsp-risk-cat">'+r.category+'</span>'
+      +'<span class="tsp-risk-level" style="background:'+col+'22;color:'+col+';border:1px solid '+col+'44">'+r.level+'</span>'
+      +'<span class="tsp-risk-detail">'+r.detail+'</span>'
+      +'</div>';
+  }).join('');
+
+  // Pre-travel checklist
+  var pt = (g.pre_travel_checklist||[]);
+  document.getElementById('tsp-pretrav').innerHTML = pt.map(function(cat){
+    return '<div><div class="tsp-check-cat">'+cat.category+'</div>'
+      +(cat.items||[]).map(function(i){ return '<div class="tsp-check-item">'+i+'</div>'; }).join('')
+      +'</div>';
+  }).join('');
+
+  // In-country protocols
+  var inc = g.in_country_protocols||{};
+  var incHtml = '';
+  Object.entries(inc).forEach(function(e){
+    if(e[1] && e[1].length){
+      var label = e[0].replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+      incHtml += '<div><div class="tsp-check-cat">'+label+'</div>'
+        +e[1].map(function(i){ return '<div class="tsp-check-item">'+i+'</div>'; }).join('')
+        +'</div>';
+    }
+  });
+  document.getElementById('tsp-incountry').innerHTML = incHtml;
+
+  // Areas to avoid
+  document.getElementById('tsp-avoid').innerHTML = (g.areas_to_avoid||[]).map(function(a){
+    return '<div class="tsp-area-row avoid">'
+      +'<div class="tsp-area-name">⚠ '+a.area+' <span style="font-family:var(--mono);font-size:8px;color:var(--critical)">'+a.risk_level+'</span></div>'
+      +'<div class="tsp-area-reason">'+a.reason+'</div>'
+      +'</div>';
+  }).join('');
+
+  // Safe zones
+  document.getElementById('tsp-safe').innerHTML = (g.safe_zones||[]).map(function(a){
+    return '<div class="tsp-area-row safe">'
+      +'<div class="tsp-area-name">✓ '+a.area+'</div>'
+      +'<div class="tsp-area-reason">'+a.reason+'</div>'
+      +'</div>';
+  }).join('');
+
+  // Emergency contacts
+  var ec = g.emergency_contacts||{};
+  document.getElementById('tsp-emergency').innerHTML = Object.entries(ec).map(function(e){
+    return '<div class="tsp-contact-row">'
+      +'<span class="tsp-contact-key">'+e[0].replace(/_/g,' ')+'</span>'
+      +'<span class="tsp-contact-val">'+e[1]+'</span>'
+      +'</div>';
+  }).join('');
+
+  // Extraction routes
+  document.getElementById('tsp-extraction').innerHTML = (g.extraction_routes||[]).map(function(r){
+    var col = r.type==='PRIMARY'?'var(--blue)':'var(--medium)';
+    return '<div class="tsp-ext-row">'
+      +'<div class="tsp-ext-type" style="color:'+col+'">'+r.type+'</div>'
+      +'<div class="tsp-ext-route">'+r.route+'</div>'
+      +'<div class="tsp-ext-note">'+r.notes+'</div>'
+      +'</div>';
+  }).join('');
+
+  // Escalation triggers
+  document.getElementById('tsp-triggers').innerHTML = (g.escalation_triggers||[]).map(function(t){
+    return '<div class="tsp-trigger">'+t+'</div>';
+  }).join('');
+
+  // Duty of care
+  document.getElementById('tsp-doc').textContent = g.duty_of_care_note||'';
+}
+
+function copyTsp(){
+  if(!_tspLastResult) return;
+  var g = _tspLastResult;
+  var lines = [
+    'TRAVEL SECURITY PACK — '+g.pack_title,
+    'Date: '+g.date,
+    'Advisory: '+g.overall_advisory,
+    '',
+    g.advisory_rationale,
+    '',
+    '— ANALYST ASSESSMENT —',
+    g.analyst_assessment,
+    '',
+    '— KEY RISKS —',
+  ];
+  (g.key_risks||[]).forEach(function(r){ lines.push('#'+r.rank+' '+r.category+' ['+r.level+']: '+r.detail); });
+  lines.push('','— EMERGENCY CONTACTS —');
+  Object.entries(g.emergency_contacts||{}).forEach(function(e){ lines.push(e[0].replace(/_/g,' ')+': '+e[1]); });
+  lines.push('','— ESCALATION TRIGGERS —');
+  (g.escalation_triggers||[]).forEach(function(t){ lines.push('⚠ '+t); });
+  lines.push('','— DUTY OF CARE —',g.duty_of_care_note||'');
+  navigator.clipboard.writeText(lines.join('\n')).then(function(){
+    var btns = document.querySelectorAll('.tsp-action-btn');
+    if(btns[0]){ var o=btns[0].textContent; btns[0].textContent='✓ Copied!'; setTimeout(function(){btns[0].textContent=o;},2000); }
+  });
+}
+
+async function saveTspDeliverable(){
+  if(!_tspLastResult) return;
+  try {
+    var resp = await fetch(API+'/deliverables/save', {
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        type: 'travel',
+        title: _tspLastResult.pack_title || 'Travel Security Pack',
+        content: _tspLastResult,
+        client_name: _tspLastResult.organisation || 'Viginote Client',
+      })
+    });
+    var d = await resp.json();
+    if(d.view_url) alert('Saved.\nShare link: '+d.view_url);
+    else alert('Saved to deliverables.');
+  } catch(e){ alert('Save failed: '+e.message); }
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────
