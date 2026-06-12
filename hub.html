@@ -362,6 +362,56 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
   .dash-grid{grid-template-columns:1fr 1fr;padding:16px}
   .dash-hero,.recent-alerts{padding-left:16px;padding-right:16px}
 }
+
+/* ── INTELLIGENCE REQUEST ENGINE ─────────────────────────────────────── */
+.ire-wrap{padding:24px 28px;max-width:1000px;height:100%;overflow-y:auto}
+.ire-header{margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.ire-header-top{display:flex;align-items:flex-start;gap:14px}
+.ire-icon{font-size:28px;flex-shrink:0;margin-top:2px}
+.ire-title{font-family:'Syne',var(--sans);font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px}
+.ire-sub{font-size:12px;color:var(--text3);line-height:1.6;max-width:650px}
+.ire-form{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:18px 20px;margin-bottom:20px}
+.ire-row{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.ire-row:last-child{margin-bottom:0}
+.ire-field{display:flex;flex-direction:column;gap:5px;min-width:160px}
+.ire-field-grow{flex:1;min-width:100%}
+.ire-label{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--text4)}
+.ire-textarea{background:var(--bg3);border:1px solid var(--border2);border-radius:5px;
+  padding:10px 12px;color:var(--text);font-size:12px;font-family:var(--body);
+  resize:vertical;min-height:80px;line-height:1.6;outline:none;width:100%;
+  transition:border-color .15s}
+.ire-textarea:focus{border-color:var(--blue)}
+.ire-input{background:var(--bg3);border:1px solid var(--border2);border-radius:5px;
+  padding:8px 12px;color:var(--text);font-size:12px;font-family:var(--body);
+  outline:none;transition:border-color .15s}
+.ire-input:focus{border-color:var(--blue)}
+.ire-select{background:var(--bg3);border:1px solid var(--border2);border-radius:5px;
+  padding:7px 10px;color:var(--text);font-family:var(--mono);font-size:10px;
+  outline:none;cursor:pointer}
+.ire-run-btn{padding:10px 24px;border-radius:5px;background:var(--blue-dim);
+  border:none;color:#fff;font-family:var(--mono);font-size:10px;font-weight:700;
+  letter-spacing:.5px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.ire-run-btn:hover{background:var(--blue)}
+.ire-run-btn:disabled{opacity:.5;cursor:not-allowed}
+.ire-status{font-family:var(--mono);font-size:10px;color:var(--text3)}
+.ire-section-label{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2.5px;
+  text-transform:uppercase;color:var(--text4);margin-bottom:8px;
+  padding-bottom:6px;border-bottom:1px solid var(--border)}
+.ire-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
+.ire-pill{font-family:var(--mono);font-size:9px;padding:3px 10px;border-radius:3px;
+  background:var(--bg3);border:1px solid var(--border2);color:var(--text3)}
+.ire-pill.crit{border-color:rgba(239,68,68,.3);color:#ef4444;background:rgba(239,68,68,.08)}
+.ire-pill.high{border-color:rgba(249,115,22,.3);color:var(--high);background:rgba(249,115,22,.08)}
+.ire-brief-frame{background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  padding:20px;min-height:200px;font-size:13px;color:var(--text2);line-height:1.8;
+  white-space:pre-wrap;max-height:600px;overflow-y:auto}
+.ire-actions{display:flex;gap:8px;margin-top:12px}
+.ire-action-btn{padding:7px 14px;border-radius:4px;font-family:var(--mono);font-size:9px;
+  font-weight:700;letter-spacing:.5px;cursor:pointer;border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text3);transition:all .15s}
+.ire-action-btn:hover{border-color:var(--blue);color:var(--blue)}
+
 </style>
 </head>
 <body>
@@ -436,6 +486,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
       <button class="nav-item" id="nav-flash" onclick="switchPanel('flash')">
         <span class="nav-icon">⚡📢</span>
         <span class="nav-label">Flash Publisher</span>
+      </button>
+      <button class="nav-item" id="nav-request" onclick="switchPanel('request')">
+        <span class="nav-icon">🎯</span>
+        <span class="nav-label">Intel Request</span>
       </button>
     </div>
 
@@ -690,6 +744,93 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
     </div><!-- /panel-flash -->
 
     <!-- DELIVERABLES PANEL -->
+    <!-- ── INTELLIGENCE REQUEST ENGINE ──────────────────────────────── -->
+    <div id="panel-request" class="ws-frame-panel">
+      <div class="ire-wrap">
+
+        <div class="ire-header">
+          <div class="ire-header-top">
+            <span class="ire-icon">🎯</span>
+            <div>
+              <div class="ire-title">Intelligence Request Engine</div>
+              <div class="ire-sub">Describe what you need. The system queries the live feed and generates a structured intelligence product automatically.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Request form -->
+        <div class="ire-form">
+          <div class="ire-row">
+            <div class="ire-field ire-field-grow">
+              <label class="ire-label">Intelligence Requirement</label>
+              <textarea id="ire-subject" class="ire-textarea"
+                placeholder="e.g. Current security situation in El Fasher for NGO field director considering staff deployment&#10;e.g. Red Sea shipping risk assessment for tanker operator routing via Hormuz&#10;e.g. Political stability in Zimbabwe ahead of Q3 investment decision"></textarea>
+            </div>
+          </div>
+          <div class="ire-row">
+            <div class="ire-field">
+              <label class="ire-label">Product Type</label>
+              <select id="ire-type" class="ire-select">
+                <option value="geopolitical">Geopolitical Assessment</option>
+                <option value="travel">Travel Security Advisory</option>
+                <option value="corporate">Corporate Security Intelligence</option>
+                <option value="osint">OSINT Research Brief</option>
+                <option value="event">Event-Specific Brief</option>
+              </select>
+            </div>
+            <div class="ire-field">
+              <label class="ire-label">Client / Audience</label>
+              <input id="ire-client" class="ire-input" placeholder="e.g. NGO Field Director, Corporate Security Team" value="Viginote Client">
+            </div>
+            <div class="ire-field">
+              <label class="ire-label">Time Horizon</label>
+              <select id="ire-horizon" class="ire-select">
+                <option value="immediate">Immediate (24-72 hours)</option>
+                <option value="short" selected>Short-term (7-30 days)</option>
+                <option value="medium">Medium-term (30-90 days)</option>
+                <option value="strategic">Strategic (90+ days)</option>
+              </select>
+            </div>
+            <div class="ire-field">
+              <label class="ire-label">Alert Pool</label>
+              <select id="ire-hours" class="ire-select">
+                <option value="168">Last 7 days</option>
+                <option value="720" selected>Last 30 days</option>
+                <option value="2160">Last 90 days</option>
+                <option value="8760">All time</option>
+              </select>
+            </div>
+          </div>
+          <div class="ire-row" style="align-items:center;gap:12px">
+            <button id="ire-run-btn" class="ire-run-btn" onclick="runIntelRequest()">
+              <span id="ire-btn-text">🎯 Generate Intelligence Product</span>
+            </button>
+            <div id="ire-status" class="ire-status"></div>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div id="ire-results" style="display:none">
+          <!-- Alerts used -->
+          <div class="ire-section-label">ALERTS USED — <span id="ire-alert-count">0</span> matching alerts queried</div>
+          <div id="ire-alert-pills" class="ire-pills"></div>
+
+          <!-- Generated brief (rendered in iframe) -->
+          <div class="ire-section-label" style="margin-top:16px">GENERATED PRODUCT</div>
+          <div id="ire-brief-frame" class="ire-brief-frame"></div>
+
+          <!-- Actions -->
+          <div class="ire-actions">
+            <button class="ire-action-btn" onclick="copyIrePost()">📋 Copy</button>
+            <button class="ire-action-btn" onclick="saveIreDeliverable()">☁ Save to Deliverables</button>
+            <button class="ire-action-btn" onclick="runIntelRequest()">↺ Regenerate</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+
     <div id="panel-deliverables">
       <div class="del-head">
         <h2>📬 Deliverables</h2>
@@ -878,6 +1019,7 @@ function switchPanel(name){
     loadAdminFeed();
   }
   if(name==='flash') loadFlashAlerts();
+  if(name==='request') initIrePanel();
 }
 
 
@@ -1652,6 +1794,270 @@ function copyFirstComment(){
     var btn = document.querySelector('#fb-comment-box button');
     if(btn){ btn.textContent='✓ Copied!'; setTimeout(function(){btn.textContent='📋 Copy comment';},2000); }
   });
+}
+
+
+// ── INTELLIGENCE REQUEST ENGINE ──────────────────────────────────────────
+var _ireInitialized = false;
+var _ireLastResult  = null;
+
+function initIrePanel(){
+  if(_ireInitialized) return;
+  _ireInitialized = true;
+  // Focus the textarea
+  setTimeout(function(){
+    var ta = document.getElementById('ire-subject');
+    if(ta) ta.focus();
+  }, 100);
+}
+
+async function runIntelRequest(){
+  var subject  = (document.getElementById('ire-subject')||{value:''}).value.trim();
+  var type     = (document.getElementById('ire-type')||{value:'geopolitical'}).value;
+  var client   = (document.getElementById('ire-client')||{value:'Viginote Client'}).value.trim() || 'Viginote Client';
+  var horizon  = (document.getElementById('ire-horizon')||{value:'short'}).value;
+  var hours    = (document.getElementById('ire-hours')||{value:'720'}).value;
+  var btn      = document.getElementById('ire-run-btn');
+  var btnText  = document.getElementById('ire-btn-text');
+  var status   = document.getElementById('ire-status');
+  var results  = document.getElementById('ire-results');
+
+  if(!subject){ alert('Please describe your intelligence requirement.'); return; }
+
+  // Disable button + show status
+  btn.disabled = true;
+  btnText.textContent = '⏳ Querying alerts...';
+  status.textContent  = 'Step 1/3 — Searching ' + hours/24 + ' days of intelligence...';
+  results.style.display = 'none';
+
+  try {
+    // Step 1: fetch alerts and filter by relevance to subject
+    var alertResp = await fetch(API+'/alerts?hours='+hours+'&min_score=1&limit=2000');
+    var alertData = await alertResp.json();
+    var allAlerts = (alertData.alerts||alertData||[]);
+
+    // Step 2: relevance filter — extract keywords from subject
+    var stopWords = new Set(['the','and','for','with','that','this','from','have',
+      'been','will','were','they','says','said','after','over','into','also',
+      'amid','than','more','some','what','which','when','where','about','their',
+      'current','situation','assessment','security','intelligence','risk','analysis']);
+    var subjectWords = subject.toLowerCase()
+      .replace(/[^a-z0-9\s]/g,' ')
+      .split(/\s+/)
+      .filter(function(w){ return w.length > 3 && !stopWords.has(w); });
+
+    // Score each alert by keyword overlap with subject
+    var scored = allAlerts.map(function(a){
+      var text = ((a.title||'') + ' ' + (a.precis||'') + ' ' + (a.region||'')).toLowerCase();
+      var matches = subjectWords.filter(function(w){ return text.includes(w); }).length;
+      var regionBonus = 0;
+      // Give extra weight to high-scoring alerts
+      var scoreBonus = Math.min((a.score||0) / 10, 0.5);
+      return Object.assign({}, a, {_relevance: matches + scoreBonus});
+    }).filter(function(a){ return a._relevance > 0; });
+
+    // Sort by relevance desc, take top 8
+    scored.sort(function(a,b){ return b._relevance - a._relevance; });
+    var selected = scored.slice(0, 8);
+
+    if(selected.length === 0){
+      status.textContent = 'No matching alerts found. Try broadening your request or extending the time window.';
+      btn.disabled = false;
+      btnText.textContent = '🎯 Generate Intelligence Product';
+      return;
+    }
+
+    // Show alert pills
+    btnText.textContent = '⏳ Generating product...';
+    status.textContent  = 'Step 2/3 — Found ' + selected.length + ' relevant alerts. Generating intelligence product...';
+
+    var pillsEl = document.getElementById('ire-alert-pills');
+    document.getElementById('ire-alert-count').textContent = selected.length;
+    pillsEl.innerHTML = selected.map(function(a){
+      var cls = (a.score||0) >= 9 ? 'crit' : (a.score||0) >= 7 ? 'high' : '';
+      return '<span class="ire-pill '+cls+'">'+
+        (a.score>=9?'🔴 ':'🟠 ')+(a.title||'').substring(0,55)+'…'+'</span>';
+    }).join('');
+
+    // Step 3: build the brief request
+    var horizonLabels = {
+      immediate: 'Immediate (24-72 hours)',
+      short: 'Short-term (7-30 days)',
+      medium: 'Medium-term (30-90 days)',
+      strategic: 'Strategic (90+ days)'
+    };
+    var typeLabels = {
+      geopolitical: 'Geopolitical Assessment',
+      travel: 'Travel Security Advisory',
+      corporate: 'Corporate Security Intelligence',
+      osint: 'OSINT Research Brief',
+      event: 'Event-Specific Brief'
+    };
+
+    var briefPayload = {
+      alerts: selected.map(function(a){
+        return {
+          id: a.id, title: a.title, precis: a.precis,
+          region: a.region, score: a.score, stream: a.stream,
+          source_domain: a.source_domain, source_tier: a.source_tier,
+          is_critical: a.is_critical
+        };
+      }),
+      briefing_type: type,
+      client_name: client,
+      horizon: horizonLabels[horizon] || horizon,
+      ref: 'IRE-' + Date.now().toString(36).toUpperCase(),
+      regions: [...new Set(selected.map(function(a){ return a.region; }))].join(', ')
+    };
+
+    var resp = await fetch(API+'/ai/generate', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      credentials: 'include',
+      body: JSON.stringify(briefPayload)
+    });
+
+    if(!resp.ok){ throw new Error('Generation failed: ' + resp.status); }
+    var data = await resp.json();
+    var g    = data.generated || data;
+
+    status.textContent  = 'Step 3/3 — Product ready.';
+    _ireLastResult = {generated: g, alerts: selected, type: type, client: client};
+
+    // Render the brief
+    var frameEl = document.getElementById('ire-brief-frame');
+    frameEl.innerHTML = renderIreBrief(g, typeLabels[type], client);
+
+    results.style.display = 'block';
+    results.scrollIntoView({behavior:'smooth', block:'start'});
+
+  } catch(err) {
+    status.textContent = '✗ Error: ' + err.message;
+    console.error('IRE error:', err);
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = '🎯 Generate Intelligence Product';
+  }
+}
+
+function renderIreBrief(g, typeLabel, client){
+  var now = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}).toUpperCase();
+  var html = '<div style="font-family:var(--body)">';
+
+  // Header
+  html += '<div style="border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:16px">';
+  html += '<div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--blue);margin-bottom:4px">'+typeLabel.toUpperCase()+' · VIGINOTE INTELLIGENCE</div>';
+  html += '<div style="font-family:var(--serif,Georgia,serif);font-size:1.4rem;font-weight:700;color:var(--text);margin-bottom:4px">'+(g.headline||'Intelligence Assessment')+'</div>';
+  html += '<div style="font-size:12px;color:var(--text3)">'+(g.deck||'')+'</div>';
+  html += '<div style="font-family:var(--mono);font-size:9px;color:var(--text4);margin-top:6px">CLIENT: '+client.toUpperCase()+' · '+now+'</div>';
+  html += '</div>';
+
+  // Key Judgement
+  if(g.key_judgement){
+    html += '<div style="border-left:3px solid var(--blue);padding:10px 14px;margin-bottom:16px;background:var(--blue-pale);border-radius:0 5px 5px 0">';
+    html += '<div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--blue);margin-bottom:6px">● KEY JUDGEMENT</div>';
+    html += '<div style="font-size:13px;color:var(--text);line-height:1.7">'+g.key_judgement+'</div>';
+    html += '</div>';
+  }
+
+  // Situational Overview
+  if(g.situational_overview){
+    html += '<div style="margin-bottom:16px">';
+    html += '<div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--text4);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)">SITUATIONAL OVERVIEW</div>';
+    var paras = Array.isArray(g.situational_overview) ? g.situational_overview : [g.situational_overview];
+    paras.forEach(function(p){ html += '<p style="font-size:12px;color:var(--text2);line-height:1.8;margin-bottom:10px">'+p+'</p>'; });
+    html += '</div>';
+  }
+
+  // Risk Matrix
+  if(g.risk_matrix && g.risk_matrix.length){
+    html += '<div style="margin-bottom:16px">';
+    html += '<div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--text4);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)">RISK MATRIX</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:6px">';
+    g.risk_matrix.forEach(function(r){
+      var col = r.level==='CRITICAL'?'#ef4444':r.level==='HIGH'?'#f97316':r.level==='MEDIUM'?'#f59e0b':'#94a3b8';
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg3);border-radius:4px;border:1px solid var(--border)">';
+      html += '<span style="font-family:var(--mono);font-size:9px;font-weight:700;color:'+col+';min-width:70px">'+r.level+'</span>';
+      html += '<span style="font-size:11px;color:var(--text2);flex:1">'+r.label+(r.subject?' — <em style="color:var(--text3)">'+r.subject+'</em>':'')+'</span>';
+      html += '<span style="font-family:var(--mono);font-size:12px;color:'+col+';">'+(r.bars||'■■□□')+'</span>';
+      html += '</div>';
+    });
+    html += '</div></div>';
+  }
+
+  // Risk Vectors
+  if(g.risk_vectors){
+    html += '<div style="margin-bottom:16px">';
+    html += '<div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--text4);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)">RISK VECTORS</div>';
+    Object.entries(g.risk_vectors).forEach(function(e){
+      html += '<div style="margin-bottom:8px"><span style="font-size:12px;font-weight:600;color:var(--text);text-transform:capitalize">'+e[0].replace(/_/g,' ')+':</span> ';
+      html += '<span style="font-size:12px;color:var(--text2);line-height:1.7">'+e[1]+'</span></div>';
+    });
+    html += '</div>';
+  }
+
+  // Assessment
+  if(g.assessment){
+    html += '<div style="margin-bottom:16px">';
+    html += '<div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--text4);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)">VIGINOTE ASSESSMENT</div>';
+    var aParas = Array.isArray(g.assessment) ? g.assessment : [g.assessment];
+    aParas.forEach(function(p){ html += '<p style="font-size:12px;color:var(--text2);line-height:1.8;margin-bottom:10px">'+p+'</p>'; });
+    html += '</div>';
+  }
+
+  // Recommendations
+  if(g.recommendations && g.recommendations.length){
+    html += '<div style="margin-bottom:16px">';
+    html += '<div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--text4);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)">RECOMMENDED ACTIONS</div>';
+    g.recommendations.forEach(function(r,i){
+      html += '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">';
+      html += '<span style="font-family:var(--mono);color:var(--blue);flex-shrink:0">'+(i+1)+'.</span>';
+      html += '<span style="color:var(--text2);line-height:1.7">'+r+'</span></div>';
+    });
+    html += '</div>';
+  }
+
+  // Footer
+  html += '<div style="padding-top:12px;border-top:1px solid var(--border);font-family:var(--mono);font-size:9px;color:var(--text4)">';
+  html += 'VIGINOTE INTELLIGENCE · GENERATED '+now+' · '+(g.source_reliability||'Multi-source corroboration');
+  html += '</div></div>';
+
+  return html;
+}
+
+function copyIrePost(){
+  var el = document.getElementById('ire-brief-frame');
+  if(!el) return;
+  var text = el.innerText || el.textContent;
+  navigator.clipboard.writeText(text).then(function(){
+    var btn = document.querySelector('.ire-action-btn');
+    if(btn){ var o=btn.textContent; btn.textContent='✓ Copied!'; setTimeout(function(){btn.textContent=o;},2000); }
+  });
+}
+
+async function saveIreDeliverable(){
+  if(!_ireLastResult) return;
+  var g = _ireLastResult.generated;
+  try {
+    var resp = await fetch(API+'/deliverables/save', {
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        type: _ireLastResult.type,
+        title: g.headline || 'Intelligence Request',
+        content: g,
+        client_name: _ireLastResult.client,
+        alerts_used: (_ireLastResult.alerts||[]).map(function(a){return a.id;})
+      })
+    });
+    var d = await resp.json();
+    if(d.view_url){
+      alert('Saved. Share link:
+' + d.view_url);
+    } else {
+      alert('Saved to deliverables.');
+    }
+  } catch(e){ alert('Save failed: ' + e.message); }
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────
