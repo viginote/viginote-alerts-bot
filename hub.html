@@ -1426,6 +1426,98 @@ function _vgnEscape(v){
     .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
 }
 
+async function vgnFetchJson(url, options, timeoutMs){
+  options = options || {};
+  timeoutMs = timeoutMs || 45000;
+  var controller = new AbortController();
+  var timer = setTimeout(function(){ controller.abort(); }, timeoutMs);
+  try{
+    var opts = Object.assign({cache:'no-store', credentials:'include'}, options);
+    opts.signal = controller.signal;
+    var resp = await fetch(url, opts);
+    var data = null;
+    try{ data = await resp.json(); }catch(e){ data = null; }
+    if(!resp.ok){
+      var msg = (data && (data.detail || data.error || data.message)) || ('Request failed: '+resp.status);
+      throw new Error(msg);
+    }
+    return data;
+  }catch(e){
+    if(e && e.name === 'AbortError'){
+      throw new Error('Request timed out. Try a shorter alert window or narrower topic.');
+    }
+    throw e;
+  }finally{
+    clearTimeout(timer);
+  }
+}
+
+function vgnAlertSearchUrl(hours, limit){
+  hours = parseInt(hours || 720);
+  limit = parseInt(limit || 1200);
+  return API + '/alerts?hours=' + hours + '&min_score=1&limit=' + limit + '&_=' + Date.now();
+}
+
+function buildLocalIreFallback(subject, typeLabel, selected, horizon){
+  selected = selected || [];
+  var highest = selected.reduce(function(max,a){ return Math.max(max, Number(a.score || 0)); }, 0);
+  var level = highest >= 9 ? 'CRITICAL' : highest >= 7 ? 'HIGH' : highest >= 5 ? 'MEDIUM' : 'LOW';
+  var regions = [...new Set(selected.map(function(a){return (a.region||'').replace(/_/g,' ');}).filter(Boolean))];
+  return {
+    headline: typeLabel + ': ' + subject,
+    deck: 'Generated from ' + selected.length + ' matching live VigiNote alerts. AI long-form generation was unavailable, so this structured brief was built from the live feed.',
+    key_judgement: 'The current live-feed pattern indicates a ' + level + ' operating environment across ' + (regions.join(', ') || 'the monitored area') + '. The most relevant alerts should be treated as near-term indicators until corroborated by additional reporting.',
+    situational_overview: selected.slice(0,4).map(function(a){
+      return (a.title||'Untitled alert') + ' — ' + (a.precis||'No summary available.');
+    }),
+    risk_matrix: [
+      {level: level, label:'Overall live-feed risk', subject: highest ? ('Highest score '+highest) : 'No score'},
+      {level: selected.length >= 5 ? 'HIGH' : 'MEDIUM', label:'Reporting density', subject: selected.length + ' relevant alerts'},
+      {level:'MEDIUM', label:'Forecast confidence', subject:'Based on matched open-source alert set'}
+    ],
+    recommendations: [
+      'Monitor the selected alerts for escalation and corroboration.',
+      'Prioritise operational decisions around verified incidents and high-score items.',
+      'Generate a full brief again with a narrower topic if the AI endpoint times out.'
+    ]
+  };
+}
+
+function buildLocalTravelPackFallback(dest, purpose, duration, org, selected, concerns){
+  selected = selected || [];
+  var highest = selected.reduce(function(max,a){ return Math.max(max, Number(a.score || 0)); }, 0);
+  var advisory = highest >= 8 ? 'CAUTION' : 'GO';
+  var riskLevel = highest >= 9 ? 'CRITICAL' : highest >= 7 ? 'HIGH' : highest >= 5 ? 'MEDIUM' : 'LOW';
+  return {
+    destination: dest,
+    organisation: org,
+    overall_advisory: advisory,
+    pack_title: 'Travel Security Pack: ' + dest,
+    advisory_rationale: selected.length
+      ? 'Built from ' + selected.length + ' matching live alerts. Highest live-feed score: ' + (highest || 'N/A') + '.'
+      : 'No matching live alerts were found in the selected window; maintain standard travel security precautions.',
+    analyst_assessment: 'This fallback pack was generated locally because the AI travel-pack endpoint timed out. It uses the live alert feed to provide immediate travel guidance for ' + dest + '. ' + (concerns ? 'Specific concerns noted: '+concerns : ''),
+    key_risks: selected.slice(0,4).map(function(a,i){
+      return {rank:i+1, category:(a.stream||'Security').toUpperCase(), level:riskLevel, detail:(a.title||'Alert') + ' — ' + (a.precis||'')};
+    }).concat(selected.length ? [] : [{rank:1, category:'General Security', level:'LOW', detail:'No matching high-risk live alerts found for this destination window.'}]),
+    pre_travel_checklist: [
+      {category:'Planning', items:['Confirm accommodation and ground transport before arrival','Share itinerary and emergency contacts with your organisation','Monitor VigiNote and local official sources before departure']},
+      {category:'Documents', items:['Carry digital and offline copies of passport, visa and insurance','Save embassy/consulate and medical contacts offline']}
+    ],
+    in_country_protocols: {
+      movement:['Use vetted transport where possible','Avoid unnecessary night movement in unfamiliar areas','Maintain check-ins with host or operations contact'],
+      accommodation:['Choose secure accommodation with reliable access control','Confirm safe transport routes before movement'],
+      communications:['Keep phone charged and location sharing available to trusted contacts','Avoid public WiFi for sensitive work']
+    },
+    areas_to_avoid: selected.slice(0,3).map(function(a){ return {area:(a.country||a.region||dest), risk_level:riskLevel, reason:(a.title||'Relevant live alert')}; }),
+    safe_zones: [{area:'Vetted hotel / business district', reason:'Use known secure venues and pre-arranged transport until the risk picture is clearer.'}],
+    emergency_contacts:{local_emergency:'Confirm locally before travel', embassy:'Confirm relevant embassy/consulate for traveller nationality', medical:'Confirm nearest private hospital or clinic'},
+    extraction_routes:[{type:'Primary', route:'Nearest international airport / vetted ground transfer', note:'Confirm route viability day-of-travel.'}],
+    escalation_triggers:['Civil unrest near accommodation or venue','Transport disruption on planned routes','New high-score alerts matching destination'],
+    client_summary:'Travel to '+dest+' for '+purpose+' over '+duration+' should proceed with proportionate caution and continuous monitoring.'
+  };
+}
+
 function loadDashboard(){
   fetch(API+'/alerts?hours=2160&min_score=1&limit=5000&_=' + Date.now(), {cache:'no-store', credentials:'include'})
   .then(function(r){return r.json();})
@@ -2216,8 +2308,7 @@ async function runIntelRequest(){
 
   try {
     // Step 1: fetch alerts and filter by relevance to subject
-    var alertResp = await fetch(API+'/alerts?hours='+hours+'&min_score=1&limit=2000');
-    var alertData = await alertResp.json();
+    var alertData = await vgnFetchJson(vgnAlertSearchUrl(hours, 1200), {}, 45000);
     var allAlerts = (alertData.alerts||alertData||[]);
 
     // Step 2: relevance filter — extract keywords from subject
@@ -2294,18 +2385,20 @@ async function runIntelRequest(){
       regions: [...new Set(selected.map(function(a){ return a.region; }))].join(', ')
     };
 
-    var resp = await fetch(API+'/ai/generate', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      credentials: 'include',
-      body: JSON.stringify(briefPayload)
-    });
-
-    if(!resp.ok){ throw new Error('Generation failed: ' + resp.status); }
-    var data = await resp.json();
-    var g    = data.generated || data;
-
-    status.textContent  = 'Step 3/3 — Product ready.';
+    var g;
+    try{
+      var data = await vgnFetchJson(API+'/ai/generate', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(briefPayload)
+      }, 90000);
+      g = data.generated || data;
+      status.textContent  = 'Step 3/3 — Product ready.';
+    }catch(aiErr){
+      console.warn('IRE AI endpoint unavailable, using local fallback:', aiErr);
+      g = buildLocalIreFallback(subject, typeLabels[type] || 'Intelligence Product', selected, horizonLabels[horizon] || horizon);
+      status.textContent  = 'AI endpoint timed out — local live-feed product generated.';
+    }
     _ireLastResult = {generated: g, alerts: selected, type: type, client: client};
 
     // Render the brief
@@ -2471,8 +2564,7 @@ async function runTracker(){
   });
 
   try {
-    var resp = await fetch(API+'/alerts?hours='+hours+'&min_score=1&limit=5000');
-    var data = await resp.json();
+    var data = await vgnFetchJson(vgnAlertSearchUrl(hours, 1200), {}, 45000);
     var all  = data.alerts || data || [];
 
     // Filter by term
@@ -2752,34 +2844,41 @@ async function runTravelPack(){
   document.getElementById('tsp-result').style.display = 'none';
 
   try {
-    var resp = await fetch(API+'/ai/travel-pack', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      credentials:'include',
-      body: JSON.stringify({
-        destination: dest,
-        purpose: purpose,
-        duration: duration,
-        organisation: org,
-        traveller_profile: profile,
-        travel_date: date,
-        specific_concerns: concerns,
-        hours: parseInt(hours)
-      })
-    });
-
-    if(!resp.ok){
-      var err = await resp.json();
-      throw new Error(err.detail || 'Generation failed');
+    var g;
+    try{
+      var data = await vgnFetchJson(API+'/ai/travel-pack', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          destination: dest,
+          purpose: purpose,
+          duration: duration,
+          organisation: org,
+          traveller_profile: profile,
+          travel_date: date,
+          specific_concerns: concerns,
+          hours: Math.min(parseInt(hours || 720), 720)
+        })
+      }, 90000);
+      g = data.generated || data;
+      status.textContent = '✓ Pack ready — review, copy or save to deliverables.';
+    }catch(aiErr){
+      console.warn('Travel pack AI endpoint unavailable, using local fallback:', aiErr);
+      status.textContent = 'AI endpoint timed out — building a live-feed fallback pack...';
+      var alertData = await vgnFetchJson(vgnAlertSearchUrl(Math.min(parseInt(hours || 720), 720), 1200), {}, 45000);
+      var allAlerts = alertData.alerts || alertData || [];
+      var words = dest.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(function(w){return w.length>3;});
+      var selected = allAlerts.filter(function(a){
+        var tx = ((a.title||'')+' '+(a.precis||'')+' '+(a.region||'')+' '+(a.country||'')).toLowerCase();
+        return dest.toLowerCase() && (tx.includes(dest.toLowerCase()) || words.some(function(w){return tx.includes(w);}));
+      }).sort(_vgnNewestFirst).slice(0,8);
+      g = buildLocalTravelPackFallback(dest, purpose, duration, org, selected, concerns);
+      status.textContent = 'AI endpoint timed out — fallback pack ready from live alerts.';
     }
-
-    var data = await resp.json();
-    var g    = data.generated;
     _tspLastResult = g;
 
     // Render
     renderTravelPack(g);
-    status.textContent = '✓ Pack ready — review, copy or save to deliverables.';
     document.getElementById('tsp-result').style.display = 'block';
     document.getElementById('tsp-result').scrollIntoView({behavior:'smooth',block:'start'});
 
