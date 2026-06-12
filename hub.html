@@ -412,6 +412,61 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
   background:var(--bg3);color:var(--text3);transition:all .15s}
 .ire-action-btn:hover{border-color:var(--blue);color:var(--blue)}
 
+
+/* ── INCIDENT TRACKER ────────────────────────────────────────────────── */
+.itr-wrap{display:flex;flex-direction:column;height:100%;overflow:hidden}
+.itr-header{padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-start;gap:16px;flex-shrink:0;flex-wrap:wrap}
+.itr-header-left{flex:1;min-width:200px}
+.itr-title{font-family:var(--sans,'Syne',sans-serif);font-size:15px;font-weight:700;
+  color:var(--text);margin-bottom:3px}
+.itr-sub{font-size:11px;color:var(--text3);line-height:1.5}
+.itr-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.itr-input{background:var(--bg3);border:1px solid var(--border2);border-radius:5px;
+  padding:7px 12px;color:var(--text);font-size:12px;font-family:var(--body);
+  outline:none;min-width:220px;transition:border-color .15s}
+.itr-input:focus{border-color:var(--blue)}
+.itr-select{background:var(--bg3);border:1px solid var(--border2);border-radius:5px;
+  padding:6px 10px;color:var(--text);font-family:var(--mono);font-size:10px;outline:none}
+.itr-run-btn{padding:7px 16px;border-radius:4px;background:var(--blue-dim);border:none;
+  color:#fff;font-family:var(--mono);font-size:10px;font-weight:700;cursor:pointer;
+  white-space:nowrap;transition:background .15s}
+.itr-run-btn:hover{background:var(--blue)}
+.itr-summary{display:flex;gap:0;border-bottom:1px solid var(--border);flex-shrink:0}
+.itr-stat{flex:1;padding:12px 16px;border-right:1px solid var(--border);text-align:center}
+.itr-stat:last-child{border-right:none}
+.itr-stat-v{font-family:var(--sans,'Syne',sans-serif);font-size:1.5rem;font-weight:800;
+  color:var(--text);line-height:1}
+.itr-stat-v.crit{color:var(--critical)}
+.itr-stat-v.high{color:var(--high)}
+.itr-stat-l{font-family:var(--mono);font-size:8px;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--text4);margin-top:3px}
+.itr-chart-wrap{padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.itr-section-label{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--text4);padding-bottom:6px;
+  border-bottom:1px solid var(--border);margin-bottom:10px}
+.itr-pattern{padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.itr-pattern-text{font-size:12px;color:var(--text2);line-height:1.8}
+.itr-list-wrap-inner{padding:0 20px;flex:1;overflow-y:auto}
+.itr-list{display:flex;flex-direction:column;gap:4px;padding:0 20px;
+  overflow-y:auto;max-height:340px}
+#itr-list-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.itr-row{display:grid;grid-template-columns:80px 1fr 70px 90px;gap:8px;
+  align-items:center;padding:8px 12px;background:var(--bg3);border-radius:4px;
+  border:1px solid var(--border);transition:border-color .12s;cursor:default}
+.itr-row:hover{border-color:var(--border2)}
+.itr-row-date{font-family:var(--mono);font-size:9px;color:var(--text4)}
+.itr-row-title{font-size:11px;color:var(--text2);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.itr-row-score{font-family:var(--mono);font-size:9px;font-weight:700;text-align:center}
+.itr-row-region{font-family:var(--mono);font-size:8px;color:var(--text4);
+  text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.itr-empty{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;color:var(--text3);padding:40px}
+.itr-trend-up{color:var(--critical)}
+.itr-trend-down{color:var(--low)}
+.itr-trend-stable{color:var(--medium)}
+
 </style>
 </head>
 <body>
@@ -490,6 +545,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
       <button class="nav-item" id="nav-request" onclick="switchPanel('request')">
         <span class="nav-icon">🎯</span>
         <span class="nav-label">Intel Request</span>
+      </button>
+      <button class="nav-item" id="nav-tracker" onclick="switchPanel('tracker')">
+        <span class="nav-icon">📈</span>
+        <span class="nav-label">Incident Tracker</span>
       </button>
     </div>
 
@@ -831,6 +890,73 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
     </div>
 
 
+    <!-- ── INCIDENT TRACKER ─────────────────────────────────────────── -->
+    <div id="panel-tracker" class="ws-frame-panel">
+      <div class="itr-wrap">
+
+        <div class="itr-header">
+          <div class="itr-header-left">
+            <div class="itr-title">📈 Incident Tracker</div>
+            <div class="itr-sub">Visualise escalation patterns for any country, region or watchlist term over time.</div>
+          </div>
+          <div class="itr-controls">
+            <input id="itr-term" class="itr-input" placeholder="Search term, country or region..." value="">
+            <select id="itr-window" class="itr-select">
+              <option value="720">30 days</option>
+              <option value="2160" selected>90 days</option>
+              <option value="4320">180 days</option>
+              <option value="8760">1 year</option>
+            </select>
+            <select id="itr-group" class="itr-select">
+              <option value="day">By day</option>
+              <option value="week" selected>By week</option>
+              <option value="month">By month</option>
+            </select>
+            <button class="itr-run-btn" onclick="runTracker()">📈 Track</button>
+          </div>
+        </div>
+
+        <!-- Summary strip -->
+        <div id="itr-summary" class="itr-summary" style="display:none">
+          <div class="itr-stat"><div class="itr-stat-v" id="itr-total">—</div><div class="itr-stat-l">Total</div></div>
+          <div class="itr-stat"><div class="itr-stat-v crit" id="itr-crit">—</div><div class="itr-stat-l">Critical</div></div>
+          <div class="itr-stat"><div class="itr-stat-v high" id="itr-high">—</div><div class="itr-stat-l">High</div></div>
+          <div class="itr-stat"><div class="itr-stat-v" id="itr-trend">—</div><div class="itr-stat-l">Trend</div></div>
+          <div class="itr-stat"><div class="itr-stat-v" id="itr-peak">—</div><div class="itr-stat-l">Peak period</div></div>
+          <div class="itr-stat"><div class="itr-stat-v" id="itr-last">—</div><div class="itr-stat-l">Last incident</div></div>
+        </div>
+
+        <!-- Chart -->
+        <div id="itr-chart-wrap" class="itr-chart-wrap" style="display:none">
+          <canvas id="itr-chart" height="180"></canvas>
+        </div>
+
+        <!-- Pattern analysis -->
+        <div id="itr-pattern" class="itr-pattern" style="display:none">
+          <div class="itr-section-label">PATTERN ANALYSIS</div>
+          <div id="itr-pattern-text" class="itr-pattern-text"></div>
+        </div>
+
+        <!-- Incident list -->
+        <div id="itr-list-wrap" style="display:none">
+          <div class="itr-section-label" style="margin-top:16px">
+            INCIDENT LOG — <span id="itr-list-count">0</span> incidents
+            <span style="float:right;font-size:9px;color:var(--text4)">Most recent first</span>
+          </div>
+          <div id="itr-list" class="itr-list"></div>
+        </div>
+
+        <!-- Empty state -->
+        <div id="itr-empty" class="itr-empty">
+          <div style="font-size:32px;margin-bottom:12px">📈</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text3)">Enter a search term and click Track</div>
+          <div style="font-size:11px;color:var(--text4);margin-top:6px">Try: Sudan · Houthi · Gaza · DRC · El Fasher · Iran</div>
+        </div>
+
+      </div>
+    </div>
+
+
     <div id="panel-deliverables">
       <div class="del-head">
         <h2>📬 Deliverables</h2>
@@ -1020,6 +1146,7 @@ function switchPanel(name){
   }
   if(name==='flash') loadFlashAlerts();
   if(name==='request') initIrePanel();
+  if(name==='tracker') initTrackerPanel();
 }
 
 
@@ -2058,6 +2185,285 @@ async function saveIreDeliverable(){
       alert('Saved to deliverables.');
     }
   } catch(e){ alert('Save failed: ' + e.message); }
+}
+
+
+// ── INCIDENT TRACKER ─────────────────────────────────────────────────────
+var _itrData = null;
+
+function initTrackerPanel(){
+  setTimeout(function(){
+    var el = document.getElementById('itr-term');
+    if(el) el.focus();
+  }, 100);
+}
+
+async function runTracker(){
+  var term    = (document.getElementById('itr-term')||{value:''}).value.trim();
+  var hours   = parseInt((document.getElementById('itr-window')||{value:'2160'}).value);
+  var groupBy = (document.getElementById('itr-group')||{value:'week'}).value;
+
+  if(!term){ alert('Enter a search term, country or region.'); return; }
+
+  var btn = document.querySelector('.itr-run-btn');
+  if(btn){ btn.disabled=true; btn.textContent='Loading...'; }
+
+  // Hide all sections
+  ['itr-summary','itr-chart-wrap','itr-pattern','itr-list-wrap','itr-empty'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.style.display='none';
+  });
+
+  try {
+    var resp = await fetch(API+'/alerts?hours='+hours+'&min_score=1&limit=5000');
+    var data = await resp.json();
+    var all  = data.alerts || data || [];
+
+    // Filter by term
+    var tl = term.toLowerCase();
+    var matched = all.filter(function(a){
+      var text = ((a.title||'')+' '+(a.precis||'')+' '+(a.region||'')+' '+(a.country||'')).toLowerCase();
+      return text.includes(tl);
+    });
+
+    if(!matched.length){
+      var empty = document.getElementById('itr-empty');
+      if(empty){
+        empty.style.display='flex';
+        empty.innerHTML = '<div style="font-size:28px;margin-bottom:10px">🔍</div>'
+          +'<div style="font-family:var(--mono);font-size:11px;color:var(--text3)">No incidents found for "'+term+'" in the selected window</div>'
+          +'<div style="font-size:11px;color:var(--text4);margin-top:5px">Try a broader term or extend the time window</div>';
+      }
+      return;
+    }
+
+    // Sort by date ascending
+    matched.sort(function(a,b){ return (a.ts||0)-(b.ts||0); });
+    _itrData = {matched:matched, term:term, hours:hours, groupBy:groupBy};
+
+    // ── Summary stats ─────────────────────────────────────────────────
+    var total = matched.length;
+    var crit  = matched.filter(function(a){ return a.is_critical||a.score>=9; }).length;
+    var high  = matched.filter(function(a){ return a.score>=7&&a.score<9; }).length;
+
+    // Trend: compare first half vs second half
+    var mid     = Math.floor(matched.length/2);
+    var first   = matched.slice(0, mid).length;
+    var second  = matched.slice(mid).length;
+    var trendPct = first > 0 ? Math.round(((second-first)/first)*100) : 0;
+    var trendLabel = trendPct > 15 ? '▲ +'+trendPct+'% ESCALATING'
+      : trendPct < -15 ? '▼ '+trendPct+'% DE-ESCALATING'
+      : '→ STABLE';
+    var trendClass = trendPct > 15 ? 'crit' : trendPct < -15 ? '' : '';
+
+    // Peak period
+    var buckets = groupAlerts(matched, 'week');
+    var peakBucket = Object.entries(buckets).sort(function(a,b){return b[1].length-a[1].length;})[0];
+    var peakLabel = peakBucket ? peakBucket[0] : '—';
+
+    // Last incident
+    var lastAlert = matched[matched.length-1];
+    var lastDate  = lastAlert && lastAlert.ts ? new Date(lastAlert.ts*1000).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '—';
+
+    document.getElementById('itr-total').textContent = total;
+    document.getElementById('itr-crit').textContent  = crit;
+    document.getElementById('itr-high').textContent  = high;
+    var trendEl = document.getElementById('itr-trend');
+    trendEl.textContent = trendLabel;
+    trendEl.className = 'itr-stat-v ' + (trendPct>15?'itr-trend-up':trendPct<-15?'itr-trend-down':'itr-trend-stable');
+    document.getElementById('itr-peak').textContent  = peakLabel;
+    document.getElementById('itr-last').textContent  = lastDate;
+    document.getElementById('itr-summary').style.display = 'flex';
+
+    // ── Chart ─────────────────────────────────────────────────────────
+    drawChart(matched, groupBy, term);
+    document.getElementById('itr-chart-wrap').style.display = 'block';
+
+    // ── Pattern analysis ──────────────────────────────────────────────
+    var patternText = generatePatternAnalysis(matched, term, trendPct, crit, total, hours);
+    document.getElementById('itr-pattern-text').innerHTML = patternText;
+    document.getElementById('itr-pattern').style.display = 'block';
+
+    // ── Incident list ─────────────────────────────────────────────────
+    renderIncidentList(matched);
+    document.getElementById('itr-list-wrap').style.display = 'flex';
+    document.getElementById('itr-list-count').textContent = total;
+
+  } catch(err) {
+    console.error('Tracker error:', err);
+    var empty = document.getElementById('itr-empty');
+    if(empty){ empty.style.display='flex'; empty.innerHTML='<div style="color:var(--critical);font-size:12px">Error: '+err.message+'</div>'; }
+  } finally {
+    if(btn){ btn.disabled=false; btn.textContent='📈 Track'; }
+  }
+}
+
+function groupAlerts(alerts, groupBy){
+  var buckets = {};
+  alerts.forEach(function(a){
+    if(!a.ts) return;
+    var d = new Date(a.ts*1000);
+    var key;
+    if(groupBy === 'day'){
+      key = d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+    } else if(groupBy === 'week'){
+      // ISO week label
+      var mon = new Date(d); mon.setDate(d.getDate() - d.getDay() + 1);
+      key = mon.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+    } else {
+      key = d.toLocaleDateString('en-GB',{month:'short',year:'2-digit'});
+    }
+    if(!buckets[key]) buckets[key] = [];
+    buckets[key].push(a);
+  });
+  return buckets;
+}
+
+function drawChart(alerts, groupBy, term){
+  var canvas = document.getElementById('itr-chart');
+  if(!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var wrap = document.getElementById('itr-chart-wrap');
+  canvas.width = wrap.clientWidth - 40;
+  canvas.height = 180;
+
+  var buckets = groupAlerts(alerts, groupBy);
+  var labels  = Object.keys(buckets);
+  var counts  = labels.map(function(k){ return buckets[k].length; });
+  var crits   = labels.map(function(k){
+    return buckets[k].filter(function(a){ return a.is_critical||a.score>=9; }).length;
+  });
+
+  if(!labels.length) return;
+
+  var maxV = Math.max.apply(null, counts) || 1;
+  var W = canvas.width, H = canvas.height;
+  var padL = 32, padR = 10, padT = 16, padB = 30;
+  var chartW = W - padL - padR;
+  var chartH = H - padT - padB;
+  var barW   = Math.max(4, Math.floor(chartW / labels.length) - 3);
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(30,45,74,0.8)';
+  ctx.lineWidth = 1;
+  for(var g=0; g<=4; g++){
+    var yg = padT + (chartH / 4) * g;
+    ctx.beginPath(); ctx.moveTo(padL, yg); ctx.lineTo(W-padR, yg); ctx.stroke();
+    ctx.fillStyle = 'rgba(100,116,139,0.6)';
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(Math.round(maxV*(4-g)/4), padL-4, yg+3);
+  }
+
+  // Bars
+  labels.forEach(function(label, i){
+    var x     = padL + i * (chartW / labels.length) + (chartW/labels.length - barW)/2;
+    var totalH = Math.max(1, Math.round((counts[i] / maxV) * chartH));
+    var critH  = Math.round((crits[i] / maxV) * chartH);
+    var yBase  = padT + chartH;
+
+    // Total bar (blue)
+    ctx.fillStyle = 'rgba(59,130,246,0.35)';
+    ctx.fillRect(x, yBase - totalH, barW, totalH);
+
+    // Critical overlay (red)
+    if(crits[i] > 0){
+      ctx.fillStyle = 'rgba(239,68,68,0.7)';
+      ctx.fillRect(x, yBase - critH, barW, critH);
+    }
+
+    // Label every N
+    var every = Math.max(1, Math.floor(labels.length / 10));
+    if(i % every === 0){
+      ctx.fillStyle = 'rgba(100,116,139,0.7)';
+      ctx.font = '8px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, x + barW/2, H - 4);
+    }
+  });
+
+  // Legend
+  ctx.fillStyle = 'rgba(59,130,246,0.7)';
+  ctx.fillRect(padL, padT-12, 10, 8);
+  ctx.fillStyle = 'rgba(100,116,139,0.8)';
+  ctx.font = '9px monospace'; ctx.textAlign = 'left';
+  ctx.fillText('Total', padL+14, padT-5);
+  ctx.fillStyle = 'rgba(239,68,68,0.7)';
+  ctx.fillRect(padL+60, padT-12, 10, 8);
+  ctx.fillStyle = 'rgba(100,116,139,0.8)';
+  ctx.fillText('Critical', padL+74, padT-5);
+}
+
+function generatePatternAnalysis(alerts, term, trendPct, crit, total, hours){
+  var days  = Math.round(hours/24);
+  var rate  = (total / (days/7)).toFixed(1);
+  var critPct = total > 0 ? Math.round((crit/total)*100) : 0;
+
+  // Find most common region
+  var regions = {};
+  alerts.forEach(function(a){ var r=a.region||'GLOBAL'; regions[r]=(regions[r]||0)+1; });
+  var topRegion = Object.entries(regions).sort(function(a,b){return b[1]-a[1];})[0];
+
+  // Find most active day of week
+  var days_map = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var dayCount = [0,0,0,0,0,0,0];
+  alerts.forEach(function(a){ if(a.ts) dayCount[new Date(a.ts*1000).getDay()]++; });
+  var peakDay = days_map[dayCount.indexOf(Math.max.apply(null,dayCount))];
+
+  var trend = trendPct > 20 ? '<span class="itr-trend-up">ESCALATING (▲'+trendPct+'%)</span>'
+    : trendPct < -20 ? '<span class="itr-trend-down">DE-ESCALATING (▼'+Math.abs(trendPct)+'%)</span>'
+    : '<span class="itr-trend-stable">STABLE</span>';
+
+  var analysis = '<strong>'+total+' incidents</strong> matching "'+term+'" recorded over the past '+days+' days '
+    +'(~'+rate+' per week). ';
+
+  analysis += 'Trajectory assessed as '+trend+'. ';
+
+  if(critPct > 40){
+    analysis += critPct+'% of incidents scored CRITICAL — indicating a high-severity, operationally significant threat environment. ';
+  } else if(critPct > 20){
+    analysis += critPct+'% of incidents scored CRITICAL — elevated severity within an otherwise mixed threat picture. ';
+  } else {
+    analysis += critPct+'% of incidents scored CRITICAL — majority of reporting reflects medium-to-high severity activity. ';
+  }
+
+  if(topRegion){
+    analysis += 'Primary geographic concentration: <strong>'+topRegion[0].replace(/_/g,' ')+'</strong> ('+topRegion[1]+' incidents). ';
+  }
+
+  analysis += 'Highest incident frequency recorded on <strong>'+peakDay+'s</strong>. ';
+
+  if(trendPct > 20){
+    analysis += '<br><br><em style="color:var(--critical)">⚠ Intelligence assessment: Incident frequency is increasing. This pattern is consistent with an escalating threat environment. Operational posture review recommended.</em>';
+  } else if(trendPct < -20){
+    analysis += '<br><br><em style="color:var(--low)">✓ Intelligence assessment: Incident frequency is decreasing. De-escalation indicators present, however sustained monitoring is advised — recurrence patterns are common in this threat category.</em>';
+  } else {
+    analysis += '<br><br><em style="color:var(--medium)">→ Intelligence assessment: Incident pattern is broadly stable. No material escalation detected in the current window. Continued monitoring at standard frequency recommended.</em>';
+  }
+
+  return analysis;
+}
+
+function renderIncidentList(alerts){
+  var list = document.getElementById('itr-list');
+  if(!list) return;
+  var sorted = alerts.slice().reverse(); // most recent first
+  list.innerHTML = sorted.slice(0,100).map(function(a){
+    var d    = a.ts ? new Date(a.ts*1000).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'}) : '—';
+    var sc   = a.score||0;
+    var col  = sc>=9?'var(--critical)':sc>=7?'var(--high)':sc>=5?'var(--medium)':'var(--text3)';
+    var reg  = (a.region||'').replace(/_/g,' ').substring(0,12);
+    return '<div class="itr-row">'
+      +'<span class="itr-row-date">'+d+'</span>'
+      +'<span class="itr-row-title" title="'+(a.title||'')+'">'+((a.title||'').substring(0,70))+'</span>'
+      +'<span class="itr-row-score" style="color:'+col+'">SCR '+sc+'</span>'
+      +'<span class="itr-row-region">'+reg+'</span>'
+      +'</div>';
+  }).join('');
+  if(sorted.length > 100){
+    list.innerHTML += '<div style="font-family:var(--mono);font-size:9px;color:var(--text4);text-align:center;padding:8px">Showing 100 of '+sorted.length+' incidents</div>';
+  }
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────
