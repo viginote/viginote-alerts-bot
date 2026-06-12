@@ -1356,6 +1356,156 @@ Fill every field accurately for {req.location}. Return ONLY the JSON object."""
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Assessment error: {type(e).__name__}: {str(e)}")
 
+
+# =======================
+# AI — TRAVEL SECURITY PACK
+# =======================
+
+class TravelPackRequest(BaseModel):
+    destination:  str
+    purpose:      str = "business"          # business | ngo | executive | leisure
+    duration:     str = "3-7 days"
+    travel_date:  str = ""
+    organisation: str = "Viginote Client"
+    traveller_profile: str = ""             # e.g. "senior executive", "field team of 4"
+    specific_concerns: str = ""
+    hours:        int = 720
+
+@app.post("/ai/travel-pack")
+async def ai_travel_pack(req: TravelPackRequest, request: Request):
+    if not _verify_admin(request):
+        raise HTTPException(status_code=403, detail="Admin access required.")
+    if not ANTHROPIC_KEY:
+        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
+
+    now_str = datetime.now(timezone.utc).strftime("%d %B %Y")
+    alert_context = ""
+
+    # Pull relevant alerts for destination
+    try:
+        conn   = get_conn()
+        days   = max(1, req.hours // 24)
+        rows   = [row_to_dict(r) for r in query_alerts(conn, days=days, limit=500)]
+        dest_lc = req.destination.lower()
+        dest_words = [w.strip() for w in dest_lc.replace(",","").split() if len(w.strip()) > 3]
+        matched = []
+        for r in rows:
+            text = f"{r.get('title','')} {r.get('precis','')} {r.get('region','')}".lower()
+            hits = sum(1 for w in dest_words if w in text)
+            if hits >= 1 or dest_lc in text:
+                matched.append(r)
+        if matched:
+            alert_context = f"\n\nLIVE VIGINOTE INTELLIGENCE for {req.destination} (last {days} days):\n"
+            for a in matched[:12]:
+                sev = "CRITICAL" if a.get("is_critical") else "HIGH" if a.get("score",0)>=7 else "MEDIUM"
+                alert_context += f"- [{sev} · Score {a.get('score',0)}] {a.get('title','')} — {a.get('precis','')}\n"
+    except Exception as e:
+        print(f"[TRAVEL PACK DB ERROR] {e}")
+
+    purpose_context = {
+        "business":  "Corporate business travel. Travellers are professionals with standard security awareness. Key concerns: personal safety, asset protection, business continuity, reputational risk.",
+        "ngo":       "Humanitarian/NGO field deployment. Travellers may operate in austere environments. Key concerns: field security, access corridors, evacuation routes, duty of care.",
+        "executive": "Senior executive or VIP travel. Heightened targeting risk. Key concerns: KFR exposure, low-profile protocols, protective intelligence, advance security.",
+        "leisure":   "Leisure travel. Key concerns: crime, civil unrest, health, transport safety, emergency response access.",
+    }.get(req.purpose, "Business travel.")
+
+    specific = f"\nSpecific concerns from requester: {req.specific_concerns}" if req.specific_concerns else ""
+    profile  = f"\nTraveller profile: {req.traveller_profile}" if req.traveller_profile else ""
+    date_ctx = f"\nPlanned travel date: {req.travel_date}" if req.travel_date else ""
+
+    prompt = f"""You are a senior intelligence analyst at Viginote Intelligence with MSc-level expertise in International Relations, Security Risk Management, Executive Protection and Travel Security. Today is {now_str}.
+
+TASK: Produce a comprehensive Travel Security Pack for the destination and traveller profile below.
+
+DESTINATION: {req.destination}
+TRAVEL PURPOSE: {req.purpose.upper()} — {purpose_context}
+DURATION: {req.duration}
+ORGANISATION: {req.organisation}{profile}{date_ctx}{specific}
+{alert_context}
+
+ANALYST STANDARDS: Apply NATO probability language. Use GO / CAUTION / NO-GO framework for overall travel advisory. Every protocol must be specific and actionable — not generic. Name specific areas, routes, organisations. Apply duty of care standards where relevant. This pack should be deliverable directly to a traveller or security manager.
+
+Return ONLY valid JSON:
+
+{{"pack_title": "Travel Security Pack: {req.destination}",
+"destination": "{req.destination}",
+"date": "{now_str}",
+"organisation": "{req.organisation}",
+"purpose": "{req.purpose}",
+"duration": "{req.duration}",
+"classification": "CLIENT CONFIDENTIAL",
+"overall_advisory": "GO",
+"advisory_colour": "GREEN",
+"advisory_rationale": "2 sentences explaining the GO/CAUTION/NO-GO decision with specific reasoning.",
+"threat_summary": "2-3 sentence executive summary of the current threat environment for this destination.",
+"key_risks": [
+  {{"rank": 1, "category": "Primary threat type", "level": "HIGH", "detail": "2 sentences specific to destination and purpose."}},
+  {{"rank": 2, "category": "Secondary threat", "level": "MEDIUM", "detail": "2 sentences."}},
+  {{"rank": 3, "category": "Tertiary threat", "level": "LOW", "detail": "1 sentence."}}
+],
+"pre_travel_checklist": [
+  {{"category": "Documentation", "items": ["Action 1", "Action 2", "Action 3"]}},
+  {{"category": "Communications", "items": ["Action 1", "Action 2"]}},
+  {{"category": "Medical", "items": ["Action 1", "Action 2"]}},
+  {{"category": "Security Briefing", "items": ["Action 1", "Action 2", "Action 3"]}},
+  {{"category": "Emergency Preparation", "items": ["Action 1", "Action 2"]}}
+],
+"in_country_protocols": {{
+  "movement": ["Specific protocol 1", "Protocol 2", "Protocol 3"],
+  "accommodation": ["Protocol 1", "Protocol 2"],
+  "communications": ["Protocol 1", "Protocol 2"],
+  "low_profile": ["Protocol 1", "Protocol 2", "Protocol 3"],
+  "digital_security": ["Protocol 1", "Protocol 2"]
+}},
+"areas_to_avoid": [
+  {{"area": "Specific named area", "reason": "Specific reason.", "risk_level": "HIGH"}},
+  {{"area": "Specific named area", "reason": "Specific reason.", "risk_level": "CRITICAL"}}
+],
+"safe_zones": [
+  {{"area": "Named area", "reason": "Why it is lower risk."}},
+  {{"area": "Named area", "reason": "Why it is lower risk."}}
+],
+"emergency_contacts": {{
+  "local_police": "Number or advisory",
+  "ambulance": "Number or advisory",
+  "nearest_embassy": "Embassy name and contact",
+  "hospital": "Named hospital and contact if known",
+  "medevac": "International SOS or similar — +xx xxxx xxxx",
+  "viginote_ops": "info@viginote.com"
+}},
+"extraction_routes": [
+  {{"route": "Primary extraction route description", "type": "PRIMARY", "notes": "Specific operational note."}},
+  {{"route": "Alternative extraction route", "type": "ALTERNATE", "notes": "When to use this."}}
+],
+"check_in_protocol": "Describe specific check-in frequency and procedure for this destination and duration.",
+"escalation_triggers": ["Specific trigger 1 — what happens that means immediate action required", "Trigger 2", "Trigger 3"],
+"duty_of_care_note": "1-2 sentences on what the organisation should document to demonstrate reasonable precaution for this deployment.",
+"analyst_assessment": "3-4 sentences. Current threat trajectory for this destination, probability of incident during the stated duration, key variable that would change the advisory level. Use NATO probability language."
+}}
+
+Fill every field specifically for {req.destination} and {req.purpose} travel. Return ONLY the JSON."""
+
+    try:
+        async with httpx.AsyncClient(timeout=90.0) as client:
+            resp = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={"x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01",
+                         "content-type": "application/json"},
+                json={"model": "claude-haiku-4-5-20251001", "max_tokens": 5000,
+                      "messages": [{"role": "user", "content": prompt}]},
+            )
+        resp.raise_for_status()
+        raw = resp.json()["content"][0]["text"].strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"): raw = raw[4:]
+        result = json.loads(raw.strip())
+        return {"status": "ok", "generated": result}
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=500, detail=f"Travel pack parse error: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Travel pack error: {type(e).__name__}: {str(e)}")
+
 # =======================
 # AI — WEEKLY DIGEST
 # =======================
