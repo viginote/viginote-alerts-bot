@@ -908,7 +908,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
 
     <!-- DELIVERABLES PANEL -->
     <!-- ── INTELLIGENCE REQUEST ENGINE ──────────────────────────────── -->
-    <div id="panel-request" class="ws-frame-panel">
+    <div class="ws-frame-panel" id="panel-request" class="ws-frame-panel">
       <div class="ire-wrap">
 
         <div class="ire-header">
@@ -995,7 +995,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
 
 
     <!-- ── INCIDENT TRACKER ─────────────────────────────────────────── -->
-    <div id="panel-tracker" class="ws-frame-panel">
+    <div class="ws-frame-panel" id="panel-tracker" class="ws-frame-panel">
       <div class="itr-wrap">
 
         <div class="itr-header">
@@ -1062,7 +1062,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
 
 
     <!-- ── TRAVEL SECURITY PACK ─────────────────────────────────────── -->
-    <div id="panel-travelpack" class="ws-frame-panel">
+    <div class="ws-frame-panel" id="panel-travelpack" class="ws-frame-panel">
       <div class="tsp-wrap">
 
         <div class="tsp-header">
@@ -1187,6 +1187,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
               <div class="tsp-section-label">EXTRACTION ROUTES</div>
               <div id="tsp-extraction" class="tsp-extraction"></div>
             </div>
+          </div>
+
+          <!-- Check-in protocol -->
+          <div class="tsp-section">
+            <div class="tsp-section-label">CHECK-IN PROTOCOL</div>
+            <div id="tsp-checkin" class="tsp-doc-text" style="font-size:12px;color:var(--text2);line-height:1.8;padding:12px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:5px"></div>
           </div>
 
           <!-- Escalation triggers -->
@@ -2369,6 +2375,15 @@ async function runIntelRequest(){
       event: 'Event-Specific Brief'
     };
 
+    // Type-specific analyst instructions per dropdown selection
+    var typeInstructions = {
+      geopolitical: 'GEOPOLITICAL ASSESSMENT: Identify key actors and their interests. Assess power dynamics and what is shifting. Project 3 scenarios (most likely/best case/worst case) with specific trigger indicators for each. State analyst prediction with confidence level (HIGH/MEDIUM/LOW). Risk vectors must cover: geopolitical stability trajectory, economic exposure, diplomatic implications.',
+      travel:       'TRAVEL SECURITY ADVISORY: Give a clear GO/CAUTION/NO-GO assessment — output this as travel_advisory field. Identify specific threat types: KFR, civil unrest, terrorism, crime, state-sponsored. Map high-risk zones vs lower-risk zones. Analyst prediction on likelihood of deterioration in 30 days. Include specific tradecraft. Risk vectors: personnel safety, movement and access, emergency response capacity.',
+      corporate:    'CORPORATE SECURITY INTELLIGENCE: Frame every finding in business impact terms. Include a business_impact field. Analyst prediction with probability x impact. Second-order effects on partners and counterparties. Risk vectors: operational continuity, financial and regulatory exposure, reputational and stakeholder risk. End with board-level briefing points.',
+      osint:        'OSINT RESEARCH BRIEF: Document source landscape in source_landscape field. Apply analytical cycle. Distinguish CONFIRMED INTELLIGENCE, SINGLE-SOURCE REPORTING and ANALYST INFERENCE — label each. Identify intelligence gaps in intelligence_gaps field. Analyst prediction with confidence level and specific reasoning. Risk vectors: source reliability, information gaps, analytical confidence rating.',
+      event:        'EVENT-SPECIFIC BRIEF: Establish a clear timeline. Assess isolated vs escalating pattern. Identify immediate and long-term implications. Analyst prediction: most likely next development with escalation pathways and probability. State intelligence requirements for next 24-48 hours. Risk vectors: immediate impact, pattern and trajectory, second-order effects.'
+    };
+
     var briefPayload = {
       alerts: selected.map(function(a){
         return {
@@ -2382,7 +2397,9 @@ async function runIntelRequest(){
       client_name: client,
       horizon: horizonLabels[horizon] || horizon,
       ref: 'IRE-' + Date.now().toString(36).toUpperCase(),
-      regions: [...new Set(selected.map(function(a){ return a.region; }))].join(', ')
+      regions: [...new Set(selected.map(function(a){ return a.region; }))].join(', '),
+      type_instructions: typeInstructions[type] || typeInstructions.geopolitical,
+      subject_context: subject
     };
 
     var g;
@@ -2424,10 +2441,20 @@ function renderIreBrief(g, typeLabel, client){
   // Header
   html += '<div style="border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:16px">';
   html += '<div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--blue);margin-bottom:4px">'+typeLabel.toUpperCase()+' · VIGINOTE INTELLIGENCE</div>';
-  html += '<div style="font-family:var(--serif,Georgia,serif);font-size:1.4rem;font-weight:700;color:var(--text);margin-bottom:4px">'+(g.headline||'Intelligence Assessment')+'</div>';
-  html += '<div style="font-size:12px;color:var(--text3)">'+(g.deck||'')+'</div>';
+  html += '<div style="font-family:Georgia,serif;font-size:1.3rem;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.3">'+(g.headline||'Intelligence Assessment')+'</div>';
+  html += '<div style="font-size:12px;color:var(--text3);line-height:1.6">'+(g.deck||'')+'</div>';
   html += '<div style="font-family:var(--mono);font-size:9px;color:var(--text4);margin-top:6px">CLIENT: '+client.toUpperCase()+' · '+now+'</div>';
   html += '</div>';
+
+  // Travel: GO/CAUTION/NO-GO banner
+  if(g.travel_advisory){
+    var advCol = g.travel_advisory==='GO'?'var(--low)':g.travel_advisory.indexOf('NO')>=0?'var(--critical)':'var(--medium)';
+    var advBg  = g.travel_advisory==='GO'?'rgba(34,197,94,.08)':g.travel_advisory.indexOf('NO')>=0?'rgba(239,68,68,.08)':'rgba(245,158,11,.08)';
+    html += '<div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:6px;border:1px solid '+advCol+'55;background:'+advBg+';margin-bottom:16px">';
+    html += '<span style="font-family:Georgia,serif;font-size:1.5rem;font-weight:800;color:'+advCol+'">'+g.travel_advisory+'</span>';
+    html += '<span style="font-size:12px;color:var(--text2);line-height:1.6">'+(g.advisory_rationale||'')+'</span>';
+    html += '</div>';
+  }
 
   // Key Judgement
   if(g.key_judgement){
@@ -2441,7 +2468,7 @@ function renderIreBrief(g, typeLabel, client){
   if(g.situational_overview){
     html += '<div style="margin-bottom:16px">';
     html += '<div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--text4);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)">SITUATIONAL OVERVIEW</div>';
-    var paras = Array.isArray(g.situational_overview) ? g.situational_overview : [g.situational_overview];
+    var paras = Array.isArray(g.situational_overview)?g.situational_overview:[g.situational_overview];
     paras.forEach(function(p){ html += '<p style="font-size:12px;color:var(--text2);line-height:1.8;margin-bottom:10px">'+p+'</p>'; });
     html += '</div>';
   }
@@ -2450,16 +2477,32 @@ function renderIreBrief(g, typeLabel, client){
   if(g.risk_matrix && g.risk_matrix.length){
     html += '<div style="margin-bottom:16px">';
     html += '<div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--text4);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)">RISK MATRIX</div>';
-    html += '<div style="display:flex;flex-direction:column;gap:6px">';
+    html += '<div style="display:flex;flex-direction:column;gap:5px">';
     g.risk_matrix.forEach(function(r){
-      var col = r.level==='CRITICAL'?'#ef4444':r.level==='HIGH'?'#f97316':r.level==='MEDIUM'?'#f59e0b':'#94a3b8';
-      html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg3);border-radius:4px;border:1px solid var(--border)">';
-      html += '<span style="font-family:var(--mono);font-size:9px;font-weight:700;color:'+col+';min-width:70px">'+r.level+'</span>';
-      html += '<span style="font-size:11px;color:var(--text2);flex:1">'+r.label+(r.subject?' — <em style="color:var(--text3)">'+r.subject+'</em>':'')+'</span>';
-      html += '<span style="font-family:var(--mono);font-size:12px;color:'+col+';">'+(r.bars||'■■□□')+'</span>';
+      var col=r.level==='CRITICAL'?'#ef4444':r.level==='HIGH'?'#f97316':r.level==='MEDIUM'||r.level==='ELEVATED'?'#f59e0b':'#94a3b8';
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:7px 11px;background:var(--bg3);border-radius:4px;border:1px solid var(--border)">';
+      html += '<span style="font-family:var(--mono);font-size:9px;font-weight:700;color:'+col+';min-width:72px">'+r.level+'</span>';
+      html += '<span style="font-size:11px;color:var(--text2);flex:1">'+r.label+(r.subject?' <em style="color:var(--text3)">— '+r.subject+'</em>':'')+'</span>';
+      html += '<span style="font-family:var(--mono);color:'+col+'">'+(r.bars||'■■□□')+'</span>';
       html += '</div>';
     });
     html += '</div></div>';
+  }
+
+  // OSINT: Source landscape
+  if(g.source_landscape){
+    html += '<div style="margin-bottom:16px">';
+    html += '<div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--text4);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)">SOURCE LANDSCAPE</div>';
+    html += '<p style="font-size:12px;color:var(--text2);line-height:1.8">'+g.source_landscape+'</p>';
+    html += '</div>';
+  }
+
+  // CORPORATE: Business impact
+  if(g.business_impact){
+    html += '<div style="margin-bottom:16px">';
+    html += '<div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--text4);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)">BUSINESS IMPACT</div>';
+    html += '<p style="font-size:12px;color:var(--text2);line-height:1.8">'+g.business_impact+'</p>';
+    html += '</div>';
   }
 
   // Risk Vectors
@@ -2477,8 +2520,40 @@ function renderIreBrief(g, typeLabel, client){
   if(g.assessment){
     html += '<div style="margin-bottom:16px">';
     html += '<div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--text4);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)">VIGINOTE ASSESSMENT</div>';
-    var aParas = Array.isArray(g.assessment) ? g.assessment : [g.assessment];
+    var aParas=Array.isArray(g.assessment)?g.assessment:[g.assessment];
     aParas.forEach(function(p){ html += '<p style="font-size:12px;color:var(--text2);line-height:1.8;margin-bottom:10px">'+p+'</p>'; });
+    html += '</div>';
+  }
+
+  // Scenario Analysis
+  if(g.scenarios && g.scenarios.length){
+    html += '<div style="margin-bottom:16px">';
+    html += '<div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--text4);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)">SCENARIO ANALYSIS</div>';
+    g.scenarios.forEach(function(s){
+      var scol=s.type==='WORST CASE'?'var(--critical)':s.type==='BEST CASE'?'var(--low)':'var(--blue)';
+      html += '<div style="margin-bottom:8px;padding:9px 12px;background:var(--bg3);border-radius:4px;border-left:3px solid '+scol+'">';
+      html += '<div style="font-family:var(--mono);font-size:9px;font-weight:700;color:'+scol+';margin-bottom:4px">'+s.type+' <span style="color:var(--text4);font-weight:400">· '+s.probability+'</span></div>';
+      html += '<div style="font-size:12px;color:var(--text2);line-height:1.6">'+s.description+'</div>';
+      if(s.trigger) html += '<div style="font-family:var(--mono);font-size:9px;color:var(--text4);margin-top:4px">TRIGGER: '+s.trigger+'</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  // Analyst Prediction
+  if(g.analyst_prediction){
+    html += '<div style="margin-bottom:16px;padding:12px 14px;background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.2);border-radius:5px">';
+    html += '<div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:#a855f7;margin-bottom:8px">🔮 ANALYST PREDICTION</div>';
+    var ap=Array.isArray(g.analyst_prediction)?g.analyst_prediction.join(' '):g.analyst_prediction;
+    html += '<div style="font-size:12px;color:var(--text2);line-height:1.8">'+ap+'</div>';
+    html += '</div>';
+  }
+
+  // OSINT: Intelligence gaps
+  if(g.intelligence_gaps){
+    html += '<div style="margin-bottom:16px">';
+    html += '<div style="font-family:var(--mono);font-size:8px;letter-spacing:2px;color:var(--text4);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border)">INTELLIGENCE GAPS</div>';
+    html += '<p style="font-size:12px;color:var(--text2);line-height:1.8">'+g.intelligence_gaps+'</p>';
     html += '</div>';
   }
 
@@ -2496,11 +2571,11 @@ function renderIreBrief(g, typeLabel, client){
 
   // Footer
   html += '<div style="padding-top:12px;border-top:1px solid var(--border);font-family:var(--mono);font-size:9px;color:var(--text4)">';
-  html += 'VIGINOTE INTELLIGENCE · GENERATED '+now+' · '+(g.source_reliability||'Multi-source corroboration');
+  html += 'VIGINOTE INTELLIGENCE · '+now+' · '+(g.source_reliability||'Multi-source corroboration. Admiralty Scale applied.');
   html += '</div></div>';
-
   return html;
 }
+
 
 function copyIrePost(){
   var el = document.getElementById('ire-brief-frame');
