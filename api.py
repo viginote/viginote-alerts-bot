@@ -374,11 +374,12 @@ class LoginRequest(BaseModel):
     password: str
 
 class SaveDeliverableRequest(BaseModel):
-    type:     str
-    title:    str
-    content:  dict
-    clients:  list[str] = []
-    one_off:  bool = False
+    type:        str
+    title:       str
+    content:     dict
+    clients:     list[str] = []
+    one_off:     bool = False
+    client_name: str = ""
 
 class PublishRequest(BaseModel):
     clients: list[str]
@@ -392,8 +393,9 @@ async def deliverable_save(req: SaveDeliverableRequest, request: Request):
     uname = _verify_token(tok) if tok else None
     if not _verify_admin(request) and not uname:
         raise HTTPException(status_code=403, detail="Authentication required.")
-    if req.type not in ("brief", "assessment", "digest"):
-        raise HTTPException(status_code=400, detail="Invalid type.")
+    ALLOWED_TYPES = {"brief","assessment","digest","geopolitical","travel","corporate","osint","event","tracker","travel_pack","intelligence_request"}
+    if req.type not in ALLOWED_TYPES:
+        req.type = "brief"  # fallback gracefully
     rec = save_deliverable(
         dtype=req.type,
         title=req.title,
