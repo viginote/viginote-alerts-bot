@@ -364,6 +364,9 @@ async def page_brief(request: Request):
 @app.get("/client", response_class=HTMLResponse)
 async def page_client(): return _serve("client.html")
 
+@app.get("/access", response_class=HTMLResponse)
+async def page_access(): return _serve("client.html")
+
 @app.get("/intelligence", response_class=HTMLResponse)
 async def page_intelligence(): return RedirectResponse(url="/client", status_code=302)
 
