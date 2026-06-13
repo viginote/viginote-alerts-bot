@@ -982,10 +982,24 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
           <div class="ire-section-label" style="margin-top:16px">GENERATED PRODUCT</div>
           <div id="ire-brief-frame" class="ire-brief-frame"></div>
 
+          <!-- Share link box -->
+          <div id="ire-share-box" style="display:none;margin-top:12px;padding:12px 14px;
+            background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.25);border-radius:6px">
+            <div style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2px;
+              color:var(--low);margin-bottom:8px;text-transform:uppercase">✓ Saved — Share Link</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div id="ire-share-url" style="font-family:var(--mono);font-size:11px;color:var(--text2);
+                flex:1;background:var(--bg3);padding:7px 10px;border-radius:4px;
+                border:1px solid var(--border2);word-break:break-all"></div>
+              <button onclick="copyIreShareLink()" style="padding:7px 14px;border-radius:4px;
+                background:var(--low);border:none;color:#fff;font-family:var(--mono);
+                font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap">📋 Copy Link</button>
+            </div>
+          </div>
           <!-- Actions -->
           <div class="ire-actions">
-            <button class="ire-action-btn" onclick="copyIrePost()">📋 Copy</button>
-            <button class="ire-action-btn" onclick="saveIreDeliverable()">☁ Save to Deliverables</button>
+            <button class="ire-action-btn" onclick="copyIrePost()">📋 Copy text</button>
+            <button class="ire-action-btn" id="ire-save-btn" onclick="saveIreDeliverable()">☁ Save &amp; Get Link</button>
             <button class="ire-action-btn" onclick="runIntelRequest()">↺ Regenerate</button>
           </div>
         </div>
@@ -1039,6 +1053,25 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
         <div id="itr-pattern" class="itr-pattern" style="display:none">
           <div class="itr-section-label">PATTERN ANALYSIS</div>
           <div id="itr-pattern-text" class="itr-pattern-text"></div>
+        </div>
+
+        <!-- Save/share for tracker -->
+        <div id="itr-share-box" style="display:none;margin:0 20px 12px;padding:12px 14px;
+          background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.25);border-radius:6px">
+          <div style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2px;
+            color:var(--low);margin-bottom:8px;text-transform:uppercase">✓ Saved — Share Link</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div id="itr-share-url" style="font-family:var(--mono);font-size:11px;color:var(--text2);
+              flex:1;background:var(--bg3);padding:7px 10px;border-radius:4px;
+              border:1px solid var(--border2);word-break:break-all"></div>
+            <button onclick="copyItrShareLink()" style="padding:7px 14px;border-radius:4px;
+              background:var(--low);border:none;color:#fff;font-family:var(--mono);
+              font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap">📋 Copy Link</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;padding:0 20px 12px;flex-shrink:0" id="itr-action-row" style="display:none">
+          <button class="itr-run-btn" style="background:var(--bg3);color:var(--text3);
+            border:1px solid var(--border2)" onclick="saveTrackerDeliverable()">☁ Save &amp; Get Link</button>
         </div>
 
         <!-- Incident list -->
@@ -1208,9 +1241,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
           </div>
 
           <!-- Actions -->
+          <!-- Share link box -->
+          <div id="tsp-share-box" style="display:none;margin-bottom:12px;padding:12px 14px;
+            background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.25);border-radius:6px">
+            <div style="font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:2px;
+              color:var(--low);margin-bottom:8px;text-transform:uppercase">✓ Saved — Share Link</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div id="tsp-share-url" style="font-family:var(--mono);font-size:11px;color:var(--text2);
+                flex:1;background:var(--bg3);padding:7px 10px;border-radius:4px;
+                border:1px solid var(--border2);word-break:break-all"></div>
+              <button onclick="copyTspShareLink()" style="padding:7px 14px;border-radius:4px;
+                background:var(--low);border:none;color:#fff;font-family:var(--mono);
+                font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap">📋 Copy Link</button>
+            </div>
+          </div>
           <div class="tsp-actions">
             <button class="tsp-action-btn" onclick="copyTsp()">📋 Copy as text</button>
-            <button class="tsp-action-btn" onclick="saveTspDeliverable()">☁ Save to Deliverables</button>
+            <button class="tsp-action-btn" id="tsp-save-btn" onclick="saveTspDeliverable()">☁ Save &amp; Get Link</button>
             <button class="tsp-action-btn" onclick="runTravelPack()">↺ Regenerate</button>
           </div>
 
@@ -2590,26 +2637,42 @@ function copyIrePost(){
 async function saveIreDeliverable(){
   if(!_ireLastResult) return;
   var g = _ireLastResult.generated;
+  var btn = document.getElementById('ire-save-btn');
+  if(btn){ btn.disabled=true; btn.textContent='Saving...'; }
   try {
     var resp = await fetch(API+'/deliverables/save', {
       method:'POST', credentials:'include',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        type: _ireLastResult.type,
+        type: _ireLastResult.type || 'brief',
         title: g.headline || 'Intelligence Request',
         content: g,
-        client_name: _ireLastResult.client,
-        alerts_used: (_ireLastResult.alerts||[]).map(function(a){return a.id;})
+        client_name: _ireLastResult.client || 'Viginote Client'
       })
     });
     var d = await resp.json();
     var shareLink = brandedViewUrl(d.public_view_url || d.view_url, d.token);
-    if(shareLink){
-      alert('Saved. Share link:\n' + shareLink);
-    } else {
-      alert('Saved to deliverables.');
+    var box = document.getElementById('ire-share-box');
+    var urlEl = document.getElementById('ire-share-url');
+    if(shareLink && box && urlEl){
+      urlEl.textContent = shareLink;
+      box.style.display = 'block';
+      box.scrollIntoView({behavior:'smooth', block:'nearest'});
     }
-  } catch(e){ alert('Save failed: ' + e.message); }
+    if(btn){ btn.textContent='✓ Saved'; }
+  } catch(e){
+    alert('Save failed: ' + e.message);
+    if(btn){ btn.disabled=false; btn.textContent='☁ Save & Get Link'; }
+  }
+}
+
+function copyIreShareLink(){
+  var el = document.getElementById('ire-share-url');
+  if(!el) return;
+  navigator.clipboard.writeText(el.textContent).then(function(){
+    var btn = document.querySelector('#ire-share-box button');
+    if(btn){ var o=btn.textContent; btn.textContent='✓ Copied!'; setTimeout(function(){btn.textContent=o;},2000); }
+  });
 }
 
 
@@ -2710,6 +2773,8 @@ async function runTracker(){
     // ── Incident list ─────────────────────────────────────────────────
     renderIncidentList(matched);
     document.getElementById('itr-list-wrap').style.display = 'flex';
+  var actionRow = document.getElementById('itr-action-row');
+  if(actionRow) actionRow.style.display = 'flex';
     document.getElementById('itr-list-count').textContent = total;
 
   } catch(err) {
@@ -3086,22 +3151,100 @@ function copyTsp(){
 
 async function saveTspDeliverable(){
   if(!_tspLastResult) return;
+  var btn = document.getElementById('tsp-save-btn');
+  if(btn){ btn.disabled=true; btn.textContent='Saving...'; }
   try {
     var resp = await fetch(API+'/deliverables/save', {
       method:'POST', credentials:'include',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        type: 'travel',
+        type: 'travel_pack',
         title: _tspLastResult.pack_title || 'Travel Security Pack',
         content: _tspLastResult,
-        client_name: _tspLastResult.organisation || 'Viginote Client',
+        client_name: _tspLastResult.organisation || 'Viginote Client'
       })
     });
     var d = await resp.json();
     var shareLink = brandedViewUrl(d.public_view_url || d.view_url, d.token);
-    if(shareLink) alert('Saved.\nShare link: '+shareLink);
-    else alert('Saved to deliverables.');
-  } catch(e){ alert('Save failed: '+e.message); }
+    var box = document.getElementById('tsp-share-box');
+    var urlEl = document.getElementById('tsp-share-url');
+    if(shareLink && box && urlEl){
+      urlEl.textContent = shareLink;
+      box.style.display = 'block';
+      box.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }
+    if(btn){ btn.textContent='✓ Saved'; }
+  } catch(e){
+    alert('Save failed: '+e.message);
+    if(btn){ btn.disabled=false; btn.textContent='☁ Save & Get Link'; }
+  }
+}
+
+function copyTspShareLink(){
+  var el = document.getElementById('tsp-share-url');
+  if(!el) return;
+  navigator.clipboard.writeText(el.textContent).then(function(){
+    var btn = document.querySelector('#tsp-share-box button');
+    if(btn){ var o=btn.textContent; btn.textContent='✓ Copied!'; setTimeout(function(){btn.textContent=o;},2000); }
+  });
+}
+
+
+// ── TRACKER SAVE & SHARE ─────────────────────────────────────────────────
+async function saveTrackerDeliverable(){
+  if(!_itrData) return;
+  var btn = document.querySelector('#itr-action-row button');
+  if(btn){ btn.disabled=true; btn.textContent='Saving...'; }
+  var term    = _itrData.term;
+  var total   = _itrData.matched.length;
+  var hours   = _itrData.hours;
+  var content = {
+    term:        term,
+    total:       total,
+    hours:       hours,
+    groupBy:     _itrData.groupBy,
+    critical:    _itrData.matched.filter(function(a){ return a.is_critical||a.score>=9; }).length,
+    high:        _itrData.matched.filter(function(a){ return a.score>=7&&a.score<9; }).length,
+    alerts:      _itrData.matched.slice(0,50).map(function(a){
+      return {title:a.title, score:a.score, region:a.region, ts:a.ts, is_critical:a.is_critical};
+    }),
+    pattern_html: (document.getElementById('itr-pattern-text')||{innerHTML:''}).innerHTML,
+    generated_at: new Date().toISOString()
+  };
+  try {
+    var resp = await fetch(API+'/deliverables/save', {
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        type: 'tracker',
+        title: 'Incident Tracker: ' + term + ' (' + Math.round(hours/24) + ' days)',
+        content: content,
+        client_name: 'Viginote Admin'
+      })
+    });
+    var d = await resp.json();
+    var shareLink = brandedViewUrl(d.public_view_url || d.view_url, d.token);
+    var box   = document.getElementById('itr-share-box');
+    var urlEl = document.getElementById('itr-share-url');
+    if(shareLink && box && urlEl){
+      urlEl.textContent = shareLink;
+      box.style.display = 'block';
+      box.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }
+    if(btn){ btn.textContent='✓ Saved'; }
+  } catch(e){
+    alert('Save failed: '+e.message);
+    if(btn){ btn.disabled=false; btn.textContent='☁ Save & Get Link'; }
+  }
+}
+
+function copyItrShareLink(){
+  var el = document.getElementById('itr-share-url');
+  if(!el) return;
+  navigator.clipboard.writeText(el.textContent).then(function(){
+    var btn = document.querySelector('#itr-share-box button');
+    if(btn){ var o=btn.textContent; btn.textContent='✓ Copied!'; setTimeout(function(){btn.textContent=o;},2000); }
+  });
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────
