@@ -51,7 +51,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
 /* ── SIDEBAR ── */
 .sidebar{width:220px;flex-shrink:0;background:var(--bg2);
   border-right:1px solid var(--border);display:flex;flex-direction:column;
-  overflow:hidden}
+  overflow-y:auto;overflow-x:hidden;min-height:0}
 .sb-section{padding:8px}
 .sb-label{font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:700;
   letter-spacing:2.5px;text-transform:uppercase;color:var(--text4);
@@ -908,7 +908,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
 
     <!-- DELIVERABLES PANEL -->
     <!-- ── INTELLIGENCE REQUEST ENGINE ──────────────────────────────── -->
-    <div class="ws-frame-panel" id="panel-request" class="ws-frame-panel">
+    <div class="ws-frame-panel" id="panel-request">
       <div class="ire-wrap">
 
         <div class="ire-header">
@@ -1067,9 +1067,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
             <button onclick="copyItrShareLink()" style="padding:7px 14px;border-radius:4px;
               background:var(--low);border:none;color:#fff;font-family:var(--mono);
               font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap">📋 Copy Link</button>
+            <button id="itr-publish-btn" onclick="if(window._itrSavedId) openPubModal(window._itrSavedId, window._itrSavedTitle||'Incident Tracker')" style="padding:7px 14px;border-radius:4px;background:var(--blue-dim);border:none;color:#fff;font-family:var(--mono);font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap">⬆ Publish</button>
           </div>
         </div>
-        <div style="display:flex;gap:8px;padding:0 20px 12px;flex-shrink:0" id="itr-action-row" style="display:none">
+        <div id="itr-action-row" style="display:none;gap:8px;padding:0 20px 12px;flex-shrink:0">
           <button class="itr-run-btn" style="background:var(--bg3);color:var(--text3);
             border:1px solid var(--border2)" onclick="saveTrackerDeliverable()">☁ Save &amp; Get Link</button>
         </div>
@@ -1253,6 +1254,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
               <button onclick="copyTspShareLink()" style="padding:7px 14px;border-radius:4px;
                 background:var(--low);border:none;color:#fff;font-family:var(--mono);
                 font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap">📋 Copy Link</button>
+              <button id="tsp-publish-btn" onclick="if(window._tspSavedId) openPubModal(window._tspSavedId, window._tspSavedTitle||'Travel Security Pack')" style="padding:7px 14px;border-radius:4px;background:var(--blue-dim);border:none;color:#fff;font-family:var(--mono);font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap">⬆ Publish</button>
             </div>
           </div>
           <div class="tsp-actions">
@@ -1336,6 +1338,92 @@ function brandedViewUrl(raw, token){
   if(token) return PUBLIC_BASE_URL + '/view/' + token;
   return raw || '';
 }
+
+function vgnEscapeHtml(value){
+  return String(value == null ? '' : value)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+function vgnCollectHubCss(){
+  var css = '';
+  try{
+    css = Array.from(document.querySelectorAll('style')).map(function(s){return s.textContent || '';}).join('\n');
+  }catch(e){ css = ''; }
+  return css + `
+.vgn-tool-public-product{max-width:980px;margin:0 auto;padding:26px;background:#080c14;color:#e2e8f0;font-family:Inter,Arial,sans-serif;}
+.vgn-tool-public-product *{box-sizing:border-box}
+.vgn-tool-public-product .ire-brief-frame,
+.vgn-tool-public-product .tsp-result-shell,
+.vgn-tool-public-product .itr-result-shell{background:#0e1420;border:1px solid #1e2d4a;border-radius:8px;padding:20px}
+@media print{
+  body{background:#080c14!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .vgn-tool-public-product{padding:0!important;max-width:100%!important}
+  .vgn-tool-public-product *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+}`;
+}
+
+function vgnCloneHtmlWithCanvas(selector){
+  var el = typeof selector === 'string' ? document.querySelector(selector) : selector;
+  if(!el) return '';
+  var clone = el.cloneNode(true);
+  try{
+    var originals = el.querySelectorAll('canvas');
+    var copies = clone.querySelectorAll('canvas');
+    originals.forEach(function(canvas, i){
+      var img = document.createElement('img');
+      try{ img.src = canvas.toDataURL('image/png'); }catch(e){}
+      img.style.maxWidth = '100%';
+      img.style.display = 'block';
+      img.style.border = '1px solid var(--border)';
+      img.style.borderRadius = '6px';
+      if(copies[i]) copies[i].replaceWith(img);
+    });
+  }catch(e){}
+  return clone.innerHTML;
+}
+
+function vgnToolReportBody(kind, title, innerHtml){
+  return '<div class="vgn-tool-public-product vgn-tool-'+kind+'">'
+    + '<div style="display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:18px">'
+    + '<div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--blue)">VIGINOTE INTELLIGENCE</div>'
+    + '<div style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--text4)">'+new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase()+'</div>'
+    + '</div>'
+    + '<h1 style="font-family:Syne,Inter,sans-serif;font-size:22px;line-height:1.25;color:var(--text);margin:0 0 16px">'+vgnEscapeHtml(title||'VigiNote Intelligence Product')+'</h1>'
+    + innerHtml
+    + '<div style="margin-top:26px;padding-top:14px;border-top:1px solid var(--border);font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text4)">© VigiNote · Confidential intelligence product · Not for redistribution</div>'
+    + '</div>';
+}
+
+function vgnBuildReplicaContent(kind, title, innerHtml, rawData){
+  return Object.assign({}, rawData || {}, {
+    headline: title,
+    type_label: kind === 'tracker' ? 'Incident Tracker' : kind === 'travelpack' ? 'Travel Security Pack' : 'Intelligence Request',
+    report_css: vgnCollectHubCss(),
+    report_body_html: vgnToolReportBody(kind, title, innerHtml),
+    rendered_html: vgnToolReportBody(kind, title, innerHtml),
+    public_product_kind: kind
+  });
+}
+
+function vgnShowSavedLink(kind, d, title){
+  var prefix = kind === 'ire' ? 'ire' : kind === 'itr' ? 'itr' : 'tsp';
+  var shareLink = brandedViewUrl(d.public_view_url || d.view_url, d.token);
+  var box = document.getElementById(prefix+'-share-box');
+  var urlEl = document.getElementById(prefix+'-share-url');
+  if(shareLink && box && urlEl){
+    urlEl.textContent = shareLink;
+    box.style.display = 'block';
+    box.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+  if(d && d.id){
+    setTimeout(function(){ openPubModal(d.id, title || 'VigiNote Intelligence Product'); }, 150);
+  }
+}
+
 var currentPanel = 'dashboard';
 var allDeliverables = [];
 var currentDelFilter = 'all';
@@ -1651,9 +1739,9 @@ function renderDeliverables(){
     return;
   }
 
-  var typeCls={brief:'dtb-brief',assessment:'dtb-assessment',digest:'dtb-digest'};
-  var typeIcon={brief:'📋',assessment:'🗺',digest:'📊'};
-  var typeLabel={brief:'Brief',assessment:'Assessment',digest:'Digest'};
+  var typeCls={brief:'dtb-brief',assessment:'dtb-assessment',digest:'dtb-digest',tracker:'dtb-brief',travel_pack:'dtb-assessment'};
+  var typeIcon={brief:'📋',assessment:'🗺',digest:'📊',tracker:'📈',travel_pack:'✈️'};
+  var typeLabel={brief:'Brief',assessment:'Assessment',digest:'Digest',tracker:'Incident Tracker',travel_pack:'Travel Pack'};
 
   list.innerHTML = items.map(function(d){
     var created=new Date(d.created_at*1000).toLocaleDateString('en-GB',
@@ -1668,7 +1756,7 @@ function renderDeliverables(){
         +'<span>'+(clients>0?'📤 '+clients+' client'+(clients!==1?'s':''):'Not published')+'</span>'
       +'</div>'
       +'<div class="del-actions">'
-        +'<a class="del-btn del-btn-view" href="'+API+'/view/'+d.token+'" target="_blank">View</a>'
+        +'<a class="del-btn del-btn-view" href="'+brandedViewUrl(d.public_view_url || d.view_url, d.token)+'" target="_blank">View</a>'
         +'<button class="del-btn del-btn-publish" onclick="openPubModal(\''+d.id+'\','+JSON.stringify(d.title||'').replace(/'/g,"\\'")+')">Publish</button>'
         +'<button class="del-btn del-btn-delete" onclick="deleteDeliverable(\''+d.id+'\')">✕</button>'
       +'</div>'
@@ -2636,29 +2724,37 @@ function copyIrePost(){
 
 async function saveIreDeliverable(){
   if(!_ireLastResult) return;
-  var g = _ireLastResult.generated;
+  var g = _ireLastResult.generated || {};
+  var title = g.headline || 'Intelligence Request';
   var btn = document.getElementById('ire-save-btn');
   if(btn){ btn.disabled=true; btn.textContent='Saving...'; }
   try {
+    var inner = vgnCloneHtmlWithCanvas('#ire-brief-frame');
+    var content = vgnBuildReplicaContent('request', title, '<div class="ire-brief-frame">'+inner+'</div>', g);
+    content.source_alerts = _ireLastResult.alerts || [];
+    content.request_meta = {
+      client: _ireLastResult.client || 'Viginote Client',
+      type: _ireLastResult.type || 'brief',
+      generated_at: new Date().toISOString()
+    };
+
     var resp = await fetch(API+'/deliverables/save', {
       method:'POST', credentials:'include',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        type: _ireLastResult.type || 'brief',
-        title: g.headline || 'Intelligence Request',
-        content: g,
-        client_name: _ireLastResult.client || 'Viginote Client'
+        type: 'brief',
+        title: title,
+        content: content,
+        clients: [],
+        one_off: false
       })
     });
     var d = await resp.json();
-    var shareLink = brandedViewUrl(d.public_view_url || d.view_url, d.token);
-    var box = document.getElementById('ire-share-box');
-    var urlEl = document.getElementById('ire-share-url');
-    if(shareLink && box && urlEl){
-      urlEl.textContent = shareLink;
-      box.style.display = 'block';
-      box.scrollIntoView({behavior:'smooth', block:'nearest'});
-    }
+    if(!resp.ok) throw new Error(d.detail || 'Save failed');
+
+    window._ireSavedId = d.id;
+    window._ireSavedTitle = title;
+    vgnShowSavedLink('ire', d, title);
     if(btn){ btn.textContent='✓ Saved'; }
   } catch(e){
     alert('Save failed: ' + e.message);
@@ -3152,27 +3248,29 @@ function copyTsp(){
 async function saveTspDeliverable(){
   if(!_tspLastResult) return;
   var btn = document.getElementById('tsp-save-btn');
+  var title = _tspLastResult.pack_title || 'Travel Security Pack';
   if(btn){ btn.disabled=true; btn.textContent='Saving...'; }
   try {
+    var inner = vgnCloneHtmlWithCanvas('#tsp-result');
+    var content = vgnBuildReplicaContent('travelpack', title, '<div class="tsp-result-shell">'+inner+'</div>', _tspLastResult);
+
     var resp = await fetch(API+'/deliverables/save', {
       method:'POST', credentials:'include',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        type: 'travel_pack',
-        title: _tspLastResult.pack_title || 'Travel Security Pack',
-        content: _tspLastResult,
-        client_name: _tspLastResult.organisation || 'Viginote Client'
+        type: 'brief',
+        title: title,
+        content: content,
+        clients: [],
+        one_off: false
       })
     });
     var d = await resp.json();
-    var shareLink = brandedViewUrl(d.public_view_url || d.view_url, d.token);
-    var box = document.getElementById('tsp-share-box');
-    var urlEl = document.getElementById('tsp-share-url');
-    if(shareLink && box && urlEl){
-      urlEl.textContent = shareLink;
-      box.style.display = 'block';
-      box.scrollIntoView({behavior:'smooth', block:'nearest'});
-    }
+    if(!resp.ok) throw new Error(d.detail || 'Save failed');
+
+    window._tspSavedId = d.id;
+    window._tspSavedTitle = title;
+    vgnShowSavedLink('tsp', d, title);
     if(btn){ btn.textContent='✓ Saved'; }
   } catch(e){
     alert('Save failed: '+e.message);
@@ -3198,39 +3296,46 @@ async function saveTrackerDeliverable(){
   var term    = _itrData.term;
   var total   = _itrData.matched.length;
   var hours   = _itrData.hours;
-  var content = {
+  var title   = 'Incident Tracker: ' + term + ' (' + Math.round(hours/24) + ' days)';
+  var inner   = ''
+    + '<div class="itr-result-shell">'
+    + (vgnCloneHtmlWithCanvas('#itr-summary') || '')
+    + (vgnCloneHtmlWithCanvas('#itr-chart-wrap') || '')
+    + (vgnCloneHtmlWithCanvas('#itr-pattern') || '')
+    + (vgnCloneHtmlWithCanvas('#itr-list-wrap') || '')
+    + '</div>';
+
+  var content = vgnBuildReplicaContent('tracker', title, inner, {
     term:        term,
     total:       total,
     hours:       hours,
     groupBy:     _itrData.groupBy,
     critical:    _itrData.matched.filter(function(a){ return a.is_critical||a.score>=9; }).length,
     high:        _itrData.matched.filter(function(a){ return a.score>=7&&a.score<9; }).length,
-    alerts:      _itrData.matched.slice(0,50).map(function(a){
+    alerts:      _itrData.matched.slice(0,100).map(function(a){
       return {title:a.title, score:a.score, region:a.region, ts:a.ts, is_critical:a.is_critical};
     }),
-    pattern_html: (document.getElementById('itr-pattern-text')||{innerHTML:''}).innerHTML,
     generated_at: new Date().toISOString()
-  };
+  });
+
   try {
     var resp = await fetch(API+'/deliverables/save', {
       method:'POST', credentials:'include',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        type: 'tracker',
-        title: 'Incident Tracker: ' + term + ' (' + Math.round(hours/24) + ' days)',
+        type: 'brief',
+        title: title,
         content: content,
-        client_name: 'Viginote Admin'
+        clients: [],
+        one_off: false
       })
     });
     var d = await resp.json();
-    var shareLink = brandedViewUrl(d.public_view_url || d.view_url, d.token);
-    var box   = document.getElementById('itr-share-box');
-    var urlEl = document.getElementById('itr-share-url');
-    if(shareLink && box && urlEl){
-      urlEl.textContent = shareLink;
-      box.style.display = 'block';
-      box.scrollIntoView({behavior:'smooth', block:'nearest'});
-    }
+    if(!resp.ok) throw new Error(d.detail || 'Save failed');
+
+    window._itrSavedId = d.id;
+    window._itrSavedTitle = title;
+    vgnShowSavedLink('itr', d, title);
     if(btn){ btn.textContent='✓ Saved'; }
   } catch(e){
     alert('Save failed: '+e.message);
