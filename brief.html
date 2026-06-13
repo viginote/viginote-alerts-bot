@@ -434,6 +434,32 @@ body:not(.feed-drawer-open) #alert-scroll{position:fixed;left:300px;top:52px;bot
       <button type="button" class="btn" onclick="window.print()">⬇ PDF</button>
     </div>
 
+    <!-- LINKEDIN CAPTION SECTION -->
+    <div id="li-section" style="display:none;margin:16px 0 0;padding:16px 20px;
+      background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;
+          letter-spacing:2px;text-transform:uppercase;color:var(--blue)">
+          💼 LinkedIn Caption — Ready to Post
+        </div>
+        <div style="display:flex;gap:6px">
+          <button onclick="copyLiCaption('personal')" style="padding:4px 12px;border-radius:3px;
+            background:var(--blue-dim);border:none;color:#fff;font-family:'JetBrains Mono',monospace;
+            font-size:9px;font-weight:700;cursor:pointer">👤 Copy Personal</button>
+          <button onclick="copyLiCaption('corporate')" style="padding:4px 12px;border-radius:3px;
+            background:transparent;border:1px solid rgba(59,130,246,.4);color:var(--blue);
+            font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;cursor:pointer">
+            🏢 Copy Corporate</button>
+        </div>
+      </div>
+      <div id="li-personal-text" style="font-size:12px;color:var(--text2);line-height:1.8;
+        white-space:pre-wrap;background:var(--bg3);padding:12px 14px;border-radius:5px;
+        border:1px solid var(--border);margin-bottom:8px"></div>
+      <div id="li-first-comment" style="font-family:'JetBrains Mono',monospace;font-size:10px;
+        color:var(--text3);padding:8px 12px;background:var(--bg2);border-radius:4px;
+        border:1px solid var(--border)"></div>
+    </div>
+
     <!-- THE BRIEF DOCUMENT -->
     <div id="brief-doc">
       <div class="article-card">
@@ -1001,6 +1027,79 @@ function renderBrief(g, selected, ref, dateStr, regionStr, client, typeLabelStr,
   document.getElementById('rp-bar').style.display = 'flex';
   document.getElementById('rp-title').textContent = ref;
   document.getElementById('print-btn').style.display = 'flex';
+
+  // ── LinkedIn caption ──────────────────────────────────────────────────
+  var liSection = document.getElementById('li-section');
+  var liText    = document.getElementById('li-personal-text');
+  var liComment = document.getElementById('li-first-comment');
+
+  if(liSection && liText){
+    // Use AI-generated caption if available, else build one
+    var caption = g.linkedin_caption || buildLinkedInCaption(g, dateStr);
+    liText.textContent = caption;
+
+    // Build first comment
+    var shareUrl = window._briefViewUrl || window.location.href;
+    var comment  = 'Full Viginote intelligence brief: ' + shareUrl
+      + '\nEnquiries: info@viginote.com';
+    if(liComment) liComment.textContent = '📌 First comment: ' + comment;
+
+    liSection.style.display = 'block';
+  }
+}
+
+function buildLinkedInCaption(g, dateStr){
+  // Fallback caption builder when AI doesn't return one
+  var headline = g.headline || 'Intelligence Assessment';
+  var deck     = g.deck || '';
+  var kj       = g.key_judgement || '';
+  var regions  = g.type_label || '';
+  var recs     = (g.recommendations||[]).slice(0,1).join(' ');
+
+  var lines = [];
+  lines.push(headline);
+  lines.push('');
+  if(deck) lines.push(deck);
+  lines.push('');
+  if(kj) lines.push('Key assessment: ' + kj);
+  lines.push('');
+  if(recs) lines.push('Recommended action: ' + recs);
+  lines.push('');
+  lines.push('Full Viginote intelligence brief available via the link below.');
+  lines.push('Enquiries: info@viginote.com');
+  lines.push('');
+  lines.push('#GeopoliticalRisk #IntelligenceAnalysis #OSINT #RiskManagement #FieldSecurity');
+  return lines.join('\n');
+}
+
+function copyLiCaption(style){
+  var textEl = document.getElementById('li-personal-text');
+  if(!textEl) return;
+  var text = textEl.textContent || '';
+
+  // For corporate style, transform to third-person
+  if(style === 'corporate'){
+    text = text.replace(/^/m, 'VIGINOTE INTELLIGENCE — ');
+    // Simple transformation: replace first-person signals
+    text = text.replace(/\bI\b/g, 'Viginote').replace(/\bmy\b/g, 'our')
+               .replace(/\bI'm\b/g, 'Viginote is').replace(/\bI've\b/g, 'Viginote has');
+  }
+
+  // Append share link if available
+  var shareUrl = window._briefViewUrl || '';
+  if(shareUrl && !text.includes(shareUrl)){
+    text = text + '\n\n🔗 ' + shareUrl;
+  }
+
+  navigator.clipboard.writeText(text).then(function(){
+    var btns = document.querySelectorAll('#li-section button');
+    var btn  = style === 'personal' ? btns[0] : btns[1];
+    if(btn){
+      var orig = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      setTimeout(function(){ btn.textContent = orig; }, 2000);
+    }
+  });
 }
 
 function regenerate(){
