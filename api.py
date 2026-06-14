@@ -364,9 +364,6 @@ async def page_brief(request: Request):
 @app.get("/client", response_class=HTMLResponse)
 async def page_client(): return _serve("client.html")
 
-@app.get("/access", response_class=HTMLResponse)
-async def page_access(): return _serve("client.html")
-
 @app.get("/intelligence", response_class=HTMLResponse)
 async def page_intelligence(): return RedirectResponse(url="/client", status_code=302)
 
@@ -1195,6 +1192,13 @@ class BriefingRequest(BaseModel):
     briefing_type: str = "morning"
     custom_title: Optional[str] = None
 
+# =======================
+# ANALYST PERSONA — SHARED
+# =======================
+_ANALYST_PERSONA = (
+    "You are a senior intelligence analyst at Viginote Intelligence. Your academic and professional background is equivalent to a PhD in International Relations and Geopolitics, with specialist postgraduate qualifications in Security Risk Management, Maritime Security Intelligence and Open Source Intelligence (OSINT) methodology. You operate to the analytical standards of Control Risks, Oxford Analytica, Jane's Intelligence, the International Institute for Strategic Studies (IISS), the International Crisis Group and Lloyd's of London intelligence division.\n\nYour expertise spans:\n— GEOPOLITICS: State behaviour, power transition theory, alliance dynamics, proxy conflict, sanctions regimes, nuclear deterrence, hybrid warfare\n— MARITIME INTELLIGENCE: Chokepoint analysis (Hormuz, Bab-el-Mandeb, Malacca, Suez), AIS tracking, vessel targeting patterns, piracy, UNCLOS, port security, P&I insurance implications\n— OSINT TRADECRAFT: Admiralty Scale source grading, ACH, PMESII framework, structured analytical techniques, link analysis, geolocation, chronolocation\n— SECURITY RISK: KFR, CBRN, critical infrastructure, executive protection, duty of care frameworks, ISO 31000 risk methodology\n— REGIONAL EXPERTISE: MENA, Sub-Saharan Africa, Eastern Europe/Russia, Indo-Pacific, Sahel, Horn of Africa, Latin America\n— ECONOMIC INTELLIGENCE: Sanctions (OFAC/UK FCDO/EU), supply chain disruption, currency instability, commodity markets as conflict indicators, trade weaponisation\n\nMANDATORY ANALYTICAL STANDARDS — APPLY TO EVERY OUTPUT:\n1. Admiralty Scale: Grade every source (A-F reliability x 1-6 credibility)\n2. NATO probability language: almost certain (95%+), highly likely (85%), probable (70%), roughly even (45%), unlikely (30%), remote (5%-)\n3. ACH: Consider competing hypotheses before any conclusion\n4. PMESII: Structure environmental assessments across all six domains\n5. Label explicitly: CONFIRMED INTELLIGENCE / SINGLE-SOURCE REPORTING / ANALYST INFERENCE\n6. Identify intelligence gaps and why they matter\n7. Analyst prediction: specific, falsifiable, time-bound — never vague\n8. Active voice: write 'Viginote assesses' not 'it is assessed that'\n9. Every sentence must advance the analysis beyond the raw data\n10. Maritime/energy/trade dimensions: apply specialist analysis, not generic commentary"
+)
+
 @app.post("/ai/generate")
 async def ai_generate(req: BriefingRequest, request: Request):
     if not _verify_admin(request): raise HTTPException(status_code=403, detail="Admin access required.")
@@ -1230,7 +1234,7 @@ async def ai_generate(req: BriefingRequest, request: Request):
     if hasattr(req, 'subject_context') and req.subject_context:
         subject_block = f"\n\nINTELLIGENCE REQUIREMENT FROM CLIENT:\n{req.subject_context}"
 
-    prompt = f"""You are a senior intelligence analyst at Viginote Intelligence — equivalent expertise to an MSc in International Relations, Geopolitics, Security Risk Management and OSINT methodology. You operate to the standards of Control Risks, Oxford Analytica and the International Crisis Group. Today is {now_str}.
+    prompt = f"""{_ANALYST_PERSONA} Today is {now_str}.
 
 ANALYST STANDARDS — NON-NEGOTIABLE:
 Apply the Admiralty Scale to every source (reliability A-F, credibility 1-6). Use NATO probability language precisely. Apply ACH — consider competing hypotheses before settling on a conclusion. Distinguish explicitly between CONFIRMED INTELLIGENCE, SINGLE-SOURCE REPORTING and ANALYST INFERENCE. Identify intelligence gaps. Never produce boilerplate. Name actors, locations, dates specifically. Write in active voice. You assess implications — you do not summarise events.{type_instr_block}{subject_block}
@@ -1326,7 +1330,7 @@ async def ai_assessment(req: AssessmentRequest, request: Request):
 
     event_context = f"\nEvent context: {req.event}" if req.event else ""
 
-    prompt = f"""You are a senior intelligence analyst at Viginote Intelligence with MSc-level expertise in International Relations, Geopolitics and Security Risk Management. Today is {now_str}.
+    prompt = f"""{_ANALYST_PERSONA} Today is {now_str}.
 
 ANALYST STANDARDS: Use the Admiralty Scale for all source grading. Apply NATO probability language. Distinguish confirmed intelligence from single-source claims and analyst inference — label each. Apply PMESII framework (Political, Military, Economic, Social, Infrastructure, Information) to structure your environmental assessment. Identify intelligence gaps explicitly. Every recommendation must be specific and actionable — never generic.
 
@@ -1434,7 +1438,7 @@ async def ai_travel_pack(req: TravelPackRequest, request: Request):
     profile  = f"\nTraveller profile: {req.traveller_profile}" if req.traveller_profile else ""
     date_ctx = f"\nPlanned travel date: {req.travel_date}" if req.travel_date else ""
 
-    prompt = f"""You are a senior intelligence analyst at Viginote Intelligence with MSc-level expertise in International Relations, Security Risk Management, Executive Protection and Travel Security. Today is {now_str}.
+    prompt = f"""{_ANALYST_PERSONA} Today is {now_str}.
 
 TASK: Produce a comprehensive Travel Security Pack for the destination and traveller profile below.
 
@@ -1597,7 +1601,7 @@ CTA: "Full brief available to subscribers. Enquiries: info@viginote.com" """
     tone_text  = tone_mod.get(tone, tone_mod["professional"])
 
     prompt = (
-        f"You are a senior intelligence analyst at Viginote Intelligence — MSc-level expertise in International Relations, Geopolitics, OSINT and Security Risk Management. Today is {now_str}.\n\nFLASH BRIEF STANDARDS: Lead with the analytical significance — not just what happened, but why it matters NOW. Use NATO probability language. Name specific actors, locations, organisations. Add one sentence of analyst assessment that goes beyond the raw alert. If the story is single-source, note it. Write as a professional analyst, not a journalist.\n\n"
+        f"{_ANALYST_PERSONA} Today is {now_str}.\n\nFLASH BRIEF STANDARDS: Lead with the analytical significance — not just what happened, but why it matters NOW. Use NATO probability language. Name specific actors, locations, organisations. Add one sentence of analyst assessment that goes beyond the raw alert. If the story is single-source, note it. Write as a professional analyst, not a journalist.\n\n"
         f"ALERT DATA:\n{alert_lines}\n"
         f"PLATFORM: {platform.upper()}\n"
         f"LENGTH: {p['length']}\n"
@@ -1692,7 +1696,7 @@ async def ai_deep_analysis(req: DeepAnalysisRequest, request: Request):
     type_instr = type_instructions.get(req.analysis_type, type_instructions["strategic"])
     horizon_lbl = horizon_labels.get(req.time_horizon, "current situation")
 
-    prompt = f"""You are a senior intelligence analyst at Viginote Intelligence with the equivalent of an MSc in International Relations, Geopolitics, Security Risk Management and OSINT methodology. You have deep regional expertise and operate to the analytical standards of Control Risks, Oxford Analytica and the IISS (International Institute for Strategic Studies). Today is {now_str}.
+    prompt = f"""{_ANALYST_PERSONA} Today is {now_str}.
 
 ANALYTICAL FRAMEWORK — APPLY TO EVERY PRODUCT:
 1. ACTOR ANALYSIS: Map all key actors, their interests, capabilities and constraints
@@ -1852,7 +1856,7 @@ async def ai_digest(req: DigestRequest, request: Request):
     regions_covered = list({a.get("region","") for a in rows})
     critical_count  = sum(1 for a in rows if a.get("is_critical"))
 
-    prompt = f"""You are a senior intelligence analyst at Viginote Intelligence — MSc-level expertise in International Relations, Geopolitics, OSINT and Security Risk Management. You operate to the standards of professional intelligence services.
+    prompt = f"""{_ANALYST_PERSONA}
 
 ANALYST STANDARDS: Apply NATO probability language. Rank situations by genuine threat trajectory — not just score. For each region, identify: the single most important development, the key actor driving it, and the 30-day outlook with probability assessment. Flag intelligence gaps where the picture is incomplete. Your digest should read like a product from the International Crisis Group or Jane's Intelligence Review — not a news summary.
 
