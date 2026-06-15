@@ -23,12 +23,12 @@ from viginote.scoring import severity_score, source_tier
 
 UA          = os.getenv("USER_AGENT", "VigiNoteAlertsBot/1.2 (+https://viginote.com)")
 POLL_LIMIT  = int(os.getenv("POLL_LIMIT", "25"))
-SIM_THRESHOLD      = int(os.getenv("SIM_THRESHOLD", "85"))  # tight enough to catch rephrases, loose enough to allow genuine new angles
+SIM_THRESHOLD      = int(os.getenv("SIM_THRESHOLD", "80"))  # catches rephrased wire stories, allows genuinely new developments
 SEVERITY_THRESHOLD = int(os.getenv("SEVERITY_THRESHOLD", "5"))
 CRITICAL_THRESHOLD = int(os.getenv("CRITICAL_THRESHOLD", "10"))
 MAX_PER_SOURCE_RUN = int(os.getenv("MAX_PER_SOURCE_RUN", "1"))
 MAX_PER_CLUSTER    = int(os.getenv("MAX_PER_CLUSTER", "1"))  # one alert per story cluster
-DEDUPE_DAYS        = int(os.getenv("DEDUPE_DAYS", "4"))  # extended to 4 days
+DEDUPE_DAYS        = int(os.getenv("DEDUPE_DAYS", "7"))  # 7 days blocks resurfacing stories
 
 FEED_TIMEOUT = aiohttp.ClientTimeout(total=25)
 
@@ -198,7 +198,7 @@ def collect_candidates(
             dupes = sum(1 for t in recent if fuzz.token_set_ratio(raw_title, t) >= SIM_THRESHOLD)
             if dupes >= MAX_PER_CLUSTER:
                 continue
-        elif keyword_overlap_duplicate(raw_title, recent, min_overlap=5):
+        elif keyword_overlap_duplicate(raw_title, recent, min_overlap=3):
             # Same story rephrased — seen in recent DB titles
             continue
 
@@ -207,20 +207,29 @@ def collect_candidates(
             continue
 
         # Within-run keyword overlap guard — catches rephrased same-story duplicates
-        if keyword_overlap_duplicate(raw_title, candidate_titles, min_overlap=4):
+        if keyword_overlap_duplicate(raw_title, candidate_titles, min_overlap=3):
             continue
 
         dom = domain_of(link)
         if per_source_collected[dom] >= MAX_PER_SOURCE_RUN:
             continue
 
-        # Tier-priority dedup: if a lower-tier (local/regional) source already
-        # has this story, don't add higher-tier (wire) version of same story
+        # Tier-priority dedup: wire blocked if local/regional already has story
         current_tier = source_tier(dom)
         if current_tier == 0:  # wire source
-            # Check if local or regional already has this story in candidates
             if keyword_overlap_duplicate(raw_title, candidate_titles, min_overlap=3):
-                continue  # local/regional already got it
+                continue
+
+        # Hard story cluster cap: max 2 sources per story across ALL tiers
+        # Prevents the same wire story appearing from 4-5 different outlets
+        story_coverage = sum(
+            1 for t in candidate_titles
+            if fuzz.token_set_ratio(raw_title, t) >= SIM_THRESHOLD
+            or (len(_key_words(raw_title)) >= 3 and
+                len(_key_words(raw_title) & _key_words(t)) >= 3)
+        )
+        if story_coverage >= MAX_PER_CLUSTER:
+            continue  # story already covered by enough sources
 
         text = fetch_article_text(link) or entry["summary"]
         score = severity_score(raw_title, text, region, feed_url)
