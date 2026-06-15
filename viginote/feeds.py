@@ -32,25 +32,12 @@ FEEDS: dict[str, list[str]] = {
         "https://rss.dw.com/rdf/rss-en-world",
         "https://feeds.skynews.com/feeds/rss/world.xml",
         # Investigative / OSINT
-        "https://www.bellingcat.com/feed/",
-        "https://www.occrp.org/en/rss",
-        "https://theintercept.com/feed/?rss",
-        "https://foreignpolicy.com/feed/",
         # Security / conflict monitors
-        "https://www.iswresearch.org/feeds/posts/default",
-        "https://acleddata.com/feed/",
-        "https://www.crisisgroup.org/rss",
         # Humanitarian / UN
-        "https://www.thenewhumanitarian.org/rss.xml",
-        "https://reliefweb.int/updates/rss.xml",
         "https://news.un.org/feed/subscribe/en/news/region/all/feed.rss",
         # Analysis
-        "https://globalvoices.org/feed/",
-        "https://www.chathamhouse.org/rss.xml",
-        "https://geopoliticalmonitor.com/feed/",
         "https://encyclopediageopolitica.com/feed/",
         "https://polgeonow.com/feeds/posts/default",
-        "https://oilprice.com/rss/main",
     ],
 
     # ── MIDDLE EAST ──────────────────────────────────────────────────────────
@@ -63,7 +50,6 @@ FEEDS: dict[str, list[str]] = {
         "https://www.aljazeera.com/xml/rss/all.xml",
         "https://www.middleeasteye.net/rss",
         "https://english.alarabiya.net/rss.xml",
-        "https://www.al-monitor.com/rss",
         # Israel / Palestine
         "https://www.timesofisrael.com/feed/",
         "https://www.haaretz.com/cmlink/1.628765",
@@ -88,7 +74,6 @@ FEEDS: dict[str, list[str]] = {
         "https://www.rudaw.net/rss/middleeast",
         "https://www.kurdistan24.net/en/rss",
         # Security / conflict
-        "https://www.crisisgroup.org/rss",
         "https://english.enabbaladi.net/feed",
     ],
 
@@ -118,13 +103,11 @@ FEEDS: dict[str, list[str]] = {
         "https://www.euractiv.com/feed/",
         "https://www.europarl.europa.eu/rss/doc/press-releases-en.xml",
         # Organised crime / security
-        "https://www.occrp.org/en/rss",
         "https://www.investigate-europe.eu/en/feed/",
         # Defence
         "https://www.defensenews.com/arc/outboundfeeds/rss/?outputType=xml",
         "https://www.janes.com/feeds/news",
         # Human rights
-        "https://www.hrw.org/rss/news",
     ],
 
     # ── ASIA ─────────────────────────────────────────────────────────────────
@@ -162,8 +145,6 @@ FEEDS: dict[str, list[str]] = {
         # Japan
         "https://www.japantimes.co.jp/feed/",
         # Security / analysis
-        "https://amti.csis.org/feed/",
-        "https://www.lowyinstitute.org/the-interpreter/rss",
     ],
 
     # ── WEST / EAST AFRICA ───────────────────────────────────────────────────
@@ -206,12 +187,7 @@ FEEDS: dict[str, list[str]] = {
         "https://www.studio-tamani.org/feed/",                 # Studio Tamani — Mali
         # ── REGIONAL ─────────────────────────────────────────────────
         "https://www.theafricareport.com/feed/",
-        "https://allafrica.com/tools/headlines/rdf/africa/headlines.rdf",
         "https://www.theeastafrican.co.ke/rss",
-        "https://acleddata.com/feed/",
-        "https://reliefweb.int/updates/rss.xml",
-        "https://insightcrime.org/feed/",
-        "https://www.crisisgroup.org/rss.xml",
     ],
 
     # ── SOUTHERN AFRICA ──────────────────────────────────────────────────────
@@ -244,9 +220,6 @@ FEEDS: dict[str, list[str]] = {
         "https://www.mmegi.bw/feed/",
         "https://club-k.net/rss.xml",
         # ── REGIONAL ─────────────────────────────────────────────────
-        "https://www.issafrica.org/research/rss",
-        "https://globalinitiative.net/feed/",
-        "https://insightcrime.org/feed/",
     ],
 
     # ── SOUTH AMERICA ────────────────────────────────────────────────────────
@@ -256,13 +229,7 @@ FEEDS: dict[str, list[str]] = {
         "https://feeds.bbci.co.uk/news/world/latin_america/rss.xml",
         "https://rss.dw.com/rdf/rss-en-latin-america",
         # Organised crime / security — specialist
-        "https://insightcrime.org/feed/",
-        "https://insightcrime.org/tag/mexico/feed/",
-        "https://insightcrime.org/tag/colombia/feed/",
-        "https://insightcrime.org/tag/venezuela/feed/",
-        "https://insightcrime.org/tag/brazil/feed/",
         # Venezuela
-        "https://venezuelanalysis.com/feed",
         "https://www.el-nacional.com/feed",
         "https://efectococuyo.com/feed/",
         # Colombia
@@ -274,13 +241,11 @@ FEEDS: dict[str, list[str]] = {
         "https://thebrazilinstitute.com/feed/",
         # Regional
         "https://en.mercopress.com/rss",
-        "https://nacla.org/rss.xml",
         "https://www.batimes.com.ar/feed",
         "https://haitiantimes.com/feed/",
         "https://www.lapresse.ca/international/amerique-latine/rss",
         # Human rights / monitors
         "https://www.hrw.org/rss/news",
-        "https://reliefweb.int/updates/rss.xml",
         "https://www.telesurtv.net/rss/news",
     ],
 }
@@ -322,9 +287,7 @@ STREAM_FEEDS: dict[str, list[str]] = {
         "https://offshore-energy.biz/feed/",
         # Intelligence / advisories
         "https://www.icc-ccs.org/index.php/rss-feeds/send/3-piracy-news",
-        "https://reliefweb.int/updates/rss.xml?search=maritime",
         # Trade / chokepoints
-        "https://oilprice.com/rss/main",
         "https://www.tradewindsnews.com/rss",
     ],
 
@@ -366,20 +329,9 @@ STREAM_FEEDS: dict[str, list[str]] = {
 
     "political": [
         # Democracy / elections
-        "https://freedomhouse.org/rss.xml",
-        "https://www.idea.int/news-media/rss.xml",
-        "https://carnegieendowment.org/rss/solr.rss?query=political+risk",
-        "https://www.chathamhouse.org/rss.xml",
         # Political violence
-        "https://acleddata.com/feed/",
-        "https://www.crisisgroup.org/rss",
         # Regional political
         "https://www.al-monitor.com/rss",
-        "https://foreignpolicy.com/feed/",
-        "https://theintercept.com/feed/?rss",
-        "https://www.opendemocracy.net/en/rss.xml",
-        "https://www.lowyinstitute.org/the-interpreter/rss",
-        "https://geopoliticalmonitor.com/feed/",
     ],
 
     "executive": [
@@ -394,9 +346,6 @@ STREAM_FEEDS: dict[str, list[str]] = {
         "https://www.who.int/feeds/entity/csr/don/en/rss.xml",
         "https://www.promedmail.org/feed/",
         # Crime / personal security
-        "https://insightcrime.org/feed/",
-        "https://globalinitiative.net/feed/",
-        "https://www.issafrica.org/iss-today/rss",
     ],
 }
 
@@ -466,3 +415,40 @@ def first_sentence(text: str, max_chars: int = 280) -> str:
         if 0 < idx < max_chars:
             return text[:idx + 1].strip()
     return text[:max_chars].strip()
+
+
+# Analysis and investigative sources — NOT polled by the real-time bot
+# Used by the hub for research and context. Updated weekly cadence.
+ANALYSIS_FEEDS = [
+    "https://acleddata.com/feed/",
+    "https://allafrica.com/tools/headlines/rdf/africa/headlines.rdf",
+    "https://amti.csis.org/feed/",
+    "https://carnegieendowment.org/rss/solr.rss?query=political+risk",
+    "https://foreignpolicy.com/feed/",
+    "https://freedomhouse.org/rss.xml",
+    "https://geopoliticalmonitor.com/feed/",
+    "https://globalinitiative.net/feed/",
+    "https://globalvoices.org/feed/",
+    "https://insightcrime.org/feed/",
+    "https://insightcrime.org/tag/brazil/feed/",
+    "https://insightcrime.org/tag/colombia/feed/",
+    "https://insightcrime.org/tag/mexico/feed/",
+    "https://insightcrime.org/tag/venezuela/feed/",
+    "https://nacla.org/rss.xml",
+    "https://reliefweb.int/updates/rss.xml",
+    "https://reliefweb.int/updates/rss.xml?search=maritime",
+    "https://theintercept.com/feed/?rss",
+    "https://venezuelanalysis.com/feed",
+    "https://www.bellingcat.com/feed/",
+    "https://www.chathamhouse.org/rss.xml",
+    "https://www.crisisgroup.org/rss",
+    "https://www.crisisgroup.org/rss.xml",
+    "https://www.idea.int/news-media/rss.xml",
+    "https://www.issafrica.org/iss-today/rss",
+    "https://www.issafrica.org/research/rss",
+    "https://www.iswresearch.org/feeds/posts/default",
+    "https://www.lowyinstitute.org/the-interpreter/rss",
+    "https://www.occrp.org/en/rss",
+    "https://www.opendemocracy.net/en/rss.xml",
+    "https://www.thenewhumanitarian.org/rss.xml",
+]
