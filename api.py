@@ -300,6 +300,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def _require_admin_secret(request: Request):
+    """Fail-closed guard for operational endpoints. Send header X-Admin-Secret = $ADMIN_SECRET."""
+    import hmac as _hmac
+    expected = os.getenv("ADMIN_SECRET", "")
+    given = request.headers.get("x-admin-secret", "")
+    if not expected or not _hmac.compare_digest(given, expected):
+        raise HTTPException(status_code=401, detail="Admin secret required")
+
 _conn = None
 
 def get_conn():
@@ -307,6 +315,11 @@ def get_conn():
     if _conn is None:
         _conn = init_db()
     return _conn
+
+# ── South Africa edition (public site at /za) ────────────────────────────────
+from viginote import sa_site  # noqa: E402
+sa_site.configure(get_conn)
+app.include_router(sa_site.router)
 
 def row_to_dict(row) -> dict:
     d = dict(row) if not isinstance(row, dict) else row
@@ -586,7 +599,8 @@ async def auth_logout(token: str):
     return {"status": "ok"}
 
 @app.get("/auth/debug")
-async def auth_debug():
+async def auth_debug(request: Request):
+    _require_admin_secret(request)
     """Debug endpoint — check clients config status without exposing passwords."""
     clients_on_disk = _CLIENTS_PATH.exists()
     clients = _load_clients()
@@ -602,7 +616,8 @@ async def auth_debug():
     }
 
 @app.get("/auth/sessions")
-async def auth_sessions():
+async def auth_sessions(request: Request):
+    _require_admin_secret(request)
     """Admin endpoint — shows active sessions."""
     return {
         "active_sessions": len(_feed_sessions),
@@ -830,7 +845,8 @@ async def page_portal(request: Request):
 # INGEST (from bot)
 # =======================
 @app.post("/ingest", status_code=201)
-def ingest(alert: dict):
+def ingest(alert: dict, request: Request):
+    _require_admin_secret(request)
     conn = get_conn()
     cur  = conn.cursor()
     try:
@@ -2013,7 +2029,8 @@ def health():
         return {"status":"degraded","error":str(e)}
 
 @app.post("/webhook/test")
-def webhook_test():
+def webhook_test(request: Request):
+    _require_admin_secret(request)
     import requests as req
     token   = os.getenv("TELEGRAM_BOT_TOKEN","")
     chat_id = os.getenv("TELEGRAM_CHAT_ID","")

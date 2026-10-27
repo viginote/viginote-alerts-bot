@@ -16,8 +16,13 @@ pip install aiohttp==3.9.5 --quiet --break-system-packages 2>/dev/null || true
 uvicorn api:app --host 0.0.0.0 --port ${PORT:-8000} &
 UVICORN_PID=$!
 
-# Start bot in background — if it crashes, API stays up
-python main.py &
+# Start the worker in background — if it crashes, API stays up.
+# EDITION=SA runs the South Africa edition (public site at /za, no Telegram needed).
+if [ "${EDITION:-}" = "SA" ]; then
+  python sa_main.py &
+else
+  python main.py &
+fi
 BOT_PID=$!
 
 echo "API PID: $UVICORN_PID | Bot PID: $BOT_PID"

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VigiNote ZA — Review queue</title><meta name="robots" content="noindex">
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#121a2b;--mut:#5d6b82;--line:#e1e5ec}
+@media (prefers-color-scheme:dark){:root{--bg:#0b1220;--card:#121b2e;--ink:#eef2f9;--mut:#93a0b8;--line:#22304a}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin:10px 0}
+.meta{color:var(--mut);font-size:.82rem;margin-bottom:4px}
+button{font:inherit;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button.p{background:#0b5fff;color:#fff;border-color:#0b5fff}button.d{color:#d62839}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}input,select{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+</style></head><body><div class="wrap">
+<h2>Review queue</h2>
+<div class="row"><input id="sec" type="password" placeholder="Admin secret">
+<select id="st"><option>pending</option><option>approved</option><option>rejected</option></select>
+<button class="p" id="go">Load</button></div>
+<div id="out"></div>
+<h3>Publish a correction</h3>
+<div class="row"><input id="cid" placeholder="Article id (optional)" size="8"><input id="ctext" placeholder="Correction text" size="50"><button id="cbtn">Publish</button></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+function el(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+try{$("#sec").value=sessionStorage.getItem("s")||""}catch(e){}
+function H(){try{sessionStorage.setItem("s",$("#sec").value)}catch(e){}return{"X-Admin-Secret":$("#sec").value,"Content-Type":"application/json"}}
+async function act(id,action){const r=await fetch("/za/admin/review",{method:"POST",headers:H(),body:JSON.stringify({id,action})});if(!r.ok)alert("Failed: "+r.status);else load()}
+async function load(){
+  const r=await fetch("/za/admin/queue?status="+$("#st").value,{headers:H()});const o=$("#out");o.replaceChildren();
+  if(!r.ok){o.append(el("p",null,"Error "+r.status+" — check the admin secret."));return}
+  const d=await r.json();o.append(el("p",null,d.count+" articles"));
+  d.articles.forEach(a=>{const c=el("div","card");
+    c.append(el("div","meta",`#${a.id} · ${a.level} (${a.score}) · ${a.topic} · ${a.place||"—"}${a.province?", "+a.province:""} · ${a.source_name} · ${a.corroboration} src`));
+    c.append(el("strong",null,a.title));if(a.summary)c.append(el("div","meta",a.summary));
+    const l=el("a",null,"open original");try{const u=new URL(a.url);if(u.protocol.startsWith("http"))l.href=u.href}catch(e){}l.target="_blank";l.rel="noopener noreferrer";c.append(l);
+    const row=el("div","row");
+    [["approve","Approve for site","p"],["instagram","Approve + Instagram",""],["reject","Reject","d"],["unpublish","Back to pending",""]].forEach(([k,t,cl])=>{const b=el("button",cl,t);b.onclick=()=>act(a.id,k);row.append(b)});
+    if(a.instagram_ok){const z=el("button",null,"Download carousel");z.onclick=async()=>{const r=await fetch("/za/admin/social/"+a.id+".zip",{headers:H()});if(!r.ok)return alert("Failed");const u=URL.createObjectURL(await r.blob());const x=el("a");x.href=u;x.download="viginote-za-"+a.id+".zip";x.click()};row.append(z)}
+    c.append(row);o.append(c)})}
+$("#go").onclick=load;$("#st").onchange=load;
+$("#cbtn").onclick=async()=>{const r=await fetch("/za/admin/correction",{method:"POST",headers:H(),body:JSON.stringify({id:$("#cid").value?+$("#cid").value:null,text:$("#ctext").value})});alert(r.ok?"Published":"Failed "+r.status);if(r.ok)$("#ctext").value=""};
+</script></body></html>

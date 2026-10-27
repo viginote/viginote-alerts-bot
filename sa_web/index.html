@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VigiNote ZA — South Africa Daily Briefing</title>
+<meta name="description" content="A daily briefing on South Africa: crime, government, Parliament, courts, services and the economy — from official and public sources, with links to the original reports.">
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#121a2b;--mut:#5d6b82;--line:#e1e5ec;--acc:#0b5fff;
+--critical:#d62839;--high:#e8710a;--elevated:#c99700;--routine:#2e9d6a}
+@media (prefers-color-scheme:dark){:root{--bg:#0b1220;--card:#121b2e;--ink:#eef2f9;--mut:#93a0b8;--line:#22304a;--acc:#6aa0ff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+a{color:var(--acc)}
+.wrap{max-width:960px;margin:0 auto;padding:0 16px}
+header{border-bottom:1px solid var(--line);background:var(--card)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px}
+.brand{font-weight:800;letter-spacing:.04em}.brand span{color:var(--acc)}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:none;border:0;color:var(--mut);font:inherit;padding:6px 10px;border-radius:8px;cursor:pointer}
+nav button.on{background:var(--bg);color:var(--ink);font-weight:600}
+h1{font-size:1.7rem;line-height:1.2;margin:28px 0 4px}
+.sub{color:var(--mut);margin:0 0 20px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:5px 12px;border-radius:999px;cursor:pointer;font:inherit;font-size:.9rem}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+select,input[type=search]{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+input[type=search]{flex:1;min-width:160px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:12px 0}
+.top{border-left:5px solid var(--routine)}
+.top.critical,.item.critical{border-left-color:var(--critical)}.top.high,.item.high{border-left-color:var(--high)}
+.top.elevated,.item.elevated{border-left-color:var(--elevated)}
+.item{border-left:5px solid var(--routine)}
+.meta{display:flex;flex-wrap:wrap;gap:6px 12px;color:var(--mut);font-size:.85rem;margin-bottom:6px}
+.lvl{font-weight:700;text-transform:uppercase;font-size:.72rem;letter-spacing:.06em}
+.lvl.critical{color:var(--critical)}.lvl.high{color:var(--high)}.lvl.elevated{color:var(--elevated)}.lvl.routine{color:var(--routine)}
+.card h3{margin:0 0 6px;font-size:1.08rem;line-height:1.3}
+.card p{margin:0 0 8px;color:var(--mut)}
+.links{display:flex;gap:14px;font-size:.9rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.stat{padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.stat b{display:block;font-size:1.4rem}
+.empty{color:var(--mut);padding:30px 0;text-align:center}
+footer{color:var(--mut);font-size:.85rem;padding:30px 0 50px;border-top:1px solid var(--line);margin-top:40px}
+table{width:100%;border-collapse:collapse;font-size:.92rem}td,th{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="brand">VIGINOTE <span>ZA</span></div>
+  <nav id="nav">
+    <button data-v="brief" class="on">Briefing</button>
+    <button data-v="feed">All stories</button>
+    <button data-v="sources">Sources</button>
+    <button data-v="corr">Corrections</button>
+    <button data-v="about">About</button>
+  </nav>
+</div></header>
+
+<main class="wrap">
+<section id="v-brief">
+  <h1>South Africa today</h1>
+  <p class="sub" id="updated">Loading…</p>
+  <div class="grid" id="stats"></div>
+  <h2 style="margin-top:28px">Top stories</h2>
+  <div id="top"></div>
+</section>
+
+<section id="v-feed" class="hidden">
+  <h1>All stories</h1>
+  <div class="filters" id="topics"></div>
+  <div class="filters">
+    <select id="prov"><option value="">All provinces</option></select>
+    <select id="days"><option value="1">Last 24 hours</option><option value="3" selected>Last 3 days</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option></select>
+    <input type="search" id="q" placeholder="Search headlines…">
+  </div>
+  <div id="list"></div>
+</section>
+
+<section id="v-sources" class="hidden">
+  <h1>Where this comes from</h1>
+  <p class="sub" id="policy"></p>
+  <div class="card"><table id="srcs"></table></div>
+</section>
+
+<section id="v-corr" class="hidden">
+  <h1>Corrections</h1>
+  <p class="sub">When we get something wrong, we say so here.</p>
+  <div id="corrs"></div>
+</section>
+
+<section id="v-about" class="hidden">
+  <h1>About VigiNote ZA</h1>
+  <div class="card">
+    <p style="color:var(--ink)">VigiNote ZA collects public reports from South African government bodies, Parliament, the police service, courts, municipalities and newsrooms, ranks them by how much they affect people, and gives you a short, sourced daily briefing.</p>
+    <p>We publish a headline, a short summary and a link to the original publisher. We do not copy articles. Each story shows its source and how confident we are: <i>official source</i>, <i>multiple outlets</i>, or <i>single source (unconfirmed)</i>.</p>
+    <p>A person reviews stories before they appear here. We never name suspects or publish unverified allegations about individuals. If you spot an error, tell us and we will correct it publicly.</p>
+    <p>Not legal, safety or financial advice. In an emergency call 10111 (police) or 112 (from a cell phone).</p>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap">VigiNote ZA · Summaries link to the original publishers, who own their content.</div></footer>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const TOPICS={};let state={topic:"",prov:"",days:3,q:""};
+function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
+function safeUrl(u){try{const x=new URL(u);return(x.protocol==="http:"||x.protocol==="https:")?x.href:"#"}catch{return"#"}}
+function ago(ts){const s=Math.max(1,Math.floor(Date.now()/1000-ts));if(s<3600)return Math.floor(s/60)+" min ago";if(s<86400)return Math.floor(s/3600)+" h ago";return Math.floor(s/86400)+" d ago"}
+function conf(a){if(a.source_tier>=3)return"Official source";if(a.corroboration>=3)return a.corroboration+" outlets";if(a.corroboration==2)return"2 outlets";return"Single source"}
+function card(a,top){
+  const c=el("article","card "+(top?"top ":"item ")+a.level);
+  const m=el("div","meta");
+  m.append(el("span","lvl "+a.level,a.level));
+  m.append(el("span",null,TOPICS[a.topic]||a.topic));
+  if(a.place)m.append(el("span",null,"📍 "+(a.city&&a.city!==a.place?a.city+", ":"")+a.province));
+  m.append(el("span",null,a.source_name+" · "+conf(a)));
+  m.append(el("span",null,ago(a.ts)));
+  c.append(m,el("h3",null,a.title));
+  if(a.summary)c.append(el("p",null,a.summary));
+  const l=el("div","links");
+  const o=el("a",null,"Original report ↗");o.href=safeUrl(a.url);o.target="_blank";o.rel="noopener noreferrer";
+  const p=el("a",null,"PDF summary");p.href="/za/report/"+a.id+".pdf";p.target="_blank";
+  l.append(o,p);c.append(l);return c}
+async function j(u){const r=await fetch(u);if(!r.ok)throw new Error(r.status);return r.json()}
+
+async function loadBrief(){
+  const d=await j("/za/api/briefing");Object.assign(TOPICS,d.topics);
+  $("#updated").textContent=d.last_update?"Last updated "+ago(d.last_update)+" · reviewed before publishing":"No stories published yet — check back soon.";
+  const s=$("#stats");s.replaceChildren();
+  d.by_topic.slice(0,4).forEach(t=>{const b=el("div","stat");b.append(el("b",null,t.n),el("span",null,TOPICS[t.topic]||t.topic));s.append(b)});
+  const t=$("#top");t.replaceChildren();
+  if(!d.top.length)t.append(el("div","empty","Nothing published in this window yet."));
+  d.top.forEach(a=>t.append(card(a,true)));
+  const pv=$("#prov");d.by_province.forEach(p=>{if(![...pv.options].some(o=>o.value===p.province)){const o=el("option",null,p.province);o.value=p.province;pv.append(o)}});
+  buildTopics()}
+function buildTopics(){const t=$("#topics");t.replaceChildren();
+  [["","All"],...Object.entries(TOPICS)].forEach(([k,v])=>{const b=el("button","chip"+(state.topic===k?" on":""),v);b.onclick=()=>{state.topic=k;buildTopics();loadFeed()};t.append(b)})}
+async function loadFeed(){
+  const p=new URLSearchParams({days:state.days,limit:100});
+  if(state.topic)p.set("topic",state.topic);if(state.prov)p.set("province",state.prov);if(state.q)p.set("q",state.q);
+  const d=await j("/za/api/articles?"+p);const l=$("#list");l.replaceChildren();
+  if(!d.articles.length)l.append(el("div","empty","No stories match these filters."));
+  d.articles.forEach(a=>l.append(card(a,false)))}
+async function loadSources(){
+  const d=await j("/za/api/sources");$("#policy").textContent=d.policy;
+  const t=$("#srcs");t.replaceChildren();
+  const h=el("tr");["Source","Type","Tier"].forEach(x=>h.append(el("th",null,x)));t.append(h);
+  d.sources.forEach(s=>{const r=el("tr");r.append(el("td",null,s.name),el("td",null,s.kind==="rss"?s.category:s.category+" (monitored manually)"),el("td",null,String(s.tier)));t.append(r)})}
+async function loadCorr(){
+  const d=await j("/za/api/corrections");const c=$("#corrs");c.replaceChildren();
+  if(!d.corrections.length)c.append(el("div","empty","No corrections published."));
+  d.corrections.forEach(x=>{const k=el("div","card");k.append(el("div","meta",new Date(x.ts*1000).toLocaleDateString()+(x.title?" · "+x.title:"")),el("p",null,x.text));c.append(k)})}
+document.querySelectorAll("#nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("#nav button").forEach(x=>x.classList.toggle("on",x===b));
+  document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));
+  $("#v-"+b.dataset.v).classList.remove("hidden");
+  ({feed:loadFeed,sources:loadSources,corr:loadCorr}[b.dataset.v]||(()=>{}))()});
+$("#prov").onchange=e=>{state.prov=e.target.value;loadFeed()};
+$("#days").onchange=e=>{state.days=e.target.value;loadFeed()};
+let t;$("#q").oninput=e=>{clearTimeout(t);t=setTimeout(()=>{state.q=e.target.value;loadFeed()},300)};
+loadBrief().catch(()=>{$("#updated").textContent="Could not load the briefing. Please try again shortly."});
+</script>
+</body>
+</html>

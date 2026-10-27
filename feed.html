@@ -791,14 +791,17 @@ function closeArticle() {
 
 // ── Admin ──────────────────────────────────────────────────────────────────
 function openAdmin() {
-  fetch(API + '/auth/sessions')
-  .then(function(r) { return r.json(); })
+  var secret = prompt('Admin secret:');
+  if (!secret) return;
+  fetch(API + '/auth/sessions', { headers: { 'X-Admin-Secret': secret } })
+  .then(function(r) { if (!r.ok) throw new Error('Not authorised'); return r.json(); })
   .then(function(d) {
     alert('Active sessions: ' + d.active_sessions + '\n' +
       (d.sessions || []).map(function(s) {
         return s.username + ' — ' + s.age_minutes + ' min ago';
       }).join('\n'));
-  });
+  })
+  .catch(function(e) { alert(e.message); });
 }
 
 // ── Boot ───────────────────────────────────────────────────────────────────
